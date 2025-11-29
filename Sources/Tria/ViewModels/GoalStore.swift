@@ -58,6 +58,23 @@ final class GoalStore: ObservableObject {
         return currentCount < level.maxGoals
     }
 
+    // MARK: - History Queries
+
+    /// 指定日の日次目標を取得
+    func goalsForDay(_ date: Date) -> [Goal] {
+        goals.filter { $0.level == .daily && $0.isInPeriod(for: date) }
+    }
+
+    /// 指定週の週次目標を取得
+    func goalsForWeek(_ date: Date) -> [Goal] {
+        goals.filter { $0.level == .weekly && $0.isInPeriod(for: date) }
+    }
+
+    /// 指定月の月次目標を取得
+    func goalsForMonth(_ date: Date) -> [Goal] {
+        goals.filter { $0.level == .monthly && $0.isInPeriod(for: date) }
+    }
+
     // MARK: - Actions
 
     /// 新しい目標を追加

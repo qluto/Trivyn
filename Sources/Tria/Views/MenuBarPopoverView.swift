@@ -6,8 +6,21 @@ struct MenuBarPopoverView: View {
     @State private var newGoalTitle = ""
     @State private var showingConfetti = false
     @State private var confettiGoalId: UUID?
+    @State private var showingHistory = false
 
     var body: some View {
+        Group {
+            if showingHistory {
+                HistoryView(isPresented: $showingHistory)
+                    .environmentObject(goalStore)
+            } else {
+                mainView
+            }
+        }
+        .fixedSize()
+    }
+
+    private var mainView: some View {
         VStack(spacing: 0) {
             // ヘッダー（ロゴ + 全レベルの進捗）
             header
@@ -125,6 +138,17 @@ struct MenuBarPopoverView: View {
             .foregroundColor(.secondary)
 
             Spacer()
+
+            Button(action: { showingHistory = true }) {
+                HStack(spacing: 4) {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 12))
+                    Text("履歴")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                }
+            }
+            .buttonStyle(.borderless)
+            .foregroundColor(.secondary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
