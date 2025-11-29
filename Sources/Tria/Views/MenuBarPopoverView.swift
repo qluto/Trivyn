@@ -17,6 +17,7 @@ struct MenuBarPopoverView: View {
     @State private var confettiGoalId: UUID?
     @State private var confettiOrigin: CGPoint?
     @State private var showingHistory = false
+    @State private var showingReflection: ReflectionType?
     @State private var goalPositions: [UUID: CGPoint] = [:]
 
     var body: some View {
@@ -24,6 +25,15 @@ struct MenuBarPopoverView: View {
             if showingHistory {
                 HistoryView(isPresented: $showingHistory)
                     .environmentObject(goalStore)
+            } else if let reflectionType = showingReflection {
+                ReflectionView(
+                    isPresented: Binding(
+                        get: { showingReflection != nil },
+                        set: { if !$0 { showingReflection = nil } }
+                    ),
+                    type: reflectionType
+                )
+                .environmentObject(goalStore)
             } else {
                 mainView
             }
@@ -153,16 +163,28 @@ struct MenuBarPopoverView: View {
     }
 
     private var footer: some View {
-        HStack {
+        HStack(spacing: 12) {
             Button(action: { FloatingWindowController.shared.showWindow() }) {
-                HStack(spacing: 4) {
-                    Image(systemName: "macwindow.on.rectangle")
-                        .font(.system(size: 12))
-                    Text("フローティング")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                }
+                Image(systemName: "macwindow.on.rectangle")
+                    .font(.system(size: 12))
             }
             .buttonStyle(.borderless)
+            .foregroundColor(.secondary)
+            .help("フローティングウィンドウ")
+
+            // 振り返りボタン（週・月選択可能）
+            Menu {
+                Button("今週の振り返り") { showingReflection = .weekly }
+                Button("今月の振り返り") { showingReflection = .monthly }
+            } label: {
+                HStack(spacing: 2) {
+                    Image(systemName: "text.badge.checkmark")
+                        .font(.system(size: 11))
+                    Text("振り返り")
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                }
+            }
+            .menuStyle(.borderlessButton)
             .foregroundColor(.secondary)
 
             Spacer()

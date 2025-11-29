@@ -4,12 +4,24 @@ import SwiftUI
 /// メニューバー常駐を管理するコントローラー
 @MainActor
 final class StatusBarController {
+    static var shared: StatusBarController?
+
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
 
     init() {
         setupStatusItem()
         setupPopover()
+        StatusBarController.shared = self
+    }
+
+    /// ポップオーバーを表示
+    func showPopover() {
+        guard let button = statusItem?.button, let popover = popover else { return }
+        if !popover.isShown {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
+        }
     }
 
     private func setupStatusItem() {

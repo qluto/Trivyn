@@ -277,26 +277,30 @@ struct HistoryView: View {
 
     private func weekDetailView(date: Date) -> some View {
         let goals = goalStore.goalsForWeek(date)
+        let reflectionPoints = getWeeklyReflectionPoints(for: date)
         return goalDetailContent(
             title: weekString(date),
             goals: goals,
             emptyMessage: "この週の目標はありません",
-            accentColor: GoalLevel.weekly.accentColor
+            accentColor: GoalLevel.weekly.accentColor,
+            reflectionPoints: reflectionPoints
         )
     }
 
     private func monthDetailView(date: Date) -> some View {
         let goals = goalStore.goalsForMonth(date)
+        let reflectionPoints = getMonthlyReflectionPoints(for: date)
         return goalDetailContent(
             title: monthString(date),
             goals: goals,
             emptyMessage: "この月の目標はありません",
-            accentColor: GoalLevel.monthly.accentColor
+            accentColor: GoalLevel.monthly.accentColor,
+            reflectionPoints: reflectionPoints
         )
     }
 
-    private func goalDetailContent(title: String, goals: [Goal], emptyMessage: String, accentColor: Color) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+    private func goalDetailContent(title: String, goals: [Goal], emptyMessage: String, accentColor: Color, reflectionPoints: [String] = []) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .foregroundColor(accentColor)
@@ -318,9 +322,50 @@ struct HistoryView: View {
                     }
                 }
             }
+
+            // 振り返りポイントがあれば表示
+            if !reflectionPoints.isEmpty {
+                Divider()
+                    .padding(.vertical, 2)
+
+                HStack(spacing: 3) {
+                    Image(systemName: "lightbulb")
+                        .font(.system(size: 9))
+                    Text("気づき・学び")
+                        .font(.system(size: 10, weight: .medium))
+                }
+                .foregroundColor(accentColor.opacity(0.8))
+
+                ForEach(reflectionPoints, id: \.self) { point in
+                    HStack(alignment: .top, spacing: 4) {
+                        Text("•")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(accentColor.opacity(0.5))
+                        Text(point)
+                            .font(.system(size: 10))
+                            .foregroundColor(.primary.opacity(0.8))
+                    }
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
+    }
+
+    // MARK: - Reflection Points
+
+    private func getWeeklyReflectionPoints(for date: Date) -> [String] {
+        let weekOfYear = calendar.component(.weekOfYear, from: date)
+        let year = calendar.component(.yearForWeekOfYear, from: date)
+        let key = "tria.reflection.weekly.\(year).\(weekOfYear)"
+        return UserDefaults.standard.stringArray(forKey: key) ?? []
+    }
+
+    private func getMonthlyReflectionPoints(for date: Date) -> [String] {
+        let month = calendar.component(.month, from: date)
+        let year = calendar.component(.year, from: date)
+        let key = "tria.reflection.monthly.\(year).\(month)"
+        return UserDefaults.standard.stringArray(forKey: key) ?? []
     }
 
     // MARK: - Helpers
