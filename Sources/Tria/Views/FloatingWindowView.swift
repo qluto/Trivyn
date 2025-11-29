@@ -7,52 +7,52 @@ struct FloatingWindowView: View {
     @State private var showingConfetti = false
     @State private var isHovered = false
 
+    private let windowWidth: CGFloat = 220
+    private let accentColor = GoalLevel.daily.accentColor
+
     var body: some View {
         VStack(spacing: 0) {
-            // ミニマルなヘッダー（ドラッグエリア）
-            header
-
-            // 目標リスト
-            ScrollView {
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(goalStore.dailyGoals) { goal in
-                        let goalId = goal.id
-                        let wasCompleted = goal.isCompleted
-                        MinimalGoalRow(
-                            goal: goal,
-                            onToggle: {
-                                if !wasCompleted {
-                                    showingConfetti = true
-                                }
-                                goalStore.toggleGoalCompletion(id: goalId)
+            // 目標リスト（ヘッダーなし、リストがそのままウィジェット）
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Array(goalStore.dailyGoals.enumerated()), id: \.element.id) { index, goal in
+                    let goalId = goal.id
+                    let wasCompleted = goal.isCompleted
+                    NumberedGoalRow(
+                        number: index + 1,
+                        goal: goal,
+                        accentColor: accentColor,
+                        onToggle: {
+                            if !wasCompleted {
+                                showingConfetti = true
                             }
-                        )
-                    }
-
-                    // 新しい目標を追加
-                    if goalStore.canAddGoal(for: .daily) {
-                        addGoalField
-                    }
-
-                    // 空の状態
-                    if goalStore.dailyGoals.isEmpty {
-                        emptyState
-                    }
+                            goalStore.toggleGoalCompletion(id: goalId)
+                        }
+                    )
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+
+                // 新しい目標を追加（3つ未満の場合）
+                if goalStore.canAddGoal(for: .daily) {
+                    addGoalField
+                }
+
+                // 空の状態
+                if goalStore.dailyGoals.isEmpty {
+                    emptyState
+                }
             }
+            .padding(10)
         }
-        .frame(width: 260, height: 300)
+        .frame(width: windowWidth)
+        .fixedSize(horizontal: false, vertical: true)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 10)
                 .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 4)
+                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 3)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(Color.primary.opacity(0.05), lineWidth: 0.5)
         )
         .overlay {
             if showingConfetti {
@@ -65,48 +65,37 @@ struct FloatingWindowView: View {
                     }
             }
         }
-        .onHover { hovering in
-            isHovered = hovering
+        // 閉じるボタン（ホバー時のみ表示、右上にオーバーレイ）
+        .overlay(alignment: .topTrailing) {
+            Button(action: { FloatingWindowController.shared.hideWindow() }) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .frame(width: 16, height: 16)
+                    .background(
+                        Circle()
+                            .fill(.ultraThinMaterial)
+                    )
+            }
+            .buttonStyle(.plain)
+            .opacity(isHovered ? 1 : 0)
+            .padding(6)
         }
-    }
-
-    private var header: some View {
-        HStack(spacing: 6) {
-            // アプリアイコン（小さな三角形）
-            Image(systemName: "triangle.fill")
-                .font(.system(size: 10))
-                .foregroundColor(.accentColor)
-
-            Text("今日の3つ")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.primary.opacity(0.8))
-
-            Spacer()
-
-            // 進捗インジケーター
-            ProgressDots(completed: completedCount, total: 3)
-
-            // 閉じるボタン（ホバー時のみ）
-            if isHovered {
-                Button(action: { FloatingWindowController.shared.hideWindow() }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
-                .transition(.opacity)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.12)) {
+                isHovered = hovering
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Color.primary.opacity(0.03))
     }
 
     private var addGoalField: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1)
-                .frame(width: 16, height: 16)
+        let nextNumber = goalStore.dailyGoals.count + 1
+        return HStack(spacing: 8) {
+            // 次の番号（薄く表示）
+            Text("\(nextNumber)")
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundColor(.secondary.opacity(0.3))
+                .frame(width: 18, height: 18)
 
             TextField("追加...", text: $newGoalTitle)
                 .textFieldStyle(.plain)
@@ -116,25 +105,25 @@ struct FloatingWindowView: View {
                     addNewGoal()
                 }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 5)
+        .padding(.horizontal, 4)
     }
 
     private var emptyState: some View {
-        VStack(spacing: 6) {
-            Image(systemName: "triangle")
-                .font(.system(size: 24))
-                .foregroundColor(.secondary.opacity(0.4))
-
-            Text("今日達成したい3つを追加")
-                .font(.system(size: 11))
-                .foregroundColor(.secondary.opacity(0.6))
+        VStack(spacing: 4) {
+            HStack(spacing: 6) {
+                ForEach(1...3, id: \.self) { num in
+                    Text("\(num)")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(accentColor.opacity(0.25))
+                }
+            }
+            Text("今日の3つを追加")
+                .font(.system(size: 10))
+                .foregroundColor(.secondary.opacity(0.5))
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
-    }
-
-    private var completedCount: Int {
-        goalStore.dailyGoals.filter { $0.isCompleted }.count
+        .padding(.vertical, 20)
     }
 
     private func addNewGoal() {
@@ -146,71 +135,68 @@ struct FloatingWindowView: View {
     }
 }
 
-/// ミニマルな目標行
-struct MinimalGoalRow: View {
+/// 番号付きの目標行（番号がチェックボックスの役割）
+struct NumberedGoalRow: View {
+    let number: Int
     let goal: Goal
+    let accentColor: Color
     let onToggle: () -> Void
+
+    @State private var isHovered = false
 
     var body: some View {
         HStack(spacing: 8) {
-            // チェックサークル
+            // 番号（タップでトグル）
             Button(action: onToggle) {
                 ZStack {
+                    // 背景円
+                    Circle()
+                        .fill(goal.isCompleted ? accentColor : Color.clear)
+                        .frame(width: 18, height: 18)
+
                     Circle()
                         .strokeBorder(
-                            goal.isCompleted ? Color.accentColor : Color.secondary.opacity(0.3),
+                            goal.isCompleted ? accentColor : Color.secondary.opacity(0.25),
                             lineWidth: 1.5
                         )
-                        .frame(width: 16, height: 16)
+                        .frame(width: 18, height: 18)
 
-                    if goal.isCompleted {
-                        Circle()
-                            .fill(Color.accentColor)
-                            .frame(width: 16, height: 16)
-
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundColor(.white)
-                    }
+                    // 番号
+                    Text("\(number)")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundColor(goal.isCompleted ? .white : .secondary.opacity(0.6))
                 }
                 .contentShape(Circle())
             }
-            .buttonStyle(MinimalCheckButtonStyle())
+            .buttonStyle(NumberButtonStyle())
 
             // テキスト
             Text(goal.title)
                 .font(.system(size: 12))
-                .foregroundColor(goal.isCompleted ? .secondary : .primary)
-                .strikethrough(goal.isCompleted, color: .secondary.opacity(0.5))
+                .foregroundColor(goal.isCompleted ? .secondary.opacity(0.5) : .primary.opacity(0.85))
+                .strikethrough(goal.isCompleted, color: .secondary.opacity(0.4))
                 .lineLimit(2)
-
-            Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.vertical, 4)
-    }
-}
-
-/// ミニマルなチェックボタンスタイル
-struct MinimalCheckButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
-            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
-    }
-}
-
-/// 進捗ドット
-struct ProgressDots: View {
-    let completed: Int
-    let total: Int
-
-    var body: some View {
-        HStack(spacing: 3) {
-            ForEach(0..<total, id: \.self) { index in
-                Circle()
-                    .fill(index < completed ? Color.accentColor : Color.secondary.opacity(0.2))
-                    .frame(width: 5, height: 5)
+        .padding(.vertical, 5)
+        .padding(.horizontal, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isHovered ? Color.primary.opacity(0.03) : Color.clear)
+        )
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.1)) {
+                isHovered = hovering
             }
         }
+    }
+}
+
+/// 番号ボタン用のスタイル
+struct NumberButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.85 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }

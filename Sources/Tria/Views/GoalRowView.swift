@@ -3,6 +3,7 @@ import SwiftUI
 /// 目標の1行を表示するビュー
 struct GoalRowView: View {
     let goal: Goal
+    let accentColor: Color
     let onToggle: () -> Void
     let onDelete: () -> Void
 
@@ -11,13 +12,13 @@ struct GoalRowView: View {
     var body: some View {
         HStack(spacing: 10) {
             // チェックボタン
-            CheckButton(isCompleted: goal.isCompleted, action: onToggle)
+            CheckButton(isCompleted: goal.isCompleted, accentColor: accentColor, action: onToggle)
 
             // 目標テキスト
             Text(goal.title)
-                .font(.system(size: 13))
+                .font(.system(size: 14))
                 .foregroundColor(goal.isCompleted ? .secondary : .primary)
-                .strikethrough(goal.isCompleted, color: .secondary)
+                .strikethrough(goal.isCompleted, color: .secondary.opacity(0.5))
                 .lineLimit(2)
 
             Spacer()
@@ -27,7 +28,7 @@ struct GoalRowView: View {
                 Button(action: onDelete) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 14))
-                        .foregroundColor(.secondary.opacity(0.6))
+                        .foregroundColor(.secondary.opacity(0.5))
                 }
                 .buttonStyle(.plain)
                 .transition(.opacity)
@@ -37,7 +38,9 @@ struct GoalRowView: View {
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? Color.secondary.opacity(0.08) : Color.clear)
+                .fill(goal.isCompleted
+                    ? accentColor.opacity(0.06)
+                    : (isHovered ? Color.secondary.opacity(0.06) : Color.clear))
         )
         .contentShape(Rectangle())
         .onHover { hovering in
@@ -51,22 +54,23 @@ struct GoalRowView: View {
 /// シンプルなチェックボタン
 struct CheckButton: View {
     let isCompleted: Bool
+    let accentColor: Color
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .strokeBorder(isCompleted ? Color.accentColor : Color.secondary.opacity(0.4), lineWidth: 1.5)
-                    .frame(width: 22, height: 22)
+                    .strokeBorder(isCompleted ? accentColor : Color.secondary.opacity(0.35), lineWidth: 1.5)
+                    .frame(width: 20, height: 20)
 
                 if isCompleted {
                     Circle()
-                        .fill(Color.accentColor)
-                        .frame(width: 22, height: 22)
+                        .fill(accentColor)
+                        .frame(width: 20, height: 20)
 
                     Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundColor(.white)
                 }
             }

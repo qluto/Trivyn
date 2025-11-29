@@ -35,7 +35,12 @@ final class GoalStore: ObservableObject {
 
     /// 選択中のレベルの目標
     var currentGoals: [Goal] {
-        switch selectedLevel {
+        goals(for: selectedLevel)
+    }
+
+    /// 指定レベルの目標を取得
+    func goals(for level: GoalLevel) -> [Goal] {
+        switch level {
         case .daily: return dailyGoals
         case .weekly: return weeklyGoals
         case .monthly: return monthlyGoals

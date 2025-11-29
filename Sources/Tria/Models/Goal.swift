@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// 目標のレベル（日次/週次/月次）
 enum GoalLevel: String, Codable, CaseIterable {
@@ -15,6 +16,15 @@ enum GoalLevel: String, Codable, CaseIterable {
     }
 
     var maxGoals: Int { 3 }
+
+    /// レベルごとのアクセントカラー
+    var accentColor: Color {
+        switch self {
+        case .daily:   return Color(hue: 0.08, saturation: 0.75, brightness: 0.95)  // オレンジ - 今日の緊急感
+        case .weekly:  return Color(hue: 0.75, saturation: 0.55, brightness: 0.85)  // 紫 - 計画的
+        case .monthly: return Color(hue: 0.48, saturation: 0.60, brightness: 0.75)  // ティール - 長期的視野
+        }
+    }
 }
 
 /// 目標モデル

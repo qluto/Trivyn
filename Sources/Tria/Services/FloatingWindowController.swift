@@ -1,5 +1,12 @@
 import AppKit
 import SwiftUI
+import Combine
+
+/// キー入力を受け付けるカスタムパネル
+final class FloatingPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+}
 
 /// Stickies風フローティングウィンドウを管理するコントローラー
 @MainActor
@@ -7,16 +14,20 @@ final class FloatingWindowController {
     static let shared = FloatingWindowController()
 
     private var panel: NSPanel?
+    private var hostingView: NSHostingView<AnyView>?
     private var isVisible = false
+    private var cancellables = Set<AnyCancellable>()
 
     private init() {
         setupPanel()
+        observeGoalChanges()
+        observeWindowMove()
     }
 
     private func setupPanel() {
-        let contentRect = NSRect(x: 0, y: 0, width: 260, height: 300)
+        let contentRect = NSRect(x: 0, y: 0, width: 240, height: 100)
 
-        panel = NSPanel(
+        panel = FloatingPanel(
             contentRect: contentRect,
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
@@ -32,22 +43,64 @@ final class FloatingWindowController {
         panel.hidesOnDeactivate = false
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = true
+        panel.hasShadow = false  // SwiftUI側でシャドウを描画
         panel.isMovableByWindowBackground = true
+        panel.becomesKeyOnlyIfNeeded = true  // テキストフィールドクリック時のみキーウィンドウに
 
         // 最小/最大サイズ
-        panel.minSize = NSSize(width: 200, height: 200)
-        panel.maxSize = NSSize(width: 350, height: 500)
+        panel.minSize = NSSize(width: 200, height: 60)
+        panel.maxSize = NSSize(width: 300, height: 400)
 
         // SwiftUI Viewをホスト
-        let hostingView = NSHostingView(
-            rootView: FloatingWindowView()
-                .environmentObject(GoalStore.shared)
+        let view = NSHostingView(
+            rootView: AnyView(
+                FloatingWindowView()
+                    .environmentObject(GoalStore.shared)
+            )
         )
-        panel.contentView = hostingView
+        hostingView = view
+        panel.contentView = view
 
         // 位置を復元または画面右下に配置
         restoreWindowPosition()
+
+        // 初期サイズを設定
+        updateWindowSize()
+    }
+
+    private func observeGoalChanges() {
+        GoalStore.shared.$goals
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.updateWindowSize()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func updateWindowSize() {
+        guard let panel = panel, let hostingView = hostingView else { return }
+
+        // SwiftUIビューの理想的なサイズを取得
+        let fittingSize = hostingView.fittingSize
+
+        // 現在のウィンドウ位置を保持（右下基準で調整）
+        let currentFrame = panel.frame
+        let newHeight = max(fittingSize.height, panel.minSize.height)
+        let newWidth = max(fittingSize.width, panel.minSize.width)
+
+        // 高さが変わった分だけY座標を調整（下端を固定）
+        let deltaHeight = newHeight - currentFrame.height
+        let newOrigin = NSPoint(
+            x: currentFrame.origin.x,
+            y: currentFrame.origin.y - deltaHeight
+        )
+
+        let newFrame = NSRect(
+            origin: newOrigin,
+            size: NSSize(width: newWidth, height: newHeight)
+        )
+
+        panel.setFrame(newFrame, display: true, animate: true)
     }
 
     func showWindow() {
@@ -80,11 +133,11 @@ final class FloatingWindowController {
             let position = NSPointFromString(positionString)
             panel.setFrameOrigin(position)
         } else {
-            // デフォルト: 画面右下
+            // デフォルト: 画面上部中央
             if let screen = NSScreen.main {
                 let screenRect = screen.visibleFrame
-                let x = screenRect.maxX - panel.frame.width - 20
-                let y = screenRect.minY + 20
+                let x = screenRect.midX - panel.frame.width / 2
+                let y = screenRect.maxY - panel.frame.height - 40
                 panel.setFrameOrigin(NSPoint(x: x, y: y))
             }
         }
@@ -94,5 +147,16 @@ final class FloatingWindowController {
         guard let panel = panel else { return }
         let positionString = NSStringFromPoint(panel.frame.origin)
         UserDefaults.standard.set(positionString, forKey: positionKey)
+    }
+
+    private func observeWindowMove() {
+        guard let panel = panel else { return }
+
+        NotificationCenter.default.publisher(for: NSWindow.didMoveNotification, object: panel)
+            .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.saveWindowPosition()
+            }
+            .store(in: &cancellables)
     }
 }
