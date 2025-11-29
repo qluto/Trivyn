@@ -8,8 +8,6 @@ struct FloatingWindowView: View {
     @State private var confettiOrigin: CGPoint?
     @State private var isHovered = false
     @State private var goalPositions: [UUID: CGPoint] = [:]
-    @State private var showWeeklyExpanded = false
-    @State private var dailyAllCompletedCelebrated = false
     @State private var selectedLevel: GoalLevel = .daily
 
     private let windowWidth: CGFloat = 220
@@ -20,12 +18,6 @@ struct FloatingWindowView: View {
 
     private var currentGoals: [Goal] {
         goalStore.goals(for: selectedLevel)
-    }
-
-    /// 日次ゴールが全て完了しているか
-    private var isDailyAllCompleted: Bool {
-        let daily = goalStore.dailyGoals
-        return !daily.isEmpty && daily.allSatisfy { $0.isCompleted }
     }
 
     var body: some View {
@@ -77,11 +69,6 @@ struct FloatingWindowView: View {
             }
             .padding(10)
             .transaction { $0.animation = nil } // レイアウトの暗黙アニメーションを無効化
-
-            // 日次完了時の週ゴール展開表示（日次表示時のみ）
-            if selectedLevel == .daily && showWeeklyExpanded && !goalStore.weeklyGoals.isEmpty {
-                weeklyExpandedSection
-            }
         }
         .frame(width: windowWidth)
         .fixedSize(horizontal: false, vertical: true)
@@ -134,17 +121,6 @@ struct FloatingWindowView: View {
                 isHovered = hovering
             }
         }
-        .onChange(of: isDailyAllCompleted) { allCompleted in
-            if allCompleted && !dailyAllCompletedCelebrated && selectedLevel == .daily {
-                // 日次完了時に週ゴールを展開
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                    showWeeklyExpanded = true
-                    dailyAllCompletedCelebrated = true
-                }
-            } else if !allCompleted {
-                dailyAllCompletedCelebrated = false
-            }
-        }
     }
 
     // MARK: - Level Switcher
@@ -190,41 +166,6 @@ struct FloatingWindowView: View {
             )
         }
         .buttonStyle(.plain)
-    }
-
-    // MARK: - 日次完了時の週ゴール展開
-
-    private var weeklyExpandedSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text("今週のゴール")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .foregroundColor(GoalLevel.weekly.accentColor)
-
-                Spacer()
-
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        showWeeklyExpanded = false
-                    }
-                } label: {
-                    Image(systemName: "chevron.up")
-                        .font(.system(size: 8, weight: .semibold))
-                        .foregroundColor(.secondary.opacity(0.5))
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 10)
-            .padding(.top, 6)
-
-            ForEach(goalStore.weeklyGoals) { goal in
-                MiniGoalRow(goal: goal, accentColor: GoalLevel.weekly.accentColor)
-            }
-            .padding(.horizontal, 10)
-        }
-        .padding(.bottom, 6)
-        .background(GoalLevel.weekly.accentColor.opacity(0.03))
-        .transaction { $0.animation = nil } // 高さ変化をアニメーションさせない
     }
 
     private var addGoalField: some View {
@@ -345,27 +286,5 @@ struct NumberButtonStyle: ButtonStyle {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.85 : 1.0)
             .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
-    }
-}
-
-/// ミニマルな目標行（週・月の展開表示用）
-struct MiniGoalRow: View {
-    let goal: Goal
-    let accentColor: Color
-
-    var body: some View {
-        HStack(spacing: 6) {
-            // 完了状態のドット
-            Circle()
-                .fill(goal.isCompleted ? accentColor : Color.secondary.opacity(0.2))
-                .frame(width: 6, height: 6)
-
-            Text(goal.title)
-                .font(.system(size: 10))
-                .foregroundColor(goal.isCompleted ? .secondary.opacity(0.5) : .primary.opacity(0.7))
-                .strikethrough(goal.isCompleted, color: .secondary.opacity(0.3))
-                .lineLimit(1)
-        }
-        .padding(.vertical, 2)
     }
 }

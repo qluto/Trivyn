@@ -124,29 +124,24 @@ final class GoalStore: ObservableObject {
     /// 目標を達成済みにする
     func completeGoal(id: UUID) {
         guard let index = goals.firstIndex(where: { $0.id == id }) else {
-            print("[Tria] Goal not found for completion: \(id)")
             return
         }
         goals[index].markAsCompleted()
         saveGoals()
-        print("[Tria] Goal completed: \(goals[index].title)")
     }
 
     /// 目標を未達成に戻す
     func uncompleteGoal(id: UUID) {
         guard let index = goals.firstIndex(where: { $0.id == id }) else {
-            print("[Tria] Goal not found for uncompletion: \(id)")
             return
         }
         goals[index].markAsIncomplete()
         saveGoals()
-        print("[Tria] Goal uncompleted: \(goals[index].title)")
     }
 
     /// 目標の達成状態をトグル
     func toggleGoalCompletion(id: UUID) {
         guard let index = goals.firstIndex(where: { $0.id == id }) else {
-            print("[Tria] Goal not found for toggle: \(id)")
             return
         }
         if goals[index].isCompleted {
