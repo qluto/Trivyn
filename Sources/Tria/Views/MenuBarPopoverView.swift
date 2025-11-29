@@ -1,12 +1,23 @@
 import SwiftUI
 
+/// ゴール位置を追跡するためのPreferenceKey
+struct GoalPositionPreferenceKey: PreferenceKey {
+    static var defaultValue: [UUID: CGPoint] = [:]
+
+    static func reduce(value: inout [UUID: CGPoint], nextValue: () -> [UUID: CGPoint]) {
+        value.merge(nextValue()) { _, new in new }
+    }
+}
+
 /// メニューバーポップオーバーのメインビュー
 struct MenuBarPopoverView: View {
     @EnvironmentObject var goalStore: GoalStore
     @State private var newGoalTitle = ""
     @State private var showingConfetti = false
     @State private var confettiGoalId: UUID?
+    @State private var confettiOrigin: CGPoint?
     @State private var showingHistory = false
+    @State private var goalPositions: [UUID: CGPoint] = [:]
 
     var body: some View {
         Group {
@@ -39,12 +50,24 @@ struct MenuBarPopoverView: View {
                             onToggle: {
                                 if !wasCompleted {
                                     confettiGoalId = goalId
+                                    confettiOrigin = goalPositions[goalId]
                                     showingConfetti = true
                                 }
                                 goalStore.toggleGoalCompletion(id: goalId)
                             },
                             onDelete: {
                                 goalStore.deleteGoal(goal)
+                            }
+                        )
+                        .background(
+                            GeometryReader { geo in
+                                Color.clear.preference(
+                                    key: GoalPositionPreferenceKey.self,
+                                    value: [goalId: CGPoint(
+                                        x: geo.frame(in: .named("popoverContainer")).midX,
+                                        y: geo.frame(in: .named("popoverContainer")).midY
+                                    )]
+                                )
                             }
                         )
                     }
@@ -64,14 +87,19 @@ struct MenuBarPopoverView: View {
             footer
         }
         .frame(width: 300, height: 340)
+        .coordinateSpace(name: "popoverContainer")
+        .onPreferenceChange(GoalPositionPreferenceKey.self) { positions in
+            goalPositions = positions
+        }
         .overlay {
             if showingConfetti {
-                ConfettiView()
+                ConfettiView(originPoint: confettiOrigin)
                     .allowsHitTesting(false)
                     .onAppear {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                             showingConfetti = false
                             confettiGoalId = nil
+                            confettiOrigin = nil
                         }
                     }
             }

@@ -3,48 +3,63 @@ import AppKit
 
 /// Confetti（紙吹雪）アニメーションビュー
 struct ConfettiView: View {
-    @State private var particles: [ConfettiParticle] = []
-    @State private var animationStarted = false
+    /// 紙吹雪の開始位置（指定しない場合は中央から）
+    var originPoint: CGPoint?
 
+    @State private var particles: [ConfettiParticle] = []
+    @State private var startTime: Date = Date()
+
+    // 適度に華やかな色味
     private let colors: [Color] = [
-        Color(red: 0.2, green: 0.4, blue: 0.7),   // ネイビー
-        Color(red: 0.3, green: 0.6, blue: 0.8),   // シアン
-        Color(red: 0.5, green: 0.7, blue: 0.9),   // ライトブルー
-        Color(red: 0.4, green: 0.5, blue: 0.7),   // 薄紫
-        Color(red: 0.6, green: 0.8, blue: 0.9),   // スカイブルー
+        Color(red: 0.30, green: 0.50, blue: 0.80),  // ブルー
+        Color(red: 0.40, green: 0.65, blue: 0.85),  // スカイブルー
+        Color(red: 0.55, green: 0.45, blue: 0.75),  // パープル
+        Color(red: 0.35, green: 0.70, blue: 0.70),  // ティール
+        Color(red: 0.65, green: 0.55, blue: 0.80),  // ラベンダー
+        Color(red: 0.45, green: 0.60, blue: 0.90),  // コーンフラワー
     ]
 
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                ForEach(particles) { particle in
-                    ConfettiParticleView(particle: particle, animationStarted: animationStarted)
+            TimelineView(.animation) { timeline in
+                let elapsed = timeline.date.timeIntervalSince(startTime)
+
+                ZStack {
+                    ForEach(particles) { particle in
+                        ConfettiParticleView(
+                            particle: particle,
+                            elapsed: elapsed,
+                            containerSize: geometry.size
+                        )
+                    }
                 }
             }
             .onAppear {
+                startTime = Date()
                 generateParticles(in: geometry.size)
-                withAnimation(.easeOut(duration: 1.5)) {
-                    animationStarted = true
-                }
             }
         }
     }
 
     private func generateParticles(in size: CGSize) {
-        particles = (0..<30).map { _ in
-            ConfettiParticle(
+        // 開始位置（指定があればその位置、なければ中央）
+        let origin = originPoint ?? CGPoint(x: size.width * 0.5, y: size.height * 0.45)
+
+        particles = (0..<35).map { _ in
+            return ConfettiParticle(
                 color: colors.randomElement() ?? .blue,
                 startPosition: CGPoint(
-                    x: CGFloat.random(in: size.width * 0.3...size.width * 0.7),
-                    y: size.height * 0.3
+                    x: origin.x + CGFloat.random(in: -20...20),
+                    y: origin.y + CGFloat.random(in: -10...10)
                 ),
-                endPosition: CGPoint(
-                    x: CGFloat.random(in: 0...size.width),
-                    y: size.height + 50
+                initialVelocity: CGVector(
+                    dx: CGFloat.random(in: -120...120),
+                    dy: CGFloat.random(in: (-280)...(-180))
                 ),
                 rotation: Double.random(in: 0...360),
-                scale: CGFloat.random(in: 0.5...1.2),
-                delay: Double.random(in: 0...0.3)
+                rotationSpeed: Double.random(in: 180...400),
+                scale: CGFloat.random(in: 0.6...1.1),
+                delay: Double.random(in: 0...0.15)
             )
         }
     }
@@ -54,8 +69,9 @@ struct ConfettiParticle: Identifiable {
     let id = UUID()
     let color: Color
     let startPosition: CGPoint
-    let endPosition: CGPoint
+    let initialVelocity: CGVector
     let rotation: Double
+    let rotationSpeed: Double
     let scale: CGFloat
     let delay: Double
     let shape: ConfettiShape = ConfettiShape.allCases.randomElement() ?? .rectangle
@@ -69,13 +85,58 @@ struct ConfettiParticle: Identifiable {
 
 struct ConfettiParticleView: View {
     let particle: ConfettiParticle
-    let animationStarted: Bool
+    let elapsed: TimeInterval
+    let containerSize: CGSize
+
+    // 重力加速度
+    private let gravity: CGFloat = 350
+
+    // アニメーション総時間
+    private let totalDuration: TimeInterval = 2.0
+
+    // 物理演算で現在位置を計算
+    private var currentPosition: CGPoint {
+        let t = max(0, elapsed - particle.delay)
+        if t <= 0 { return particle.startPosition }
+
+        // 放物線運動: x = x0 + vx*t, y = y0 + vy*t + 0.5*g*t^2
+        let x = particle.startPosition.x + particle.initialVelocity.dx * t
+        let y = particle.startPosition.y + particle.initialVelocity.dy * t + 0.5 * gravity * t * t
+
+        return CGPoint(x: x, y: y)
+    }
+
+    // 現在の回転角度
+    private var currentRotation: Double {
+        let t = max(0, elapsed - particle.delay)
+        return particle.rotation + particle.rotationSpeed * t
+    }
+
+    // 透明度（画面外に出たらフェードアウト）
+    private var currentOpacity: Double {
+        let t = max(0, elapsed - particle.delay)
+        if t <= 0 { return 0 }
+
+        let pos = currentPosition
+        // 画面下端に近づいたらフェードアウト
+        let fadeStart = containerSize.height * 0.7
+        let fadeEnd = containerSize.height + 20
+        if pos.y > fadeStart {
+            let progress = (pos.y - fadeStart) / (fadeEnd - fadeStart)
+            return max(0, 1 - progress)
+        }
+        // 開始時のフェードイン
+        if t < 0.1 {
+            return t / 0.1
+        }
+        return 1
+    }
 
     var body: some View {
         Group {
             switch particle.shape {
             case .rectangle:
-                Rectangle()
+                RoundedRectangle(cornerRadius: 1)
                     .fill(particle.color)
                     .frame(width: 8 * particle.scale, height: 4 * particle.scale)
             case .circle:
@@ -88,14 +149,13 @@ struct ConfettiParticleView: View {
                     .frame(width: 8 * particle.scale, height: 8 * particle.scale)
             }
         }
-        .rotationEffect(.degrees(animationStarted ? particle.rotation + 360 : particle.rotation))
-        .position(animationStarted ? particle.endPosition : particle.startPosition)
-        .opacity(animationStarted ? 0 : 1)
-        .animation(
-            .easeOut(duration: 1.2)
-                .delay(particle.delay),
-            value: animationStarted
+        .rotationEffect(.degrees(currentRotation))
+        .rotation3DEffect(
+            .degrees(currentRotation * 0.5),
+            axis: (x: 1, y: 0.5, z: 0)
         )
+        .position(currentPosition)
+        .opacity(currentOpacity)
     }
 }
 

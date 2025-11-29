@@ -5,7 +5,9 @@ struct FloatingWindowView: View {
     @EnvironmentObject var goalStore: GoalStore
     @State private var newGoalTitle = ""
     @State private var showingConfetti = false
+    @State private var confettiOrigin: CGPoint?
     @State private var isHovered = false
+    @State private var goalPositions: [UUID: CGPoint] = [:]
 
     private let windowWidth: CGFloat = 220
     private let accentColor = GoalLevel.daily.accentColor
@@ -23,9 +25,21 @@ struct FloatingWindowView: View {
                         accentColor: accentColor,
                         onToggle: {
                             if !wasCompleted {
+                                confettiOrigin = goalPositions[goalId]
                                 showingConfetti = true
                             }
                             goalStore.toggleGoalCompletion(id: goalId)
+                        }
+                    )
+                    .background(
+                        GeometryReader { geo in
+                            Color.clear.preference(
+                                key: GoalPositionPreferenceKey.self,
+                                value: [goalId: CGPoint(
+                                    x: geo.frame(in: .named("floatingContainer")).midX,
+                                    y: geo.frame(in: .named("floatingContainer")).midY
+                                )]
+                            )
                         }
                     )
                 }
@@ -44,6 +58,10 @@ struct FloatingWindowView: View {
         }
         .frame(width: windowWidth)
         .fixedSize(horizontal: false, vertical: true)
+        .coordinateSpace(name: "floatingContainer")
+        .onPreferenceChange(GoalPositionPreferenceKey.self) { positions in
+            goalPositions = positions
+        }
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(.ultraThinMaterial)
@@ -56,11 +74,12 @@ struct FloatingWindowView: View {
         )
         .overlay {
             if showingConfetti {
-                ConfettiView()
+                ConfettiView(originPoint: confettiOrigin)
                     .allowsHitTesting(false)
                     .onAppear {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                             showingConfetti = false
+                            confettiOrigin = nil
                         }
                     }
             }

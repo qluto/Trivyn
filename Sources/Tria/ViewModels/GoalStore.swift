@@ -10,10 +10,40 @@ final class GoalStore: ObservableObject {
     @Published var selectedLevel: GoalLevel = .daily
 
     private let storageService: StorageService
+    private var dayChangeObserver: NSObjectProtocol?
 
     init(storageService: StorageService = .shared) {
         self.storageService = storageService
         loadGoals()
+        setupDayChangeObserver()
+    }
+
+    deinit {
+        if let observer = dayChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+
+    // MARK: - Day Change Handling
+
+    /// 日付変更の監視を設定
+    private func setupDayChangeObserver() {
+        dayChangeObserver = NotificationCenter.default.addObserver(
+            forName: .NSCalendarDayChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleDayChange()
+            }
+        }
+    }
+
+    /// 日付変更時の処理
+    private func handleDayChange() {
+        // Published プロパティを更新してUIをリフレッシュ
+        objectWillChange.send()
+        print("[Tria] Day changed - UI refreshed")
     }
 
     // MARK: - Computed Properties
