@@ -100,7 +100,9 @@ final class FloatingWindowController {
             size: NSSize(width: newWidth, height: newHeight)
         )
 
-        panel.setFrame(newFrame, display: true, animate: true)
+        // AppKitのフレームアニメーションとSwiftUI側のレイアウトアニメーションが重なると
+        // 上部バーや角丸が揺れるため、ここでは即時リサイズにする
+        panel.setFrame(newFrame, display: true, animate: false)
     }
 
     func showWindow() {

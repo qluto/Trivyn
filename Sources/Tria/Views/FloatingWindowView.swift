@@ -30,6 +30,11 @@ struct FloatingWindowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // レベル切り替えバー（上部）
+            levelSwitcher
+            Divider()
+                .padding(.horizontal, 10)
+
             // 目標リスト
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(Array(currentGoals.enumerated()), id: \.element.id) { index, goal in
@@ -71,16 +76,12 @@ struct FloatingWindowView: View {
                 }
             }
             .padding(10)
+            .transaction { $0.animation = nil } // レイアウトの暗黙アニメーションを無効化
 
             // 日次完了時の週ゴール展開表示（日次表示時のみ）
             if selectedLevel == .daily && showWeeklyExpanded && !goalStore.weeklyGoals.isEmpty {
                 weeklyExpandedSection
             }
-
-            // レベル切り替えバー
-            Divider()
-                .padding(.horizontal, 10)
-            levelSwitcher
         }
         .frame(width: windowWidth)
         .fixedSize(horizontal: false, vertical: true)
@@ -88,6 +89,8 @@ struct FloatingWindowView: View {
         .onPreferenceChange(GoalPositionPreferenceKey.self) { positions in
             goalPositions = positions
         }
+        // レイアウト変更時は即時反映し、ウィンドウリサイズとの二重アニメーションを防ぐ
+        .transaction { $0.animation = nil }
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(.ultraThinMaterial)
@@ -162,9 +165,8 @@ struct FloatingWindowView: View {
         let isSelected = selectedLevel == level
 
         return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                selectedLevel = level
-            }
+            // レイアウト変化を即時反映し、ウィンドウリサイズとの競合を避ける
+            selectedLevel = level
         } label: {
             HStack(spacing: 4) {
                 // 進捗ドット
@@ -222,6 +224,7 @@ struct FloatingWindowView: View {
         }
         .padding(.bottom, 6)
         .background(GoalLevel.weekly.accentColor.opacity(0.03))
+        .transaction { $0.animation = nil } // 高さ変化をアニメーションさせない
     }
 
     private var addGoalField: some View {
