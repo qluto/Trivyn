@@ -102,16 +102,16 @@ final class ReminderService: ObservableObject {
         if weeklyGoals.isEmpty {
             // 週ゴールが設定されていない場合
             sendNotification(
-                title: "今週のゴールを設定しましょう",
-                body: "新しい週が始まりました。3つのゴールを設定して、充実した1週間に！"
+                title: L10n.string("notification.weekly.setup.title"),
+                body: L10n.string("notification.weekly.setup.body")
             )
         } else {
             // 週ゴールがある場合はリマインド
             let incompleteCount = weeklyGoals.filter { !$0.isCompleted }.count
             if incompleteCount > 0 {
                 sendNotification(
-                    title: "今週のゴール",
-                    body: "残り\(incompleteCount)つのゴールがあります。今週も頑張りましょう！"
+                    title: L10n.string("notification.weekly.reminder.title"),
+                    body: L10n.string("notification.weekly.reminder.body", incompleteCount)
                 )
             }
         }
@@ -134,15 +134,15 @@ final class ReminderService: ObservableObject {
 
         if monthlyGoals.isEmpty {
             sendNotification(
-                title: "今月のゴールを設定しましょう",
-                body: "新しい月が始まりました。大きな目標を3つ設定して、着実に前進しましょう！"
+                title: L10n.string("notification.monthly.setup.title"),
+                body: L10n.string("notification.monthly.setup.body")
             )
         } else {
             let incompleteCount = monthlyGoals.filter { !$0.isCompleted }.count
             if incompleteCount > 0 {
                 sendNotification(
-                    title: "今月のゴール",
-                    body: "残り\(incompleteCount)つのゴールがあります。今月も頑張りましょう！"
+                    title: L10n.string("notification.monthly.reminder.title"),
+                    body: L10n.string("notification.monthly.reminder.body", incompleteCount)
                 )
             }
         }
@@ -168,10 +168,10 @@ final class ReminderService: ObservableObject {
         let completedCount = weeklyGoals.filter { $0.isCompleted }.count
 
         sendNotification(
-            title: "今週の振り返り",
+            title: L10n.string("notification.weekly.reflection.title"),
             body: completedCount == weeklyGoals.count && !weeklyGoals.isEmpty
-                ? "今週のゴールをすべて達成しました！振り返りで来週に備えましょう。"
-                : "今週を振り返って、来週のゴールを設定しましょう。"
+                ? L10n.string("notification.weekly.reflection.complete")
+                : L10n.string("notification.weekly.reflection.prompt")
         )
 
         UserDefaults.standard.set(now, forKey: "tria.lastWeeklyReflection")
@@ -193,10 +193,10 @@ final class ReminderService: ObservableObject {
         let completedCount = monthlyGoals.filter { $0.isCompleted }.count
 
         sendNotification(
-            title: "今月の振り返り",
+            title: L10n.string("notification.monthly.reflection.title"),
             body: completedCount == monthlyGoals.count && !monthlyGoals.isEmpty
-                ? "今月のゴールをすべて達成しました！振り返りで来月に備えましょう。"
-                : "今月を振り返って、来月のゴールを設定しましょう。"
+                ? L10n.string("notification.monthly.reflection.complete")
+                : L10n.string("notification.monthly.reflection.prompt")
         )
 
         UserDefaults.standard.set(now, forKey: "tria.lastMonthlyReflection")
@@ -238,15 +238,15 @@ final class ReminderService: ObservableObject {
 
     func triggerWeeklyReminder() {
         sendNotification(
-            title: "今週のゴール",
-            body: "週のゴールを確認しましょう！"
+            title: L10n.string("notification.weekly.check.title"),
+            body: L10n.string("notification.weekly.check.body")
         )
     }
 
     func triggerMonthlyReminder() {
         sendNotification(
-            title: "今月のゴール",
-            body: "月のゴールを確認しましょう！"
+            title: L10n.string("notification.monthly.check.title"),
+            body: L10n.string("notification.monthly.check.body")
         )
     }
 }

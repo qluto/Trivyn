@@ -8,7 +8,9 @@ struct HistoryView: View {
     @State private var selection: Selection? = nil
 
     private let calendar = Calendar.current
-    private let weekdays = ["日", "月", "火", "水", "木", "金", "土"]
+    private var weekdays: [String] {
+        Weekday.allCases.map { $0.shortName }
+    }
 
     enum Selection: Equatable {
         case day(Date)
@@ -24,7 +26,7 @@ struct HistoryView: View {
                     HStack(spacing: 2) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 11, weight: .medium))
-                        Text("戻る")
+                        Text(L10n.string("history.back"))
                             .font(.system(size: 11, weight: .medium, design: .rounded))
                     }
                 }
@@ -33,7 +35,7 @@ struct HistoryView: View {
 
                 Spacer()
 
-                Text("履歴")
+                Text(L10n.string("history.title"))
                     .font(.system(size: 14, weight: .bold, design: .rounded))
 
                 Spacer()
@@ -41,7 +43,7 @@ struct HistoryView: View {
                 // バランス用
                 HStack(spacing: 2) {
                     Image(systemName: "chevron.left")
-                    Text("戻る")
+                    Text("history.back")
                 }
                 .font(.system(size: 11))
                 .opacity(0)
@@ -270,7 +272,7 @@ struct HistoryView: View {
         return goalDetailContent(
             title: dateString(date),
             goals: goals,
-            emptyMessage: "この日の目標はありません",
+            emptyMessage: L10n.string("history.empty.day"),
             accentColor: GoalLevel.daily.accentColor
         )
     }
@@ -281,7 +283,7 @@ struct HistoryView: View {
         return goalDetailContent(
             title: weekString(date),
             goals: goals,
-            emptyMessage: "この週の目標はありません",
+            emptyMessage: String(localized: "history.empty.week"),
             accentColor: GoalLevel.weekly.accentColor,
             reflectionPoints: reflectionPoints
         )
@@ -293,7 +295,7 @@ struct HistoryView: View {
         return goalDetailContent(
             title: monthString(date),
             goals: goals,
-            emptyMessage: "この月の目標はありません",
+            emptyMessage: L10n.string("history.empty.month"),
             accentColor: GoalLevel.monthly.accentColor,
             reflectionPoints: reflectionPoints
         )
@@ -331,7 +333,7 @@ struct HistoryView: View {
                 HStack(spacing: 3) {
                     Image(systemName: "lightbulb")
                         .font(.system(size: 9))
-                    Text("気づき・学び")
+                    Text(L10n.string("history.insights"))
                         .font(.system(size: 10, weight: .medium))
                 }
                 .foregroundColor(accentColor.opacity(0.8))
@@ -412,30 +414,30 @@ struct HistoryView: View {
 
     private func monthYearString(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.dateFormat = "yyyy年M月"
+        formatter.locale = AppSettings.shared.locale
+        formatter.setLocalizedDateFormatFromTemplate("yyyy MMMM")
         return formatter.string(from: date)
     }
 
     private func dateString(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.dateFormat = "M月d日(E)"
+        formatter.locale = AppSettings.shared.locale
+        formatter.setLocalizedDateFormatFromTemplate("MMMd EEEE")
         return formatter.string(from: date)
     }
 
     private func weekString(_ date: Date) -> String {
         let weekOfYear = calendar.component(.weekOfYear, from: date)
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.dateFormat = "M月"
-        return "\(formatter.string(from: date)) 第\(weekOfYear)週"
+        formatter.locale = AppSettings.shared.locale
+        formatter.setLocalizedDateFormatFromTemplate("MMMM")
+        return "\(formatter.string(from: date)) W\(weekOfYear)"
     }
 
     private func monthString(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.dateFormat = "yyyy年M月"
+        formatter.locale = AppSettings.shared.locale
+        formatter.setLocalizedDateFormatFromTemplate("yyyy MMMM")
         return formatter.string(from: date)
     }
 }

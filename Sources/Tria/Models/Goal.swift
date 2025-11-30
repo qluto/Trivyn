@@ -2,16 +2,17 @@ import Foundation
 import SwiftUI
 
 /// 目標のレベル（日次/週次/月次）
-enum GoalLevel: String, Codable, CaseIterable {
+@MainActor
+enum GoalLevel: String, Codable, CaseIterable, Sendable {
     case daily = "daily"
     case weekly = "weekly"
     case monthly = "monthly"
 
     var displayName: String {
         switch self {
-        case .daily: return "今日"
-        case .weekly: return "今週"
-        case .monthly: return "今月"
+        case .daily: return L10n.string("goal.level.daily")
+        case .weekly: return L10n.string("goal.level.weekly")
+        case .monthly: return L10n.string("goal.level.monthly")
         }
     }
 

@@ -10,7 +10,7 @@ struct FloatingWindowView: View {
     @State private var goalPositions: [UUID: CGPoint] = [:]
     @State private var selectedLevel: GoalLevel = .daily
 
-    private let windowWidth: CGFloat = 220
+    private let windowWidth: CGFloat = 260
 
     private var currentAccentColor: Color {
         selectedLevel.accentColor
@@ -161,6 +161,8 @@ struct FloatingWindowView: View {
                 Text(level.displayName)
                     .font(.system(size: 9, weight: isSelected ? .semibold : .medium, design: .rounded))
                     .foregroundColor(isSelected ? level.accentColor : .secondary.opacity(0.7))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 4)
@@ -181,7 +183,7 @@ struct FloatingWindowView: View {
                 .foregroundColor(.secondary.opacity(0.3))
                 .frame(width: 18, height: 18)
 
-            TextField("追加...", text: $newGoalTitle)
+            TextField(L10n.string("floating.add.placeholder"), text: $newGoalTitle)
                 .textFieldStyle(.plain)
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
@@ -196,9 +198,9 @@ struct FloatingWindowView: View {
     private var emptyState: some View {
         let emptyMessage: String = {
             switch selectedLevel {
-            case .daily: return "今日の3つを追加"
-            case .weekly: return "今週の3つを追加"
-            case .monthly: return "今月の3つを追加"
+            case .daily: return L10n.string("floating.empty.daily")
+            case .weekly: return L10n.string("floating.empty.weekly")
+            case .monthly: return L10n.string("floating.empty.monthly")
             }
         }()
 

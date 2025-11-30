@@ -71,7 +71,7 @@ final class StatusBarController {
         let menu = NSMenu()
 
         menu.addItem(NSMenuItem(
-            title: "フローティングウィンドウを表示",
+            title: L10n.string("menu.showFloatingWindow"),
             action: #selector(showFloatingWindow),
             keyEquivalent: "f"
         ))
@@ -80,7 +80,7 @@ final class StatusBarController {
         menu.addItem(NSMenuItem.separator())
 
         menu.addItem(NSMenuItem(
-            title: "Triaを終了",
+            title: L10n.string("menu.quit"),
             action: #selector(quitApp),
             keyEquivalent: "q"
         ))

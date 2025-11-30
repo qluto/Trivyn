@@ -1,14 +1,15 @@
 import SwiftUI
 
 /// 振り返りの種類
+@MainActor
 enum ReflectionType {
     case weekly
     case monthly
 
     var title: String {
         switch self {
-        case .weekly: return "今週の振り返り"
-        case .monthly: return "今月の振り返り"
+        case .weekly: return L10n.string("reflection.weekly.title")
+        case .monthly: return L10n.string("reflection.monthly.title")
         }
     }
 
@@ -143,7 +144,7 @@ struct ReflectionView: View {
                 VStack(spacing: 2) {
                     Text("\(completedCount)/\(currentGoals.count)")
                         .font(.system(size: 18, weight: .bold, design: .rounded))
-                    Text("達成")
+                    Text(L10n.string("reflection.achievement"))
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
                 }
@@ -160,17 +161,17 @@ struct ReflectionView: View {
 
     private var encouragementMessage: String {
         if currentGoals.isEmpty {
-            return "ゴールが設定されていませんでした"
+            return L10n.string("reflection.empty")
         }
         switch completionRate {
         case 1.0:
-            return "すべて達成しました！"
+            return L10n.string("reflection.perfect")
         case 0.67...:
-            return "よく頑張りました！"
+            return L10n.string("reflection.good")
         case 0.34...:
-            return "着実に進んでいます"
+            return L10n.string("reflection.progress")
         default:
-            return "振り返って次に活かしましょう"
+            return L10n.string("reflection.encourage")
         }
     }
 
@@ -178,7 +179,7 @@ struct ReflectionView: View {
 
     private var currentGoalsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(type == .weekly ? "今週のゴール" : "今月のゴール")
+            Text(type == .weekly ? L10n.string("reflection.goals.weekly") : L10n.string("reflection.goals.monthly"))
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.secondary)
 
@@ -205,7 +206,7 @@ struct ReflectionView: View {
             HStack(spacing: 4) {
                 Image(systemName: "lightbulb")
                     .font(.system(size: 11))
-                Text("気づき・学び")
+                Text(L10n.string("reflection.insights"))
                     .font(.system(size: 12, weight: .semibold))
             }
             .foregroundColor(type.accentColor)
@@ -217,7 +218,7 @@ struct ReflectionView: View {
                         .foregroundColor(type.accentColor.opacity(0.5))
                         .frame(width: 12)
 
-                    TextField("振り返りポイント...", text: $reflectionPoints[index], axis: .vertical)
+                    TextField(L10n.string("reflection.placeholder"), text: $reflectionPoints[index], axis: .vertical)
                         .textFieldStyle(.plain)
                         .font(.system(size: 13))
                         .lineLimit(2...4)
@@ -229,7 +230,7 @@ struct ReflectionView: View {
             }
 
             // ヒント
-            Text("うまくいったこと、改善点、次に活かせることなど")
+            Text(L10n.string("reflection.hint"))
                 .font(.system(size: 10))
                 .foregroundColor(.secondary.opacity(0.5))
         }
@@ -240,7 +241,7 @@ struct ReflectionView: View {
 
     private var footer: some View {
         HStack {
-            Button("閉じる") {
+            Button(L10n.string("reflection.close")) {
                 isPresented = false
             }
             .buttonStyle(.plain)
@@ -250,7 +251,7 @@ struct ReflectionView: View {
             Spacer()
 
             Button(action: saveAndClose) {
-                Text("保存")
+                Text(L10n.string("reflection.save"))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.white)
                     .padding(.horizontal, 20)

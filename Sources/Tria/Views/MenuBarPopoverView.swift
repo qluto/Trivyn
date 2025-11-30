@@ -152,7 +152,7 @@ struct MenuBarPopoverView: View {
                 .font(.system(size: 14))
                 .foregroundColor(goalStore.selectedLevel.accentColor.opacity(0.6))
 
-            TextField("新しい目標を追加...", text: $newGoalTitle)
+            TextField(L10n.string("popover.add.placeholder"), text: $newGoalTitle)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
                 .onSubmit {
@@ -173,22 +173,31 @@ struct MenuBarPopoverView: View {
             }
             .buttonStyle(.borderless)
             .foregroundColor(.secondary)
-            .help("フローティングウィンドウ")
+            .help(L10n.string("popover.floatingWindow.help"))
 
             // 振り返りボタン（週・月選択可能）
             Menu {
-                Button("今週の振り返り") { showingReflection = .weekly }
-                Button("今月の振り返り") { showingReflection = .monthly }
+                Button(L10n.string("popover.reflection.weekly")) { showingReflection = .weekly }
+                Button(L10n.string("popover.reflection.monthly")) { showingReflection = .monthly }
             } label: {
-                HStack(spacing: 2) {
+                HStack(spacing: 3) {
                     Image(systemName: "text.badge.checkmark")
                         .font(.system(size: 11))
-                    Text("振り返り")
+                    Text(L10n.string("popover.reflection"))
                         .font(.system(size: 11, weight: .medium, design: .rounded))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 7, weight: .semibold))
                 }
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(Color.secondary.opacity(0.15))
+                )
             }
-            .menuStyle(.borderlessButton)
-            .foregroundColor(.secondary)
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
 
             Spacer()
 
@@ -198,13 +207,13 @@ struct MenuBarPopoverView: View {
             }
             .buttonStyle(.borderless)
             .foregroundColor(.secondary)
-            .help("設定")
+            .help(L10n.string("popover.settings.help"))
 
             Button(action: { showingHistory = true }) {
                 HStack(spacing: 4) {
                     Image(systemName: "calendar")
                         .font(.system(size: 12))
-                    Text("履歴")
+                    Text(L10n.string("popover.history"))
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                 }
             }
@@ -249,6 +258,8 @@ struct LevelProgressIndicator: View {
             Text(level.displayName)
                 .font(.system(size: 9, weight: isSelected ? .semibold : .regular, design: .rounded))
                 .foregroundColor(isSelected ? level.accentColor : .secondary.opacity(0.6))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 4)

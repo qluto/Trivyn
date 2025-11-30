@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Tria",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v13)
     ],
@@ -12,7 +13,8 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Tria",
-            path: "Sources/Tria"
+            path: "Sources/Tria",
+            resources: [.process("Resources")]
         )
     ]
 )

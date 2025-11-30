@@ -1,0 +1,98 @@
+/*
+  Localizable.strings (Japanese)
+  Tria
+*/
+
+// MARK: - Goal Levels
+"goal.level.daily" = "今日";
+"goal.level.weekly" = "今週";
+"goal.level.monthly" = "今月";
+
+// MARK: - Weekday Names (Full)
+"weekday.sunday" = "日曜日";
+"weekday.monday" = "月曜日";
+"weekday.tuesday" = "火曜日";
+"weekday.wednesday" = "水曜日";
+"weekday.thursday" = "木曜日";
+"weekday.friday" = "金曜日";
+"weekday.saturday" = "土曜日";
+
+// MARK: - Weekday Names (Short)
+"weekday.short.sunday" = "日";
+"weekday.short.monday" = "月";
+"weekday.short.tuesday" = "火";
+"weekday.short.wednesday" = "水";
+"weekday.short.thursday" = "木";
+"weekday.short.friday" = "金";
+"weekday.short.saturday" = "土";
+
+// MARK: - MenuBar Popover
+"popover.add.placeholder" = "新しい目標を追加...";
+"popover.reflection" = "振り返り";
+"popover.reflection.weekly" = "今週の振り返り";
+"popover.reflection.monthly" = "今月の振り返り";
+"popover.history" = "履歴";
+"popover.floatingWindow.help" = "フローティングウィンドウ";
+"popover.settings.help" = "設定";
+
+// MARK: - Floating Window
+"floating.add.placeholder" = "追加...";
+"floating.empty.daily" = "今日の3つを追加";
+"floating.empty.weekly" = "今週の3つを追加";
+"floating.empty.monthly" = "今月の3つを追加";
+
+// MARK: - History View
+"history.back" = "戻る";
+"history.title" = "履歴";
+"history.insights" = "気づき・学び";
+"history.empty.day" = "この日の目標はありません";
+"history.empty.week" = "この週の目標はありません";
+"history.empty.month" = "この月の目標はありません";
+
+// MARK: - Reflection View
+"reflection.weekly.title" = "今週の振り返り";
+"reflection.monthly.title" = "今月の振り返り";
+"reflection.achievement" = "達成";
+"reflection.goals.weekly" = "今週のゴール";
+"reflection.goals.monthly" = "今月のゴール";
+"reflection.empty" = "ゴールが設定されていませんでした";
+"reflection.perfect" = "すべて達成しました！";
+"reflection.good" = "よく頑張りました！";
+"reflection.progress" = "着実に進んでいます";
+"reflection.encourage" = "振り返って次に活かしましょう";
+"reflection.insights" = "気づき・学び";
+"reflection.placeholder" = "振り返りポイント...";
+"reflection.hint" = "うまくいったこと、改善点、次に活かせることなど";
+"reflection.close" = "閉じる";
+"reflection.save" = "保存";
+
+// MARK: - Settings View
+"settings.title" = "設定";
+"settings.language" = "言語";
+"settings.language.system" = "システム設定に従う";
+"settings.weekStart" = "週の始まり";
+"settings.weekStart.description" = "週次目標の期間がこの曜日から始まります";
+
+// MARK: - Status Bar Menu
+"menu.showFloatingWindow" = "フローティングウィンドウを表示";
+"menu.quit" = "Triaを終了";
+
+// MARK: - Notifications
+"notification.weekly.setup.title" = "今週のゴールを設定しましょう";
+"notification.weekly.setup.body" = "新しい週が始まりました。3つのゴールを設定して、充実した1週間に！";
+"notification.weekly.reminder.title" = "今週のゴール";
+"notification.weekly.reminder.body" = "残り%d個のゴールがあります。今週も頑張りましょう！";
+"notification.monthly.setup.title" = "今月のゴールを設定しましょう";
+"notification.monthly.setup.body" = "新しい月が始まりました。大きな目標を3つ設定して、着実に前進しましょう！";
+"notification.monthly.reminder.title" = "今月のゴール";
+"notification.monthly.reminder.body" = "残り%d個のゴールがあります。今月も頑張りましょう！";
+"notification.weekly.reflection.title" = "今週の振り返り";
+"notification.weekly.reflection.complete" = "今週のゴールをすべて達成しました！振り返りで来週に備えましょう。";
+"notification.weekly.reflection.prompt" = "今週を振り返って、来週のゴールを設定しましょう。";
+"notification.monthly.reflection.title" = "今月の振り返り";
+"notification.monthly.reflection.complete" = "今月のゴールをすべて達成しました！振り返りで来月に備えましょう。";
+"notification.monthly.reflection.prompt" = "今月を振り返って、来月のゴールを設定しましょう。";
+"notification.weekly.check.title" = "今週のゴール";
+"notification.weekly.check.body" = "週のゴールを確認しましょう！";
+"notification.monthly.check.title" = "今月のゴール";
+"notification.monthly.check.body" = "月のゴールを確認しましょう！";

@@ -4,6 +4,7 @@ import SwiftUI
 struct SettingsView: View {
     @Binding var isPresented: Bool
     @ObservedObject private var settings = AppSettings.shared
+    @State private var refreshId = UUID()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -18,7 +19,7 @@ struct SettingsView: View {
 
                 Spacer()
 
-                Text("設定")
+                Text(L10n.string("settings.title"))
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
 
                 Spacer()
@@ -36,6 +37,9 @@ struct SettingsView: View {
             // 設定項目
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    // 言語設定
+                    languageSection
+
                     // 週の始まり設定
                     weekStartSection
                 }
@@ -43,11 +47,40 @@ struct SettingsView: View {
             }
         }
         .frame(width: 300, height: 340)
+        .id(refreshId)
+        .onReceive(NotificationCenter.default.publisher(for: .languageDidChange)) { _ in
+            refreshId = UUID()
+        }
+    }
+
+    private var languageSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.string("settings.language"))
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundColor(.primary)
+
+            // 言語選択グリッド
+            VStack(spacing: 6) {
+                ForEach(AppLanguage.allCases, id: \.self) { language in
+                    LanguageButton(
+                        language: language,
+                        isSelected: settings.language == language
+                    ) {
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            settings.language = language
+                        }
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .background(Color.secondary.opacity(0.06))
+        .cornerRadius(10)
     }
 
     private var weekStartSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("週の始まり")
+            Text(L10n.string("settings.weekStart"))
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .foregroundColor(.primary)
 
@@ -65,13 +98,45 @@ struct SettingsView: View {
                 }
             }
 
-            Text("週次目標の期間がこの曜日から始まります")
+            Text(L10n.string("settings.weekStart.description"))
                 .font(.system(size: 10))
                 .foregroundColor(.secondary)
         }
         .padding(12)
         .background(Color.secondary.opacity(0.06))
         .cornerRadius(10)
+    }
+}
+
+/// 言語選択ボタン
+struct LanguageButton: View {
+    let language: AppLanguage
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Text(language.nativeName)
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular, design: .rounded))
+                    .foregroundColor(isSelected ? .white : .primary.opacity(0.8))
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 32)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isSelected ? Color.accentColor : Color.secondary.opacity(0.1))
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
