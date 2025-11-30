@@ -18,6 +18,7 @@ struct MenuBarPopoverView: View {
     @State private var confettiOrigin: CGPoint?
     @State private var showingHistory = false
     @State private var showingReflection: ReflectionType?
+    @State private var showingSettings = false
     @State private var goalPositions: [UUID: CGPoint] = [:]
 
     var body: some View {
@@ -34,6 +35,8 @@ struct MenuBarPopoverView: View {
                     type: reflectionType
                 )
                 .environmentObject(goalStore)
+            } else if showingSettings {
+                SettingsView(isPresented: $showingSettings)
             } else {
                 mainView
             }
@@ -188,6 +191,14 @@ struct MenuBarPopoverView: View {
             .foregroundColor(.secondary)
 
             Spacer()
+
+            Button(action: { showingSettings = true }) {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 12))
+            }
+            .buttonStyle(.borderless)
+            .foregroundColor(.secondary)
+            .help("設定")
 
             Button(action: { showingHistory = true }) {
                 HStack(spacing: 4) {

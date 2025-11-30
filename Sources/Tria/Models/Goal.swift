@@ -78,9 +78,10 @@ struct Goal: Identifiable, Codable {
 
 extension Goal {
     /// 指定された日付がこの目標の期間内かどうか
-    func isInPeriod(for date: Date) -> Bool {
-        let calendar = Calendar.current
-
+    /// - Parameters:
+    ///   - date: 判定する日付
+    ///   - calendar: 使用するカレンダー（週の始まりを反映）
+    func isInPeriod(for date: Date, using calendar: Calendar) -> Bool {
         switch level {
         case .daily:
             return calendar.isDate(periodStart, inSameDayAs: date)
@@ -96,5 +97,10 @@ extension Goal {
             return periodComponents.year == dateComponents.year &&
                    periodComponents.month == dateComponents.month
         }
+    }
+
+    /// 指定された日付がこの目標の期間内かどうか（デフォルトカレンダー使用）
+    func isInPeriod(for date: Date) -> Bool {
+        isInPeriod(for: date, using: Calendar.current)
     }
 }

@@ -11,15 +11,20 @@ final class GoalStore: ObservableObject {
 
     private let storageService: StorageService
     private var dayChangeObserver: NSObjectProtocol?
+    private var weekStartObserver: NSObjectProtocol?
 
     init(storageService: StorageService = .shared) {
         self.storageService = storageService
         loadGoals()
         setupDayChangeObserver()
+        setupWeekStartObserver()
     }
 
     deinit {
         if let observer = dayChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        if let observer = weekStartObserver {
             NotificationCenter.default.removeObserver(observer)
         }
     }
@@ -46,21 +51,47 @@ final class GoalStore: ObservableObject {
         print("[Tria] Day changed - UI refreshed")
     }
 
+    // MARK: - Week Start Change Handling
+
+    /// 週の始まり変更の監視を設定
+    private func setupWeekStartObserver() {
+        weekStartObserver = NotificationCenter.default.addObserver(
+            forName: .weekStartDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleWeekStartChange()
+            }
+        }
+    }
+
+    /// 週の始まり変更時の処理
+    private func handleWeekStartChange() {
+        objectWillChange.send()
+        print("[Tria] Week start changed - UI refreshed")
+    }
+
     // MARK: - Computed Properties
+
+    /// 設定を反映したカレンダー
+    private var calendar: Calendar {
+        AppSettings.shared.calendar
+    }
 
     /// 現在の期間の日次目標
     var dailyGoals: [Goal] {
-        goals.filter { $0.level == .daily && $0.isInPeriod(for: Date()) }
+        goals.filter { $0.level == .daily && $0.isInPeriod(for: Date(), using: calendar) }
     }
 
     /// 現在の期間の週次目標
     var weeklyGoals: [Goal] {
-        goals.filter { $0.level == .weekly && $0.isInPeriod(for: Date()) }
+        goals.filter { $0.level == .weekly && $0.isInPeriod(for: Date(), using: calendar) }
     }
 
     /// 現在の期間の月次目標
     var monthlyGoals: [Goal] {
-        goals.filter { $0.level == .monthly && $0.isInPeriod(for: Date()) }
+        goals.filter { $0.level == .monthly && $0.isInPeriod(for: Date(), using: calendar) }
     }
 
     /// 選択中のレベルの目標
@@ -92,17 +123,17 @@ final class GoalStore: ObservableObject {
 
     /// 指定日の日次目標を取得
     func goalsForDay(_ date: Date) -> [Goal] {
-        goals.filter { $0.level == .daily && $0.isInPeriod(for: date) }
+        goals.filter { $0.level == .daily && $0.isInPeriod(for: date, using: calendar) }
     }
 
     /// 指定週の週次目標を取得
     func goalsForWeek(_ date: Date) -> [Goal] {
-        goals.filter { $0.level == .weekly && $0.isInPeriod(for: date) }
+        goals.filter { $0.level == .weekly && $0.isInPeriod(for: date, using: calendar) }
     }
 
     /// 指定月の月次目標を取得
     func goalsForMonth(_ date: Date) -> [Goal] {
-        goals.filter { $0.level == .monthly && $0.isInPeriod(for: date) }
+        goals.filter { $0.level == .monthly && $0.isInPeriod(for: date, using: calendar) }
     }
 
     // MARK: - Actions
