@@ -79,14 +79,18 @@ struct FloatingWindowView: View {
         // レイアウト変更時は即時反映し、ウィンドウリサイズとの二重アニメーションを防ぐ
         .transaction { $0.animation = nil }
         .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 3)
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(.ultraThinMaterial)
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.black.opacity(0.35))
+            }
+            .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 3)
         )
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(Color.primary.opacity(0.05), lineWidth: 0.5)
+                .strokeBorder(Color.white.opacity(0.1), lineWidth: 0.5)
         )
         .overlay {
             if showingConfetti {
