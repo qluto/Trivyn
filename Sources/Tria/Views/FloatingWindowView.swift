@@ -3,6 +3,7 @@ import SwiftUI
 /// ミニマルなフローティングウィンドウのビュー
 struct FloatingWindowView: View {
     @EnvironmentObject var goalStore: GoalStore
+    @Environment(\.colorScheme) private var colorScheme
     @State private var newGoalTitle = ""
     @State private var showingConfetti = false
     @State private var confettiOrigin: CGPoint?
@@ -83,7 +84,7 @@ struct FloatingWindowView: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(.ultraThinMaterial)
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.black.opacity(0.35))
+                    .fill(colorScheme == .dark ? Color.black.opacity(0.35) : Color.white.opacity(0.5))
             }
             .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 3)
         )
