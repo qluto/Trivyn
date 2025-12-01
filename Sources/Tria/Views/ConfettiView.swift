@@ -172,8 +172,10 @@ struct TriangleShape: Shape {
 
 // MARK: - Preview
 
-#Preview {
-    ConfettiView()
-        .frame(width: 300, height: 400)
-        .background(Color.gray.opacity(0.2))
+struct ConfettiView_Previews: PreviewProvider {
+    static var previews: some View {
+        ConfettiView()
+            .frame(width: 300, height: 400)
+            .background(Color.gray.opacity(0.2))
+    }
 }
