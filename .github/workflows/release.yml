@@ -1,0 +1,51 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build app
+        run: ./scripts/build-app.sh
+
+      - name: Create zip
+        run: |
+          cd build
+          zip -r Tria.app.zip Tria.app
+
+      - name: Generate release tag
+        id: tag
+        run: |
+          VERSION="v1.0.0-$(date +'%Y%m%d')-${GITHUB_SHA::7}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.version }}
+          name: Tria ${{ steps.tag.outputs.version }}
+          body: |
+            Automatic build from commit ${{ github.sha }}
+
+            ## Installation
+            1. Download `Tria.app.zip`
+            2. Extract and copy `Tria.app` to `/Applications`
+            3. Launch the app
+          files: build/Tria.app.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
