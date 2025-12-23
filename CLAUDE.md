@@ -37,3 +37,7 @@ SwiftUI views hosted in AppKit containers:
 ## Language
 
 Comments and UI text are in Japanese. Code identifiers are in English.
+
+## Documentation
+
+When adding, removing, or modifying features, always update `FEATURES.md` to keep it in sync with the codebase.
