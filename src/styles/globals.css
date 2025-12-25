@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-transparent;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    @apply w-full h-full;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@layer utilities {
+  .glass-dark {
+    background: rgba(20, 25, 30, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .text-primary {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .text-secondary {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .border-subtle {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Tauri drag region - required for Windows compatibility */
+[data-tauri-drag-region] {
+  app-region: drag;
+  -webkit-app-region: drag;
+}
+
+/* Prevent dragging on interactive elements */
+[data-tauri-drag-region] button,
+[data-tauri-drag-region] input,
+[data-tauri-drag-region] textarea,
+[data-tauri-drag-region] select,
+[data-tauri-drag-region] a {
+  app-region: no-drag;
+  -webkit-app-region: no-drag;
+}

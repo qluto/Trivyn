@@ -2,6 +2,10 @@
 .build/
 Build/
 DerivedData/
+target/
+
+# node
+node_modules/
 
 # Xcode
 *.xcodeproj
