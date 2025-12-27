@@ -52,6 +52,11 @@ fn main() {
             commands::settings::get_setting,
             commands::settings::set_setting,
             commands::settings::get_all_settings,
+            commands::reflections::get_reflection,
+            commands::reflections::save_reflection,
+            commands::reflections::get_reflections_by_level,
+            commands::periods::is_goal_in_period,
+            commands::periods::get_period_start,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

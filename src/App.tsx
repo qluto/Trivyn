@@ -1,5 +1,6 @@
 import FloatingWindow from "./components/floating/FloatingWindow";
 import MenuBarPopover from "./components/popover/MenuBarPopover";
+import './i18n';
 
 function App() {
   // Determine which view to show based on window label

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGoalStore } from '../../store/goalStore';
 import { GoalLevel } from '../../types';
 import HistoryView from './HistoryView';
@@ -10,13 +11,8 @@ import ConfettiView from '../common/ConfettiView';
 
 type BottomTab = 'goals' | 'reflection' | 'history' | 'settings';
 
-const LEVEL_LABELS: Record<GoalLevel, string> = {
-  daily: '今日',
-  weekly: '今週',
-  monthly: '今月',
-};
-
 export default function MenuBarPopover() {
+  const { t } = useTranslation();
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel>('daily');
   const [bottomTab, setBottomTab] = useState<BottomTab>('goals');
   const [showConfetti, setShowConfetti] = useState(false);
@@ -75,7 +71,7 @@ export default function MenuBarPopover() {
           onComplete={() => setShowConfetti(false)}
         />
       )}
-      <div className="relative w-[600px] h-[700px]">
+      <div className="relative w-[500px] h-[600px]">
       {/* Arrow pointing up to tray icon */}
       <div className="absolute -top-2 right-12 w-4 h-4 bg-[rgba(20,25,30,0.85)] border-l border-t border-subtle rotate-45" />
 
@@ -83,12 +79,12 @@ export default function MenuBarPopover() {
       <div className="relative h-full rounded-xl glass-dark border border-subtle shadow-2xl flex flex-col overflow-hidden">
         {/* Header with Tria logo and level tabs */}
         <div className="border-b border-subtle" data-tauri-drag-region>
-          <div className="flex items-center justify-between p-4">
+          <div className="flex items-center justify-between px-3 py-2">
             <h1 className="text-2xl font-bold text-primary">Tria</h1>
 
             {/* Level tabs */}
             <div className="flex gap-2">
-              {(Object.keys(LEVEL_LABELS) as GoalLevel[]).map((level) => (
+              {(['daily', 'weekly', 'monthly'] as GoalLevel[]).map((level) => (
                 <button
                   key={level}
                   onClick={() => setSelectedLevel(level)}
@@ -101,7 +97,7 @@ export default function MenuBarPopover() {
                     }
                   `}
                 >
-                  {LEVEL_LABELS[level]}
+                  {t(`levels.${level}`)}
                 </button>
               ))}
             </div>
@@ -111,7 +107,7 @@ export default function MenuBarPopover() {
         {/* Content area */}
         <div className="flex-1 overflow-y-auto">
           {bottomTab === 'goals' && (
-            <div className="p-4 space-y-2">
+            <div className="px-3 py-2 space-y-2">
               {/* Goals list */}
               {currentGoals.map((goal, index) => (
                 <NumberedGoalRow
@@ -125,7 +121,7 @@ export default function MenuBarPopover() {
 
               {/* Add goal field */}
               {canAdd && (
-                <div className="pt-2">
+                <div className="pt-1">
                   <AddGoalField
                     level={selectedLevel}
                     nextNumber={currentGoals.length + 1}
@@ -147,7 +143,7 @@ export default function MenuBarPopover() {
 
         {/* Bottom navigation bar */}
         <div className="border-t border-subtle bg-black/20 backdrop-blur-sm">
-          <div className="flex items-center justify-around p-3">
+          <div className="flex items-center justify-around p-2">
             <button
               onClick={() => setBottomTab('goals')}
               className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
@@ -169,7 +165,7 @@ export default function MenuBarPopover() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                <span className="text-sm">振り返り</span>
+                <span className="text-sm">{t('navigation.reflection')}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -186,7 +182,7 @@ export default function MenuBarPopover() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span className="text-sm">履歴</span>
+                <span className="text-sm">{t('navigation.history')}</span>
               </div>
             </button>
 
@@ -201,7 +197,7 @@ export default function MenuBarPopover() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span className="text-sm">設定</span>
+                <span className="text-sm">{t('navigation.settings')}</span>
               </div>
             </button>
           </div>

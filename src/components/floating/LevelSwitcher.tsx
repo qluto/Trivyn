@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { GoalLevel } from '../../types';
 
 interface LevelSwitcherProps {
@@ -10,12 +11,6 @@ interface LevelSwitcherProps {
   };
 }
 
-const LEVEL_LABELS: Record<GoalLevel, string> = {
-  daily: '今日',
-  weekly: '今週',
-  monthly: '今月',
-};
-
 const LEVEL_COLORS: Record<GoalLevel, string> = {
   daily: 'bg-daily-accent',
   weekly: 'bg-weekly-accent',
@@ -23,6 +18,7 @@ const LEVEL_COLORS: Record<GoalLevel, string> = {
 };
 
 export default function LevelSwitcher({ selected, onChange, goalsCount }: LevelSwitcherProps) {
+  const { t } = useTranslation();
   const levels: GoalLevel[] = ['daily', 'weekly', 'monthly'];
 
   return (
@@ -46,7 +42,7 @@ export default function LevelSwitcher({ selected, onChange, goalsCount }: LevelS
             `}
           >
             <span className={`text-xs font-medium ${isSelected ? 'text-primary' : 'text-secondary'}`}>
-              {LEVEL_LABELS[level]}
+              {t(`levels.${level}`)}
             </span>
 
             {/* Progress dots */}

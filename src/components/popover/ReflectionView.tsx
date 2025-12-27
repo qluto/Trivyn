@@ -1,13 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GoalLevel } from '../../types';
 import { useReflectionStore, generatePeriodKey } from '../../store/reflectionStore';
 import { useGoalStore } from '../../store/goalStore';
-
-const LEVEL_LABELS: Record<GoalLevel, string> = {
-  daily: '今日',
-  weekly: '今週',
-  monthly: '今月',
-};
 
 interface ReflectionViewProps {
   level: GoalLevel;
@@ -15,6 +10,7 @@ interface ReflectionViewProps {
 }
 
 export default function ReflectionView({ level, onClose }: ReflectionViewProps) {
+  const { t } = useTranslation();
   const [insights, setInsights] = useState({
     insight1: '',
     insight2: '',
@@ -77,7 +73,7 @@ export default function ReflectionView({ level, onClose }: ReflectionViewProps) 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10" data-tauri-drag-region>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-white/10" data-tauri-drag-region>
         <button
           onClick={onClose}
           className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors"
@@ -86,45 +82,45 @@ export default function ReflectionView({ level, onClose }: ReflectionViewProps) 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-lg font-semibold text-primary">{LEVEL_LABELS[level]}の振り返り</h1>
+        <h1 className="text-lg font-semibold text-primary">{t(`levels.${level}`)}{t('reflection.title')}</h1>
         <div className="w-8" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
         {/* Progress Circle */}
-        <div className="flex flex-col items-center py-8">
-          <div className="relative w-40 h-40">
-            <svg className="transform -rotate-90 w-40 h-40">
+        <div className="flex flex-col items-center py-4">
+          <div className="relative w-32 h-32">
+            <svg className="transform -rotate-90 w-32 h-32">
               <circle
-                cx="80"
-                cy="80"
-                r="70"
+                cx="64"
+                cy="64"
+                r="56"
                 stroke="currentColor"
                 strokeWidth="8"
                 fill="none"
                 className="text-white/10"
               />
               <circle
-                cx="80"
-                cy="80"
-                r="70"
+                cx="64"
+                cy="64"
+                r="56"
                 stroke="currentColor"
                 strokeWidth="8"
                 fill="none"
                 strokeLinecap="round"
                 className="text-blue-400"
-                strokeDasharray={`${2 * Math.PI * 70}`}
-                strokeDashoffset={`${2 * Math.PI * 70 * (1 - (totalGoals > 0 ? completedGoals / totalGoals : 0))}`}
+                strokeDasharray={`${2 * Math.PI * 56}`}
+                strokeDashoffset={`${2 * Math.PI * 56 * (1 - (totalGoals > 0 ? completedGoals / totalGoals : 0))}`}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="text-4xl font-bold text-primary">{completedGoals}/{totalGoals}</div>
-              <div className="text-sm text-secondary">達成</div>
+              <div className="text-3xl font-bold text-primary">{completedGoals}/{totalGoals}</div>
+              <div className="text-sm text-secondary">{t('goals.completed')}</div>
             </div>
           </div>
           {totalGoals === 0 && (
-            <p className="text-sm text-secondary mt-4">ゴールが設定されていませんでした</p>
+            <p className="text-sm text-secondary mt-4">{t('goals.noGoals')}</p>
           )}
         </div>
 
@@ -134,14 +130,14 @@ export default function ReflectionView({ level, onClose }: ReflectionViewProps) 
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <span className="text-xl">💡</span>
-            <h2 className="text-base font-semibold text-primary">気づき・学び</h2>
+            <h2 className="text-base font-semibold text-primary">{t('reflection.insights')}</h2>
           </div>
 
           <div className="space-y-3">
             {[
-              { key: 'insight1' as const, placeholder: '振り返りポイント...' },
-              { key: 'insight2' as const, placeholder: '振り返りポイント...' },
-              { key: 'insight3' as const, placeholder: '振り返りポイント...' },
+              { key: 'insight1' as const, placeholder: t('reflection.placeholder') },
+              { key: 'insight2' as const, placeholder: t('reflection.placeholder') },
+              { key: 'insight3' as const, placeholder: t('reflection.placeholder') },
             ].map((item, index) => (
               <div key={index} className="flex gap-3">
                 <div className="flex-shrink-0 mt-3">
@@ -164,36 +160,36 @@ export default function ReflectionView({ level, onClose }: ReflectionViewProps) 
           </div>
 
           <p className="text-xs text-secondary pl-5">
-            うまくいったこと、改善点、次に活かせることなど
+            {t('reflection.hint')}
           </p>
         </div>
       </div>
 
       {/* Footer Buttons */}
-      <div className="p-4 border-t border-white/10 flex gap-3">
+      <div className="px-3 py-2 border-t border-white/10 flex gap-2">
         <button
           onClick={onClose}
           className="
-            flex-1 py-3 px-4 rounded-lg
+            flex-1 py-2 px-3 rounded-lg
             bg-white/5 hover:bg-white/10
             text-primary font-medium text-sm
             transition-all duration-200
           "
         >
-          閉じる
+          {t('reflection.close')}
         </button>
         <button
           onClick={handleSave}
           disabled={isSaving}
           className="
-            flex-1 py-3 px-4 rounded-lg
+            flex-1 py-2 px-3 rounded-lg
             bg-white/10 hover:bg-white/15
             text-primary font-medium text-sm
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
           "
         >
-          {isSaving ? '保存中...' : '保存'}
+          {isSaving ? t('reflection.saving') : t('reflection.save')}
         </button>
       </div>
     </div>

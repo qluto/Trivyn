@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
 import { AppLanguage, WindowPosition } from '../types';
+import i18n from '../i18n';
 
 interface SettingsStore {
   weekStart: number;
@@ -25,9 +26,19 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
     set({ loading: true });
     try {
       const settings = await invoke<Record<string, string>>('get_all_settings', {});
+      const lang = (settings.language as AppLanguage) || 'system';
+
+      // Apply language to i18n
+      let i18nLang = lang;
+      if (lang === 'system') {
+        // Use browser's language detection
+        i18nLang = navigator.language.startsWith('ja') ? 'ja' : 'en';
+      }
+      await i18n.changeLanguage(i18nLang);
+
       set({
         weekStart: parseInt(settings.week_start || '2'),
-        language: (settings.language as AppLanguage) || 'system',
+        language: lang,
         floatingWindowPosition: JSON.parse(
           settings.floating_window_position || '{"x":0,"y":0}'
         ),
@@ -51,6 +62,14 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   setLanguage: async (lang: AppLanguage) => {
     try {
       await invoke('set_setting', { key: 'language', value: lang });
+
+      // Apply language to i18n
+      let i18nLang = lang;
+      if (lang === 'system') {
+        i18nLang = navigator.language.startsWith('ja') ? 'ja' : 'en';
+      }
+      await i18n.changeLanguage(i18nLang);
+
       set({ language: lang });
     } catch (error) {
       console.error('Failed to set language:', error);

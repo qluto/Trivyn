@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GoalLevel } from '../../types';
 
 interface AddGoalFieldProps {
@@ -14,6 +15,7 @@ const LEVEL_COLORS: Record<GoalLevel, string> = {
 };
 
 export default function AddGoalField({ level, nextNumber, onAdd }: AddGoalFieldProps) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
@@ -49,7 +51,7 @@ export default function AddGoalField({ level, nextNumber, onAdd }: AddGoalFieldP
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         onKeyDown={handleKeyDown}
-        placeholder="新しい目標を追加..."
+        placeholder={t('goals.addPlaceholder')}
         className={`
           flex-1 bg-transparent border-b-2 border-transparent
           text-sm text-primary placeholder-white/30

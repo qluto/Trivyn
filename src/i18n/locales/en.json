@@ -1,0 +1,88 @@
+{
+  "app": {
+    "name": "Tria",
+    "description": "Three Wins Productivity App",
+    "version": "v0.1.0"
+  },
+  "levels": {
+    "daily": "Today",
+    "weekly": "This Week",
+    "monthly": "This Month"
+  },
+  "goals": {
+    "empty": {
+      "daily": "Set your goals for today",
+      "weekly": "Set your goals for this week",
+      "monthly": "Set your goals for this month"
+    },
+    "maxHint": "Maximum 3 goals",
+    "addPlaceholder": "Enter a goal...",
+    "completed": "Completed",
+    "noGoals": "No goals were set"
+  },
+  "navigation": {
+    "goals": "Goals",
+    "reflection": "Reflection",
+    "history": "History",
+    "settings": "Settings"
+  },
+  "reflection": {
+    "title": "'s Reflection",
+    "insights": "Insights & Learnings",
+    "placeholder": "Reflection point...",
+    "hint": "What went well, what to improve, what to apply next time, etc.",
+    "save": "Save",
+    "saving": "Saving...",
+    "close": "Close"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Configure application settings",
+    "weekStart": {
+      "label": "Week Start Day",
+      "description": "Set the starting day of the week for weekly goals"
+    },
+    "language": {
+      "label": "Language",
+      "description": "Set the application display language",
+      "system": "System Default",
+      "ja": "日本語",
+      "en": "English"
+    },
+    "notifications": {
+      "label": "Notifications",
+      "description": "Configure reminder notifications",
+      "weeklyReminder": "Weekly Reminder",
+      "weeklyReminderDesc": "notification",
+      "monthlyReminder": "Monthly Reminder",
+      "monthlyReminderDesc": "Notify at the beginning of the month",
+      "reflectionPrompt": "Reflection Prompt",
+      "reflectionPromptDesc": "Notify on weekends and end of month"
+    }
+  },
+  "weekdays": {
+    "sunday": "Sunday",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "short": {
+      "sunday": "Sun",
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat"
+    }
+  },
+  "history": {
+    "backToToday": "Back to Today",
+    "close": "Close",
+    "noGoalsOnDate": "No goals on this date",
+    "monthYear": "{{month}} {{year}}",
+    "dateDetail": "{{month}} {{day}}"
+  }
+}

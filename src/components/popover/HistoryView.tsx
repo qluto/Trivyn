@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGoalStore } from '../../store/goalStore';
 import { Goal, GoalLevel } from '../../types';
 
@@ -7,8 +8,6 @@ const LEVEL_COLORS: Record<GoalLevel, string> = {
   weekly: 'bg-weekly-accent',
   monthly: 'bg-monthly-accent',
 };
-
-const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 
 function getDaysInMonth(year: number, month: number): Date[] {
   const firstDay = new Date(year, month, 1);
@@ -54,6 +53,7 @@ function getGoalsForDate(goals: Goal[], date: Date): Goal[] {
 }
 
 export default function HistoryView() {
+  const { t, i18n } = useTranslation();
   const { goals } = useGoalStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -61,6 +61,14 @@ export default function HistoryView() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const days = useMemo(() => getDaysInMonth(year, month), [year, month]);
+
+  // Weekday names based on current language
+  const weekdayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const weekdays = weekdayKeys.map(key => t(`weekdays.short.${key}`));
+
+  // Month names for English
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
 
   const selectedDateGoals = useMemo(() => {
     if (!selectedDate) return [];
@@ -85,7 +93,7 @@ export default function HistoryView() {
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
       {/* Header */}
-      <div className="p-4 border-b border-white/10" data-tauri-drag-region>
+      <div className="px-3 py-2 border-b border-white/10" data-tauri-drag-region>
         <div className="flex items-center justify-between mb-3">
           <button
             onClick={goToPreviousMonth}
@@ -97,7 +105,10 @@ export default function HistoryView() {
           </button>
 
           <h2 className="text-lg font-semibold text-primary">
-            {year}年 {month + 1}月
+            {i18n.language === 'ja'
+              ? t('history.monthYear', { year, month: month + 1 })
+              : t('history.monthYear', { month: monthNames[month], year })
+            }
           </h2>
 
           <button
@@ -114,16 +125,16 @@ export default function HistoryView() {
           onClick={goToToday}
           className="w-full py-2 px-4 rounded-lg bg-white/5 hover:bg-white/10 text-primary text-sm font-medium transition-colors"
         >
-          今日に戻る
+          {t('history.backToToday')}
         </button>
       </div>
 
       {/* Calendar Grid */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto px-3 py-2">
         {/* Weekday headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
-          {WEEKDAYS.map((day) => (
-            <div key={day} className="text-center text-xs font-medium text-secondary py-1">
+          {weekdays.map((day, index) => (
+            <div key={index} className="text-center text-xs font-medium text-secondary py-1">
               {day}
             </div>
           ))}
@@ -176,18 +187,21 @@ export default function HistoryView() {
           <div className="mt-6 p-4 rounded-lg bg-white/5 border border-white/10">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-primary">
-                {selectedDate.getMonth() + 1}月{selectedDate.getDate()}日
+                {i18n.language === 'ja'
+                  ? t('history.dateDetail', { month: selectedDate.getMonth() + 1, day: selectedDate.getDate() })
+                  : t('history.dateDetail', { month: monthNames[selectedDate.getMonth()], day: selectedDate.getDate() })
+                }
               </h3>
               <button
                 onClick={() => setSelectedDate(null)}
                 className="text-xs text-secondary hover:text-primary"
               >
-                閉じる
+                {t('history.close')}
               </button>
             </div>
 
             {selectedDateGoals.length === 0 ? (
-              <p className="text-xs text-secondary italic">この日の目標はありません</p>
+              <p className="text-xs text-secondary italic">{t('history.noGoalsOnDate')}</p>
             ) : (
               <div className="space-y-2">
                 {selectedDateGoals.map((goal) => (

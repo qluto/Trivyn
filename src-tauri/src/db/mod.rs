@@ -6,6 +6,7 @@ use tauri::{AppHandle, Manager};
 
 pub mod goals;
 pub mod settings;
+pub mod reflections;
 
 pub struct Database {
     pub conn: Mutex<Connection>,

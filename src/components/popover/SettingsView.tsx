@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../../store/settingsStore';
 
 export default function SettingsView() {
+  const { t } = useTranslation();
   const { weekStart, language, loadSettings, setWeekStart, setLanguage } = useSettingsStore();
 
   useEffect(() => {
@@ -9,15 +11,23 @@ export default function SettingsView() {
   }, [loadSettings]);
 
   const weekStartOptions = [
-    { value: 1, label: '日曜日' },
-    { value: 2, label: '月曜日' },
+    { value: 1, label: t('weekdays.sunday') },
+    { value: 2, label: t('weekdays.monday') },
+    { value: 3, label: t('weekdays.tuesday') },
+    { value: 4, label: t('weekdays.wednesday') },
+    { value: 5, label: t('weekdays.thursday') },
+    { value: 6, label: t('weekdays.friday') },
+    { value: 7, label: t('weekdays.saturday') },
   ];
 
   const languageOptions = [
-    { value: 'system', label: 'システム設定' },
-    { value: 'ja', label: '日本語' },
-    { value: 'en', label: 'English' },
+    { value: 'system', label: t('settings.language.system') },
+    { value: 'ja', label: t('settings.language.ja') },
+    { value: 'en', label: t('settings.language.en') },
   ];
+
+  const weekdayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const weekStartDayName = t(`weekdays.${weekdayKeys[(weekStart - 1) % 7]}`);
 
   const handleWeekStartChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setWeekStart(parseInt(e.target.value));
@@ -28,21 +38,21 @@ export default function SettingsView() {
   };
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="px-3 py-2 space-y-4">
       <div data-tauri-drag-region>
-        <h2 className="text-lg font-semibold text-primary mb-2">設定</h2>
+        <h2 className="text-lg font-semibold text-primary mb-2">{t('settings.title')}</h2>
         <p className="text-sm text-secondary">
-          アプリケーションの設定を変更できます
+          {t('settings.description')}
         </p>
       </div>
 
       {/* Week start setting */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-primary block">
-          週の開始日
+          {t('settings.weekStart.label')}
         </label>
         <p className="text-xs text-secondary mb-2">
-          週次目標の開始曜日を設定します
+          {t('settings.weekStart.description')}
         </p>
         <select
           className="
@@ -66,10 +76,10 @@ export default function SettingsView() {
       {/* Language setting */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-primary block">
-          言語
+          {t('settings.language.label')}
         </label>
         <p className="text-xs text-secondary mb-2">
-          アプリケーションの表示言語を設定します
+          {t('settings.language.description')}
         </p>
         <select
           className="
@@ -93,10 +103,10 @@ export default function SettingsView() {
       {/* Notifications setting */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-primary block">
-          通知
+          {t('settings.notifications.label')}
         </label>
         <p className="text-xs text-secondary mb-2">
-          リマインダー通知の設定
+          {t('settings.notifications.description')}
         </p>
         <div className="space-y-2">
           <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer">
@@ -106,8 +116,8 @@ export default function SettingsView() {
               defaultChecked
             />
             <div className="flex-1">
-              <div className="text-sm text-primary">週次リマインダー</div>
-              <div className="text-xs text-secondary">月曜日に通知</div>
+              <div className="text-sm text-primary">{t('settings.notifications.weeklyReminder')}</div>
+              <div className="text-xs text-secondary">{weekStartDayName}{t('settings.notifications.weeklyReminderDesc')}</div>
             </div>
           </label>
 
@@ -118,8 +128,8 @@ export default function SettingsView() {
               defaultChecked
             />
             <div className="flex-1">
-              <div className="text-sm text-primary">月次リマインダー</div>
-              <div className="text-xs text-secondary">月初に通知</div>
+              <div className="text-sm text-primary">{t('settings.notifications.monthlyReminder')}</div>
+              <div className="text-xs text-secondary">{t('settings.notifications.monthlyReminderDesc')}</div>
             </div>
           </label>
 
@@ -130,18 +140,18 @@ export default function SettingsView() {
               defaultChecked
             />
             <div className="flex-1">
-              <div className="text-sm text-primary">振り返りプロンプト</div>
-              <div className="text-xs text-secondary">週末・月末に通知</div>
+              <div className="text-sm text-primary">{t('settings.notifications.reflectionPrompt')}</div>
+              <div className="text-xs text-secondary">{t('settings.notifications.reflectionPromptDesc')}</div>
             </div>
           </label>
         </div>
       </div>
 
       {/* App info */}
-      <div className="pt-4 border-t border-white/10" data-tauri-drag-region>
+      <div className="pt-2 border-t border-white/10" data-tauri-drag-region>
         <div className="text-xs text-secondary space-y-1">
-          <div>Tria v0.1.0</div>
-          <div>Three Wins 生産性アプリ</div>
+          <div>{t('app.name')} {t('app.version')}</div>
+          <div>{t('app.description')}</div>
         </div>
       </div>
     </div>

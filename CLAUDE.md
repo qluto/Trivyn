@@ -11,6 +11,8 @@ npm run tauri:build   # Build production app
 pkill -f tria         # Kill running instance
 ```
 
+**Important**: Always keep the development server running (`npm run tauri:dev`) when working on this project. The server provides hot reload functionality for both frontend and backend changes.
+
 ## Architecture
 
 Tria is a **multiplatform desktop app** (macOS, Windows, Linux) built with **Tauri 2.x** implementing the "Three Wins" productivity method. Users set 3 goals each for daily, weekly, and monthly timeframes.

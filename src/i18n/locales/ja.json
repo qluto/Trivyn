@@ -1,0 +1,88 @@
+{
+  "app": {
+    "name": "Tria",
+    "description": "Three Wins 生産性アプリ",
+    "version": "v0.1.0"
+  },
+  "levels": {
+    "daily": "今日",
+    "weekly": "今週",
+    "monthly": "今月"
+  },
+  "goals": {
+    "empty": {
+      "daily": "今日の目標を設定しましょう",
+      "weekly": "今週の目標を設定しましょう",
+      "monthly": "今月の目標を設定しましょう"
+    },
+    "maxHint": "最大3つまで設定できます",
+    "addPlaceholder": "目標を入力...",
+    "completed": "達成",
+    "noGoals": "ゴールが設定されていませんでした"
+  },
+  "navigation": {
+    "goals": "目標",
+    "reflection": "振り返り",
+    "history": "履歴",
+    "settings": "設定"
+  },
+  "reflection": {
+    "title": "の振り返り",
+    "insights": "気づき・学び",
+    "placeholder": "振り返りポイント...",
+    "hint": "うまくいったこと、改善点、次に活かせることなど",
+    "save": "保存",
+    "saving": "保存中...",
+    "close": "閉じる"
+  },
+  "settings": {
+    "title": "設定",
+    "description": "アプリケーションの設定を変更できます",
+    "weekStart": {
+      "label": "週の開始日",
+      "description": "週次目標の開始曜日を設定します"
+    },
+    "language": {
+      "label": "言語",
+      "description": "アプリケーションの表示言語を設定します",
+      "system": "システム設定",
+      "ja": "日本語",
+      "en": "English"
+    },
+    "notifications": {
+      "label": "通知",
+      "description": "リマインダー通知の設定",
+      "weeklyReminder": "週次リマインダー",
+      "weeklyReminderDesc": "に通知",
+      "monthlyReminder": "月次リマインダー",
+      "monthlyReminderDesc": "月初に通知",
+      "reflectionPrompt": "振り返りプロンプト",
+      "reflectionPromptDesc": "週末・月末に通知"
+    }
+  },
+  "weekdays": {
+    "sunday": "日曜日",
+    "monday": "月曜日",
+    "tuesday": "火曜日",
+    "wednesday": "水曜日",
+    "thursday": "木曜日",
+    "friday": "金曜日",
+    "saturday": "土曜日",
+    "short": {
+      "sunday": "日",
+      "monday": "月",
+      "tuesday": "火",
+      "wednesday": "水",
+      "thursday": "木",
+      "friday": "金",
+      "saturday": "土"
+    }
+  },
+  "history": {
+    "backToToday": "今日に戻る",
+    "close": "閉じる",
+    "noGoalsOnDate": "この日の目標はありません",
+    "monthYear": "{{year}}年{{month}}月",
+    "dateDetail": "{{month}}月{{day}}日"
+  }
+}
