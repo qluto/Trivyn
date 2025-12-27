@@ -6,11 +6,36 @@ pub fn setup_main_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         // Always on top
         window.set_always_on_top(true)?;
 
-        // Restore saved position
+        // Set window level and behavior (macOS)
+        #[cfg(target_os = "macos")]
+        {
+            use cocoa::appkit::{NSWindow, NSWindowCollectionBehavior};
+            use cocoa::base::id;
+
+            let ns_window = window.ns_window().unwrap() as id;
+            unsafe {
+                // Set level to NSFloatingWindowLevel (3) - high enough to be visible but not blocking
+                ns_window.setLevel_(3);
+
+                // Set collection behavior to allow positioning on all spaces
+                let behavior = NSWindowCollectionBehavior::NSWindowCollectionBehaviorCanJoinAllSpaces
+                    | NSWindowCollectionBehavior::NSWindowCollectionBehaviorStationary;
+                ns_window.setCollectionBehavior_(behavior);
+            }
+        }
+
+        // Restore saved position (with validation)
         if let Some(db) = app.try_state::<Database>() {
             if let Ok(pos_json) = db.get_setting("floating_window_position") {
                 if let Ok(pos) = serde_json::from_str::<WindowPosition>(&pos_json) {
-                    let _ = window.set_position(PhysicalPosition::new(pos.x as i32, pos.y as i32));
+                    // Validate position is within reasonable bounds (not off-screen)
+                    // Allow negative values but ensure window is at least partially visible
+                    if pos.x >= -200.0 && pos.y >= -100.0 && pos.x < 5000.0 && pos.y < 5000.0 {
+                        let _ = window.set_position(PhysicalPosition::new(pos.x as i32, pos.y as i32));
+                    } else {
+                        // Invalid position, clear it from database
+                        let _ = db.set_setting("floating_window_position", "");
+                    }
                 }
             }
         }
@@ -19,6 +44,7 @@ pub fn setup_main_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         let app_handle = app.clone();
         window.on_window_event(move |event| {
             if let tauri::WindowEvent::Moved(position) = event {
+                // Save position to database (screen bounds already validated on restore)
                 if let Some(db) = app_handle.try_state::<Database>() {
                     let pos = WindowPosition {
                         x: position.x as f64,

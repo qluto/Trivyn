@@ -47,7 +47,8 @@
         "decorations": false,
         "alwaysOnTop": true,
         "transparent": true,
-        "center": true
+        "center": true,
+        "acceptFirstMouse": true
       },
       {
         "label": "popover",

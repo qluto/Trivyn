@@ -77,7 +77,7 @@ export default function FloatingWindow() {
         />
       )}
       <div
-        className="relative w-[280px] min-h-[200px] max-h-[500px] rounded-xl glass-dark border border-subtle shadow-2xl overflow-hidden"
+        className="relative w-[280px] min-h-[200px] max-h-[500px] rounded-xl glass-dark border border-subtle shadow-2xl overflow-hidden select-none"
         data-tauri-drag-region
       >
       {/* Level Switcher */}
