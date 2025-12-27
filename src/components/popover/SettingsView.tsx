@@ -38,7 +38,7 @@ export default function SettingsView() {
   };
 
   return (
-    <div className="px-3 py-2 space-y-4">
+    <div className="px-3 py-2 pb-4 space-y-4">
       <div data-tauri-drag-region>
         <h2 className="text-lg font-semibold text-primary mb-2">{t('settings.title')}</h2>
         <p className="text-sm text-secondary">

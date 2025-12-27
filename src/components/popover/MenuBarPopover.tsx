@@ -49,7 +49,13 @@ export default function MenuBarPopover() {
     const resizeWindow = async () => {
       try {
         const height = bottomTab === 'history' ? historyHeight : PAGE_HEIGHTS[bottomTab];
+        console.log(`[MenuBarPopover] Resizing to ${height}px for tab: ${bottomTab}`);
+        console.log(`[MenuBarPopover] Window size before: ${window.innerWidth}x${window.innerHeight}`);
         await invoke('resize_popover', { height });
+        // Wait a bit for the resize to take effect
+        setTimeout(() => {
+          console.log(`[MenuBarPopover] Window size after: ${window.innerWidth}x${window.innerHeight}`);
+        }, 100);
       } catch (error) {
         console.error('Failed to resize window:', error);
       }
@@ -98,12 +104,12 @@ export default function MenuBarPopover() {
           onComplete={() => setShowConfetti(false)}
         />
       )}
-      <div className="relative w-[420px] h-screen">
+      <div className="relative w-[420px] h-full">
       {/* Arrow pointing up to tray icon */}
       <div className="absolute -top-2 right-12 w-4 h-4 bg-[rgba(20,25,30,0.85)] border-l border-t border-subtle rotate-45" />
 
       {/* Main popover container */}
-      <div className="relative h-full rounded-xl glass-dark border border-subtle shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative rounded-xl glass-dark border border-subtle shadow-2xl flex flex-col overflow-hidden">
         {/* Header with Tria logo and main navigation */}
         <div className="border-b border-subtle" data-tauri-drag-region>
           <div className="flex items-center justify-between px-3 py-2">
@@ -168,7 +174,7 @@ export default function MenuBarPopover() {
         </div>
 
         {/* Content area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="overflow-y-auto">
           {bottomTab === 'goals' && (
             <div className="flex flex-col">
               {/* Level tabs for goals */}
@@ -194,7 +200,7 @@ export default function MenuBarPopover() {
               </div>
 
               {/* Goals list */}
-              <div className="px-3 py-2 space-y-2">
+              <div className="px-3 py-2 pb-4 space-y-2">
                 {currentGoals.map((goal, index) => (
                   <NumberedGoalRow
                     key={goal.id}

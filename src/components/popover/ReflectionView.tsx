@@ -78,7 +78,7 @@ export default function ReflectionView() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
+    <div className="flex flex-col bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
       {/* Level tabs */}
       <div className="border-b border-white/10 px-3 py-2">
         <div className="flex gap-2">
@@ -102,7 +102,7 @@ export default function ReflectionView() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+      <div className="overflow-y-auto px-3 py-3 pb-4 space-y-4">
         {/* Goals List (Read-only) */}
         {levelGoals.length > 0 && (
           <div className="space-y-0">

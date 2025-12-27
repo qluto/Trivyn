@@ -152,7 +152,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
   }, [selection, selectedGoals.length, onHeightChange]);
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
+    <div className="flex flex-col bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
       {/* Header */}
       <div className="px-3 py-2 border-b border-white/10">
         <div className="flex items-center justify-between">
@@ -184,7 +184,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="flex-1 overflow-y-auto px-6">
+      <div className="overflow-y-auto px-6 pb-4">
         {/* Weekday headers */}
         <div className="grid grid-cols-8 gap-1 pt-2">
           <button
