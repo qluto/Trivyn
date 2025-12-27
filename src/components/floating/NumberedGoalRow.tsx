@@ -4,7 +4,7 @@ interface NumberedGoalRowProps {
   number: number;
   goal: Goal;
   level: GoalLevel;
-  onToggle: () => void;
+  onToggle: (position: { x: number; y: number }) => void;
 }
 
 const LEVEL_COLORS: Record<GoalLevel, { border: string; fill: string }> = {
@@ -17,9 +17,18 @@ export default function NumberedGoalRow({ number, goal, level, onToggle }: Numbe
   const colors = LEVEL_COLORS[level];
   const isCompleted = goal.isCompleted;
 
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const position = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    };
+    onToggle(position);
+  };
+
   return (
     <button
-      onClick={onToggle}
+      onClick={handleClick}
       className="w-full flex items-center gap-2.5 py-2 px-3 rounded-lg
                  hover:bg-white/5 transition-all duration-200
                  group"

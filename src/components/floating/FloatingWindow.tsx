@@ -5,14 +5,24 @@ import LevelSwitcher from './LevelSwitcher';
 import NumberedGoalRow from './NumberedGoalRow';
 import AddGoalField from './AddGoalField';
 import EmptyState from './EmptyState';
+import ConfettiView from '../common/ConfettiView';
 
 export default function FloatingWindow() {
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel>('daily');
-  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal } = useGoalStore();
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiLevel, setConfettiLevel] = useState<GoalLevel>('daily');
+  const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
+  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
 
   useEffect(() => {
     loadGoals();
-  }, [loadGoals]);
+    setupEventListeners();
+  }, [loadGoals, setupEventListeners]);
+
+  // Reset confetti when changing tabs
+  useEffect(() => {
+    setShowConfetti(false);
+  }, [selectedLevel]);
 
   const currentGoals = goals.filter((g) => g.level === selectedLevel);
   const canAdd = canAddGoal(selectedLevel);
@@ -25,8 +35,25 @@ export default function FloatingWindow() {
     }
   };
 
-  const handleToggle = async (goalId: string) => {
-    await toggleGoalCompletion(goalId);
+  const handleToggle = async (goalId: string, position: { x: number; y: number }) => {
+    try {
+      // Toggle the goal and get the updated state
+      const updatedGoal = await toggleGoalCompletion(goalId);
+
+      // Show confetti only if the goal was just completed (is now true)
+      if (updatedGoal.isCompleted) {
+        setConfettiLevel(updatedGoal.level);
+        setConfettiPosition(position);
+        setShowConfetti(true);
+
+        // Safety timeout to ensure confetti is hidden after animation (3 seconds)
+        setTimeout(() => {
+          setShowConfetti(false);
+        }, 3500);
+      }
+    } catch (error) {
+      console.error('Failed to toggle goal:', error);
+    }
   };
 
   const handleClose = async () => {
@@ -41,10 +68,18 @@ export default function FloatingWindow() {
   };
 
   return (
-    <div
-      className="relative w-[280px] min-h-[200px] max-h-[500px] rounded-xl glass-dark border border-subtle shadow-2xl overflow-hidden"
-      data-tauri-drag-region
-    >
+    <>
+      {showConfetti && (
+        <ConfettiView
+          level={confettiLevel}
+          startPosition={confettiPosition}
+          onComplete={() => setShowConfetti(false)}
+        />
+      )}
+      <div
+        className="relative w-[280px] min-h-[200px] max-h-[500px] rounded-xl glass-dark border border-subtle shadow-2xl overflow-hidden"
+        data-tauri-drag-region
+      >
       {/* Level Switcher */}
       <div data-tauri-drag-region>
         <LevelSwitcher
@@ -68,7 +103,7 @@ export default function FloatingWindow() {
               number={index + 1}
               goal={goal}
               level={selectedLevel}
-              onToggle={() => handleToggle(goal.id)}
+              onToggle={(position) => handleToggle(goal.id, position)}
             />
           ))
         )}
@@ -94,6 +129,7 @@ export default function FloatingWindow() {
       >
         <span className="text-xs text-white/70 group-hover:text-white">✕</span>
       </button>
-    </div>
+      </div>
+    </>
   );
 }

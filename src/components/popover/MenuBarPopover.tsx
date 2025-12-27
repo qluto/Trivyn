@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGoalStore } from '../../store/goalStore';
 import { GoalLevel } from '../../types';
 import HistoryView from './HistoryView';
 import ReflectionView from './ReflectionView';
 import SettingsView from './SettingsView';
 import NumberedGoalRow from '../floating/NumberedGoalRow';
+import AddGoalField from '../floating/AddGoalField';
+import ConfettiView from '../common/ConfettiView';
 
-type BottomTab = 'goals' | 'reflection' | 'history';
+type BottomTab = 'goals' | 'reflection' | 'history' | 'settings';
 
 const LEVEL_LABELS: Record<GoalLevel, string> = {
   daily: '今日',
@@ -17,16 +19,63 @@ const LEVEL_LABELS: Record<GoalLevel, string> = {
 export default function MenuBarPopover() {
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel>('daily');
   const [bottomTab, setBottomTab] = useState<BottomTab>('goals');
-  const { goals, toggleGoalCompletion } = useGoalStore();
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiLevel, setConfettiLevel] = useState<GoalLevel>('daily');
+  const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
+  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
+
+  useEffect(() => {
+    loadGoals();
+    setupEventListeners();
+  }, [loadGoals, setupEventListeners]);
+
+  // Reset confetti when changing tabs (level or bottom tab)
+  useEffect(() => {
+    setShowConfetti(false);
+  }, [selectedLevel, bottomTab]);
 
   const currentGoals = goals.filter((g) => g.level === selectedLevel);
+  const canAdd = canAddGoal(selectedLevel);
 
-  const handleToggle = async (goalId: string) => {
-    await toggleGoalCompletion(goalId);
+  const handleAddGoal = async (title: string) => {
+    try {
+      await addGoal(title, selectedLevel);
+    } catch (error) {
+      console.error('Failed to add goal:', error);
+    }
+  };
+
+  const handleToggle = async (goalId: string, position: { x: number; y: number }) => {
+    try {
+      // Toggle the goal and get the updated state
+      const updatedGoal = await toggleGoalCompletion(goalId);
+
+      // Show confetti only if the goal was just completed (is now true)
+      if (updatedGoal.isCompleted) {
+        setConfettiLevel(updatedGoal.level);
+        setConfettiPosition(position);
+        setShowConfetti(true);
+
+        // Safety timeout to ensure confetti is hidden after animation (3 seconds)
+        setTimeout(() => {
+          setShowConfetti(false);
+        }, 3500);
+      }
+    } catch (error) {
+      console.error('Failed to toggle goal:', error);
+    }
   };
 
   return (
-    <div className="relative w-[600px] h-[700px]">
+    <>
+      {showConfetti && (
+        <ConfettiView
+          level={confettiLevel}
+          startPosition={confettiPosition}
+          onComplete={() => setShowConfetti(false)}
+        />
+      )}
+      <div className="relative w-[600px] h-[700px]">
       {/* Arrow pointing up to tray icon */}
       <div className="absolute -top-2 right-12 w-4 h-4 bg-[rgba(20,25,30,0.85)] border-l border-t border-subtle rotate-45" />
 
@@ -63,14 +112,6 @@ export default function MenuBarPopover() {
         <div className="flex-1 overflow-y-auto">
           {bottomTab === 'goals' && (
             <div className="p-4 space-y-2">
-              {/* Add goal button */}
-              <button className="w-full p-4 rounded-lg border border-dashed border-white/20 hover:border-white/30 hover:bg-white/5 transition-all flex items-center gap-3 text-secondary hover:text-primary">
-                <div className="w-6 h-6 rounded-full border-2 border-current flex items-center justify-center">
-                  <span className="text-lg">+</span>
-                </div>
-                <span className="text-sm">新しい目標を追加...</span>
-              </button>
-
               {/* Goals list */}
               {currentGoals.map((goal, index) => (
                 <NumberedGoalRow
@@ -78,13 +119,30 @@ export default function MenuBarPopover() {
                   number={index + 1}
                   goal={goal}
                   level={selectedLevel}
-                  onToggle={() => handleToggle(goal.id)}
+                  onToggle={(position) => handleToggle(goal.id, position)}
                 />
               ))}
+
+              {/* Add goal field */}
+              {canAdd && (
+                <div className="pt-2">
+                  <AddGoalField
+                    level={selectedLevel}
+                    nextNumber={currentGoals.length + 1}
+                    onAdd={handleAddGoal}
+                  />
+                </div>
+              )}
             </div>
           )}
-          {bottomTab === 'reflection' && <ReflectionView />}
+          {bottomTab === 'reflection' && (
+            <ReflectionView
+              level={selectedLevel}
+              onClose={() => setBottomTab('goals')}
+            />
+          )}
           {bottomTab === 'history' && <HistoryView />}
+          {bottomTab === 'settings' && <SettingsView />}
         </div>
 
         {/* Bottom navigation bar */}
@@ -131,9 +189,25 @@ export default function MenuBarPopover() {
                 <span className="text-sm">履歴</span>
               </div>
             </button>
+
+            <button
+              onClick={() => setBottomTab('settings')}
+              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                bottomTab === 'settings' ? 'text-primary' : 'text-secondary hover:text-primary'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="text-sm">設定</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

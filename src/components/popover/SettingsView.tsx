@@ -1,4 +1,13 @@
+import { useEffect } from 'react';
+import { useSettingsStore } from '../../store/settingsStore';
+
 export default function SettingsView() {
+  const { weekStart, language, loadSettings, setWeekStart, setLanguage } = useSettingsStore();
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
   const weekStartOptions = [
     { value: 1, label: '日曜日' },
     { value: 2, label: '月曜日' },
@@ -9,6 +18,14 @@ export default function SettingsView() {
     { value: 'ja', label: '日本語' },
     { value: 'en', label: 'English' },
   ];
+
+  const handleWeekStartChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setWeekStart(parseInt(e.target.value));
+  };
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLanguage(e.target.value as 'system' | 'en' | 'ja');
+  };
 
   return (
     <div className="p-4 space-y-6">
@@ -35,7 +52,8 @@ export default function SettingsView() {
             focus:outline-none focus:ring-2 focus:ring-white/20
             cursor-pointer
           "
-          defaultValue={2}
+          value={weekStart}
+          onChange={handleWeekStartChange}
         >
           {weekStartOptions.map((option) => (
             <option key={option.value} value={option.value} className="bg-gray-800">
@@ -61,7 +79,8 @@ export default function SettingsView() {
             focus:outline-none focus:ring-2 focus:ring-white/20
             cursor-pointer
           "
-          defaultValue="system"
+          value={language}
+          onChange={handleLanguageChange}
         >
           {languageOptions.map((option) => (
             <option key={option.value} value={option.value} className="bg-gray-800">

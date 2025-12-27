@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
+import { emit, listen } from '@tauri-apps/api/event';
 import { Goal, GoalLevel } from '../types';
 
 interface GoalStore {
@@ -11,10 +12,11 @@ interface GoalStore {
   // Actions
   loadGoals: () => Promise<void>;
   addGoal: (title: string, level: GoalLevel) => Promise<void>;
-  toggleGoalCompletion: (goalId: string) => Promise<void>;
+  toggleGoalCompletion: (goalId: string) => Promise<Goal>;
   updateGoal: (goalId: string, title: string) => Promise<void>;
   deleteGoal: (goalId: string) => Promise<void>;
   setSelectedLevel: (level: GoalLevel) => void;
+  setupEventListeners: () => Promise<void>;
 
   // Computed
   getDailyGoals: () => Goal[];
@@ -49,6 +51,8 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
         periodStart
       });
       set((state) => ({ goals: [...state.goals, newGoal] }));
+      // Emit event to sync other windows
+      await emit('goals-updated', {});
     } catch (error) {
       set({ error: String(error) });
       throw error;
@@ -61,8 +65,12 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       set((state) => ({
         goals: state.goals.map((g) => (g.id === goalId ? updatedGoal : g)),
       }));
+      // Emit event to sync other windows
+      await emit('goals-updated', {});
+      return updatedGoal;
     } catch (error) {
       set({ error: String(error) });
+      throw error;
     }
   },
 
@@ -74,6 +82,8 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
           g.id === goalId ? { ...g, title } : g
         ),
       }));
+      // Emit event to sync other windows
+      await emit('goals-updated', {});
     } catch (error) {
       set({ error: String(error) });
     }
@@ -85,6 +95,8 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       set((state) => ({
         goals: state.goals.filter((g) => g.id !== goalId),
       }));
+      // Emit event to sync other windows
+      await emit('goals-updated', {});
     } catch (error) {
       set({ error: String(error) });
     }
@@ -125,5 +137,13 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     const { goals } = get();
     const levelGoals = goals.filter((g) => g.level === level);
     return levelGoals.length < 3;
+  },
+
+  setupEventListeners: async () => {
+    // Listen for goals-updated events from other windows
+    await listen('goals-updated', async () => {
+      // Reload goals from backend
+      await get().loadGoals();
+    });
   },
 }));

@@ -26,9 +26,11 @@ export interface AppSettings {
 }
 
 export interface Reflection {
-  id: number;
-  level: 'weekly' | 'monthly';
+  id: number | null;
+  level: GoalLevel;
   periodKey: string;
-  insights: string[];
+  insight1: string | null;
+  insight2: string | null;
+  insight3: string | null;
   createdAt: number;
 }
