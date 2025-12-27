@@ -22,8 +22,12 @@ export default function MenuBarPopover() {
 
   useEffect(() => {
     loadGoals();
-    setupEventListeners();
-  }, [loadGoals, setupEventListeners]);
+    const cleanup = setupEventListeners();
+    return () => {
+      cleanup.then(unlisten => unlisten && unlisten());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Reset confetti when changing tabs (level or bottom tab)
   useEffect(() => {
@@ -71,7 +75,7 @@ export default function MenuBarPopover() {
           onComplete={() => setShowConfetti(false)}
         />
       )}
-      <div className="relative w-[500px] h-[600px]">
+      <div className="relative w-[420px] h-[600px]">
       {/* Arrow pointing up to tray icon */}
       <div className="absolute -top-2 right-12 w-4 h-4 bg-[rgba(20,25,30,0.85)] border-l border-t border-subtle rotate-45" />
 

@@ -75,11 +75,17 @@ function getMonthGoals(goals: Goal[], year: number, month: number): Goal[] {
   });
 }
 
+type Selection =
+  | { type: 'date'; date: Date }
+  | { type: 'week'; year: number; week: number }
+  | { type: 'month'; year: number; month: number }
+  | null;
+
 export default function HistoryView() {
   const { t, i18n } = useTranslation();
   const { goals } = useGoalStore();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selection, setSelection] = useState<Selection>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -96,24 +102,29 @@ export default function HistoryView() {
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                       'July', 'August', 'September', 'October', 'November', 'December'];
 
-  const selectedDateGoals = useMemo(() => {
-    if (!selectedDate) return [];
-    return getGoalsForDate(goals, selectedDate);
-  }, [goals, selectedDate]);
+  const selectedGoals = useMemo(() => {
+    if (!selection) return [];
+
+    switch (selection.type) {
+      case 'date':
+        return getGoalsForDate(goals, selection.date, 'daily');
+      case 'week':
+        return getWeekGoals(goals, selection.year, selection.week);
+      case 'month':
+        return getMonthGoals(goals, selection.year, selection.month);
+      default:
+        return [];
+    }
+  }, [goals, selection]);
 
   const goToPreviousMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
-    setSelectedDate(null);
+    setSelection(null);
   };
 
   const goToNextMonth = () => {
     setCurrentDate(new Date(year, month + 1, 1));
-    setSelectedDate(null);
-  };
-
-  const goToToday = () => {
-    setCurrentDate(new Date());
-    setSelectedDate(null);
+    setSelection(null);
   };
 
   return (
@@ -130,28 +141,12 @@ export default function HistoryView() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-primary">
-              {i18n.language === 'ja'
-                ? t('history.monthYear', { year, month: month + 1 })
-                : t('history.monthYear', { month: monthNames[month], year })
-              }
-            </h2>
-            {monthlyGoals.length > 0 && (
-              <div className="flex gap-1">
-                {Array.from({ length: Math.min(monthlyGoals.length, 3) }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-2 h-2 rounded-full ${
-                      monthlyGoals.filter(g => g.isCompleted).length === monthlyGoals.length
-                        ? 'bg-green-400'
-                        : 'bg-monthly-accent'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <h2 className="text-lg font-semibold text-primary">
+            {i18n.language === 'ja'
+              ? t('history.monthYear', { year, month: month + 1 })
+              : t('history.monthYear', { month: monthNames[month], year })
+            }
+          </h2>
 
           <button
             onClick={goToNextMonth}
@@ -168,9 +163,23 @@ export default function HistoryView() {
       <div className="flex-1 overflow-y-auto px-6">
         {/* Weekday headers */}
         <div className="grid grid-cols-8 gap-1 pt-2">
-          <div className="text-center text-xs font-medium text-secondary">
-            {/* Empty cell for week column */}
-          </div>
+          <button
+            onClick={() => setSelection({ type: 'month', year, month })}
+            className="flex items-center justify-center hover:bg-white/5 transition-colors rounded"
+          >
+            {monthlyGoals.length > 0 && (
+              <div className="flex flex-col gap-1">
+                {monthlyGoals.map((goal, i) => (
+                  <div
+                    key={i}
+                    className={`w-2 h-2 rounded-full ${
+                      goal.isCompleted ? 'bg-monthly-accent' : 'bg-gray-500'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </button>
           {weekdays.map((day, index) => (
             <div key={index} className="text-center text-xs font-medium text-secondary">
               {day}
@@ -192,26 +201,29 @@ export default function HistoryView() {
             return (
               <div key={weekIndex} className="grid grid-cols-8 gap-1">
                 {/* Week indicator with dots */}
-                <div className="flex items-center justify-center">
+                <button
+                  onClick={() => setSelection({ type: 'week', year: firstDayOfWeek.getFullYear(), week: weekNum })}
+                  className="flex items-center justify-center hover:bg-white/5 transition-colors rounded"
+                >
                   {hasWeekGoals && (
                     <div className="flex flex-col gap-1">
-                      {Array.from({ length: Math.min(weekGoals.length, 3) }).map((_, i) => (
+                      {weekGoals.map((goal, i) => (
                         <div
                           key={i}
                           className={`w-2 h-2 rounded-full ${
-                            weekGoalsCompleted ? 'bg-green-400' : 'bg-weekly-accent'
+                            goal.isCompleted ? 'bg-weekly-accent' : 'bg-gray-500'
                           }`}
                         />
                       ))}
                     </div>
                   )}
-                </div>
+                </button>
 
                 {/* Days of the week */}
                 {weekDays.map((date, dayIndex) => {
                   const isCurrentMonth = date.getMonth() === month;
                   const isToday = isSameDay(date, new Date());
-                  const isSelected = selectedDate && isSameDay(date, selectedDate);
+                  const isSelected = selection?.type === 'date' && isSameDay(date, selection.date);
                   const dayGoals = getGoalsForDate(goals, date, 'daily');
                   const hasGoals = dayGoals.length > 0;
                   const completedCount = dayGoals.filter((g) => g.isCompleted).length;
@@ -220,7 +232,7 @@ export default function HistoryView() {
                   return (
                     <button
                       key={dayIndex}
-                      onClick={() => setSelectedDate(date)}
+                      onClick={() => setSelection({ type: 'date', date })}
                       className={`
                         relative aspect-square rounded-lg text-base transition-all
                         ${isCurrentMonth ? 'text-primary' : 'text-secondary opacity-40'}
@@ -232,11 +244,11 @@ export default function HistoryView() {
                         <span className={isToday ? 'font-bold' : ''}>{date.getDate()}</span>
                         {hasGoals && (
                           <div className="flex gap-0.5">
-                            {Array.from({ length: Math.min(dayGoals.length, 3) }).map((_, i) => (
+                            {dayGoals.map((goal, i) => (
                               <div
                                 key={i}
                                 className={`w-1.5 h-1.5 rounded-full ${
-                                  allCompleted ? 'bg-green-400' : 'bg-daily-accent'
+                                  goal.isCompleted ? 'bg-daily-accent' : 'bg-gray-500'
                                 }`}
                               />
                             ))}
@@ -251,29 +263,40 @@ export default function HistoryView() {
           })}
         </div>
 
-        {/* Selected date details */}
-        {selectedDate && (
+        {/* Selection details */}
+        {selection && (
           <div className="mt-6 p-4 rounded-lg bg-white/5 border border-white/10">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-primary">
-                {i18n.language === 'ja'
-                  ? t('history.dateDetail', { month: selectedDate.getMonth() + 1, day: selectedDate.getDate() })
-                  : t('history.dateDetail', { month: monthNames[selectedDate.getMonth()], day: selectedDate.getDate() })
-                }
+                {selection.type === 'date' && (
+                  i18n.language === 'ja'
+                    ? `${selection.date.getMonth() + 1}月${selection.date.getDate()}日の目標`
+                    : `${monthNames[selection.date.getMonth()]} ${selection.date.getDate()}`
+                )}
+                {selection.type === 'week' && (
+                  i18n.language === 'ja'
+                    ? `第${selection.week}週の目標`
+                    : `Week ${selection.week}`
+                )}
+                {selection.type === 'month' && (
+                  i18n.language === 'ja'
+                    ? `${selection.month + 1}月の目標`
+                    : `${monthNames[selection.month]}`
+                )}
               </h3>
               <button
-                onClick={() => setSelectedDate(null)}
+                onClick={() => setSelection(null)}
                 className="text-xs text-secondary hover:text-primary"
               >
                 {t('history.close')}
               </button>
             </div>
 
-            {selectedDateGoals.length === 0 ? (
+            {selectedGoals.length === 0 ? (
               <p className="text-xs text-secondary italic">{t('history.noGoalsOnDate')}</p>
             ) : (
               <div className="space-y-2">
-                {selectedDateGoals.map((goal) => (
+                {selectedGoals.map((goal) => (
                   <div
                     key={goal.id}
                     className="flex items-center gap-2 p-2 rounded-lg bg-white/5"

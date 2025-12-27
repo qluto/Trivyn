@@ -1,4 +1,4 @@
-use tauri::State;
+use tauri::{State, AppHandle, Emitter};
 use crate::db::Database;
 use crate::models::{Goal, GoalLevel};
 
@@ -16,6 +16,7 @@ pub async fn add_goal(
     title: String,
     level: String,
     period_start: i64,
+    app: AppHandle,
     db: State<'_, Database>,
 ) -> Result<Goal, String> {
     let goal_level = GoalLevel::from_str(&level)
@@ -34,33 +35,54 @@ pub async fn add_goal(
     db.add_goal(&goal)
         .map_err(|e| e.to_string())?;
 
+    // Broadcast event to all windows
+    let _ = app.emit("goals-updated", ());
+
     Ok(goal)
 }
 
 #[tauri::command]
 pub async fn toggle_goal_completion(
     goal_id: String,
+    app: AppHandle,
     db: State<'_, Database>,
 ) -> Result<Goal, String> {
-    db.toggle_goal_completion(&goal_id)
-        .map_err(|e| e.to_string())
+    let goal = db.toggle_goal_completion(&goal_id)
+        .map_err(|e| e.to_string())?;
+
+    // Broadcast event to all windows
+    let _ = app.emit("goals-updated", ());
+
+    Ok(goal)
 }
 
 #[tauri::command]
 pub async fn update_goal(
     goal_id: String,
     title: String,
+    app: AppHandle,
     db: State<'_, Database>,
 ) -> Result<(), String> {
     db.update_goal(&goal_id, &title)
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+
+    // Broadcast event to all windows
+    let _ = app.emit("goals-updated", ());
+
+    Ok(())
 }
 
 #[tauri::command]
 pub async fn delete_goal(
     goal_id: String,
+    app: AppHandle,
     db: State<'_, Database>,
 ) -> Result<(), String> {
     db.delete_goal(&goal_id)
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+
+    // Broadcast event to all windows
+    let _ = app.emit("goals-updated", ());
+
+    Ok(())
 }

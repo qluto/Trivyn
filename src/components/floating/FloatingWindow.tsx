@@ -18,8 +18,12 @@ export default function FloatingWindow() {
 
   useEffect(() => {
     loadGoals();
-    setupEventListeners();
-  }, [loadGoals, setupEventListeners]);
+    const cleanup = setupEventListeners();
+    return () => {
+      cleanup.then(unlisten => unlisten && unlisten());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Reset confetti when changing tabs
   useEffect(() => {
