@@ -83,6 +83,7 @@
     "close": "閉じる",
     "noGoalsOnDate": "この日の目標はありません",
     "monthYear": "{{year}}年{{month}}月",
-    "dateDetail": "{{month}}月{{day}}日"
+    "dateDetail": "{{month}}月{{day}}日",
+    "delete": "削除"
   }
 }

@@ -83,7 +83,7 @@ type Selection =
 
 export default function HistoryView() {
   const { t, i18n } = useTranslation();
-  const { goals } = useGoalStore();
+  const { goals, deleteGoal } = useGoalStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selection, setSelection] = useState<Selection>(null);
 
@@ -299,7 +299,7 @@ export default function HistoryView() {
                 {selectedGoals.map((goal) => (
                   <div
                     key={goal.id}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-white/5"
+                    className="flex items-center gap-2 p-2 rounded-lg bg-white/5 group"
                   >
                     <div
                       className={`w-2 h-2 rounded-full flex-shrink-0 ${
@@ -314,7 +314,7 @@ export default function HistoryView() {
                       {goal.title}
                     </span>
                     {goal.isCompleted && (
-                      <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
                           d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -322,6 +322,15 @@ export default function HistoryView() {
                         />
                       </svg>
                     )}
+                    <button
+                      onClick={() => deleteGoal(goal.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-500/20 rounded flex-shrink-0"
+                      title={t('history.delete')}
+                    >
+                      <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 ))}
               </div>

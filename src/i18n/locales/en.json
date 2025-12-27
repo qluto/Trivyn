@@ -83,6 +83,7 @@
     "close": "Close",
     "noGoalsOnDate": "No goals on this date",
     "monthYear": "{{month}} {{year}}",
-    "dateDetail": "{{month}} {{day}}"
+    "dateDetail": "{{month}} {{day}}",
+    "delete": "Delete"
   }
 }
