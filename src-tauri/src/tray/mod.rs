@@ -47,7 +47,7 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                         let _ = window.hide();
                     } else {
                         // Position popup below tray icon
-                        let x = position.x as i32 - 300; // Center the 600px wide window
+                        let x = position.x as i32 - 210; // Center the 420px wide window
                         let y = position.y as i32 + 10;  // Position below the menu bar
 
                         let _ = window.set_position(PhysicalPosition::new(x, y));

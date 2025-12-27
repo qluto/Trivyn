@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { invoke } from '@tauri-apps/api/core';
 import { useGoalStore } from '../../store/goalStore';
 import { GoalLevel } from '../../types';
 import HistoryView from './HistoryView';
@@ -11,6 +12,14 @@ import ConfettiView from '../common/ConfettiView';
 
 type BottomTab = 'goals' | 'reflection' | 'history' | 'settings';
 
+// Page heights for different tabs
+const PAGE_HEIGHTS: Record<BottomTab, number> = {
+  goals: 400,
+  history: 720,
+  reflection: 700,
+  settings: 650,
+};
+
 export default function MenuBarPopover() {
   const { t } = useTranslation();
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel>('daily');
@@ -18,6 +27,7 @@ export default function MenuBarPopover() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiLevel, setConfettiLevel] = useState<GoalLevel>('daily');
   const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
+  const [historyHeight, setHistoryHeight] = useState(720); // Dynamic height for history view
   const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
 
   useEffect(() => {
@@ -33,6 +43,19 @@ export default function MenuBarPopover() {
   useEffect(() => {
     setShowConfetti(false);
   }, [selectedLevel, bottomTab]);
+
+  // Resize window when tab changes or history height changes
+  useEffect(() => {
+    const resizeWindow = async () => {
+      try {
+        const height = bottomTab === 'history' ? historyHeight : PAGE_HEIGHTS[bottomTab];
+        await invoke('resize_popover', { height });
+      } catch (error) {
+        console.error('Failed to resize window:', error);
+      }
+    };
+    resizeWindow();
+  }, [bottomTab, historyHeight]);
 
   const currentGoals = goals.filter((g) => g.level === selectedLevel);
   const canAdd = canAddGoal(selectedLevel);
@@ -75,7 +98,7 @@ export default function MenuBarPopover() {
           onComplete={() => setShowConfetti(false)}
         />
       )}
-      <div className="relative w-[420px] h-[600px]">
+      <div className="relative w-[420px] h-screen">
       {/* Arrow pointing up to tray icon */}
       <div className="absolute -top-2 right-12 w-4 h-4 bg-[rgba(20,25,30,0.85)] border-l border-t border-subtle rotate-45" />
 
@@ -196,7 +219,7 @@ export default function MenuBarPopover() {
             </div>
           )}
           {bottomTab === 'reflection' && <ReflectionView />}
-          {bottomTab === 'history' && <HistoryView />}
+          {bottomTab === 'history' && <HistoryView onHeightChange={setHistoryHeight} />}
           {bottomTab === 'settings' && <SettingsView />}
         </div>
       </div>

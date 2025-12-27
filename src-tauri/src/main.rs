@@ -58,6 +58,7 @@ fn main() {
             commands::periods::is_goal_in_period,
             commands::periods::get_period_start,
             commands::window::resize_window_from_top,
+            commands::window::resize_popover,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

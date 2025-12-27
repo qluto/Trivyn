@@ -19,3 +19,23 @@ pub async fn resize_window_from_top(window: Window, new_height: f64) -> Result<(
 
     Ok(())
 }
+
+#[command]
+pub async fn resize_popover(window: Window, height: f64) -> Result<(), String> {
+    // Get current position
+    let current_pos = window
+        .outer_position()
+        .map_err(|e| format!("Failed to get position: {}", e))?;
+
+    // Resize window (420px width for popover)
+    window
+        .set_size(LogicalSize::new(420.0, height))
+        .map_err(|e| format!("Failed to resize window: {}", e))?;
+
+    // Restore the top position
+    window
+        .set_position(PhysicalPosition::new(current_pos.x, current_pos.y))
+        .map_err(|e| format!("Failed to set position: {}", e))?;
+
+    Ok(())
+}

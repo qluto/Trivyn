@@ -7,8 +7,12 @@ function App() {
   const isPopover = window.location.search.includes('popover');
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center">
-      {isPopover ? <MenuBarPopover /> : <FloatingWindow />}
+    <div className="w-screen h-screen">
+      {isPopover ? <MenuBarPopover /> : (
+        <div className="w-full h-full flex items-center justify-center">
+          <FloatingWindow />
+        </div>
+      )}
     </div>
   );
 }

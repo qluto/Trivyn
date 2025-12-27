@@ -1,7 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGoalStore } from '../../store/goalStore';
 import { Goal, GoalLevel } from '../../types';
+
+interface HistoryViewProps {
+  onHeightChange?: (height: number) => void;
+}
 
 const LEVEL_COLORS: Record<GoalLevel, string> = {
   daily: 'bg-daily-accent',
@@ -81,7 +85,7 @@ type Selection =
   | { type: 'month'; year: number; month: number }
   | null;
 
-export default function HistoryView() {
+export default function HistoryView({ onHeightChange }: HistoryViewProps) {
   const { t, i18n } = useTranslation();
   const { goals, deleteGoal } = useGoalStore();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -126,6 +130,26 @@ export default function HistoryView() {
     setCurrentDate(new Date(year, month + 1, 1));
     setSelection(null);
   };
+
+  // Notify parent of height changes based on selection
+  useEffect(() => {
+    if (!onHeightChange) return;
+
+    const calculateHeight = () => {
+      const baseHeight = 550; // Calendar base height
+      const headerHeight = 50; // Selection header height
+      const goalHeight = 48; // Height per goal
+
+      if (!selection || selectedGoals.length === 0) {
+        return 720; // Default height when nothing selected
+      }
+
+      const selectionDetailHeight = headerHeight + (selectedGoals.length * goalHeight) + 80; // Extra padding
+      return Math.min(baseHeight + selectionDetailHeight, 900); // Max 900px
+    };
+
+    onHeightChange(calculateHeight());
+  }, [selection, selectedGoals.length, onHeightChange]);
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
