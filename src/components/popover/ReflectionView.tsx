@@ -4,19 +4,15 @@ import { GoalLevel } from '../../types';
 import { useReflectionStore, generatePeriodKey } from '../../store/reflectionStore';
 import { useGoalStore } from '../../store/goalStore';
 
-interface ReflectionViewProps {
-  level: GoalLevel;
-  onClose: () => void;
-}
-
 const LEVEL_COLORS: Record<GoalLevel, string> = {
   daily: 'bg-daily-accent',
   weekly: 'bg-weekly-accent',
   monthly: 'bg-monthly-accent',
 };
 
-export default function ReflectionView({ level, onClose }: ReflectionViewProps) {
+export default function ReflectionView() {
   const { t } = useTranslation();
+  const [level, setLevel] = useState<GoalLevel>('daily');
   const [insights, setInsights] = useState({
     insight1: '',
     insight2: '',
@@ -83,9 +79,26 @@ export default function ReflectionView({ level, onClose }: ReflectionViewProps) 
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
-      {/* Header */}
-      <div className="flex items-center justify-center px-3 py-2 border-b border-white/10" data-tauri-drag-region>
-        <h1 className="text-lg font-semibold text-primary">{t(`levels.${level}`)}{t('reflection.title')}</h1>
+      {/* Level tabs */}
+      <div className="border-b border-white/10 px-3 py-2">
+        <div className="flex gap-2">
+          {(['daily', 'weekly', 'monthly'] as GoalLevel[]).map((lvl) => (
+            <button
+              key={lvl}
+              onClick={() => setLevel(lvl)}
+              className={`
+                flex-1 px-4 py-1.5 rounded-lg text-sm font-medium
+                transition-all duration-200
+                ${level === lvl
+                  ? 'bg-white/15 text-primary'
+                  : 'text-secondary hover:bg-white/5 hover:text-primary'
+                }
+              `}
+            >
+              {t(`levels.${lvl}`)}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Content */}

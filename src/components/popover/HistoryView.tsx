@@ -130,7 +130,7 @@ export default function HistoryView() {
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
       {/* Header */}
-      <div className="px-3 py-2 border-b border-white/10" data-tauri-drag-region>
+      <div className="px-3 py-2 border-b border-white/10">
         <div className="flex items-center justify-between">
           <button
             onClick={goToPreviousMonth}
