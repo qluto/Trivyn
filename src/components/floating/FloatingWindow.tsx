@@ -77,7 +77,7 @@ export default function FloatingWindow() {
         />
       )}
       <div
-        className="relative w-[280px] min-h-[200px] max-h-[500px] rounded-xl glass-dark border border-subtle shadow-2xl overflow-hidden select-none"
+        className="relative w-[220px] rounded-xl glass-dark border border-subtle shadow-2xl overflow-hidden select-none"
         data-tauri-drag-region
       >
       {/* Level Switcher */}
@@ -90,10 +90,10 @@ export default function FloatingWindow() {
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-white/10 mx-2" data-tauri-drag-region />
+      <div className="h-px bg-white/10 mx-1" data-tauri-drag-region />
 
       {/* Goals List */}
-      <div className="p-2 space-y-0.5" data-tauri-drag-region>
+      <div className="px-1 py-1 space-y-0" data-tauri-drag-region>
         {currentGoals.length === 0 ? (
           <EmptyState level={selectedLevel} />
         ) : (

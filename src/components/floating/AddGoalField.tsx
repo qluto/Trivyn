@@ -35,10 +35,10 @@ export default function AddGoalField({ level, nextNumber, onAdd }: AddGoalFieldP
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full flex items-center gap-2.5 py-2 px-3">
+    <form onSubmit={handleSubmit} className="w-full flex items-center gap-2 py-1 px-1.5">
       {/* Number indicator */}
-      <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white/10">
-        <span className="text-xs font-semibold text-white/20">
+      <div className="flex items-center justify-center w-5 h-5 rounded-full border-2 border-white/10">
+        <span className="text-[10px] leading-none font-semibold text-white/20">
           {nextNumber}
         </span>
       </div>
@@ -54,7 +54,7 @@ export default function AddGoalField({ level, nextNumber, onAdd }: AddGoalFieldP
         placeholder={t('goals.addPlaceholder')}
         className={`
           flex-1 bg-transparent border-b-2 border-transparent
-          text-sm text-primary placeholder-white/30
+          text-xs leading-snug text-primary placeholder-white/30
           outline-none transition-all duration-200
           ${isFocused ? LEVEL_COLORS[level] : 'border-white/10'}
         `}

@@ -28,7 +28,7 @@ export default function NumberedGoalRow({ number, goal, level, onToggle }: Numbe
 
   return (
     <div
-      className="w-full flex items-center gap-2.5 py-2 px-3 rounded-lg group"
+      className="w-full flex items-center gap-2 py-1 px-1.5 rounded-lg group"
       data-tauri-drag-region
     >
       {/* Number circle - clickable */}
@@ -36,7 +36,7 @@ export default function NumberedGoalRow({ number, goal, level, onToggle }: Numbe
         onClick={handleClick}
         className={`
           flex items-center justify-center
-          w-6 h-6 rounded-full border-2
+          w-5 h-5 rounded-full border-2
           transition-all duration-200
           hover:scale-110
           ${isCompleted
@@ -45,7 +45,7 @@ export default function NumberedGoalRow({ number, goal, level, onToggle }: Numbe
           }
         `}
       >
-        <span className={`text-xs font-semibold ${isCompleted ? 'text-white' : 'text-secondary'}`}>
+        <span className={`text-[10px] leading-none font-semibold ${isCompleted ? 'text-white' : 'text-secondary'}`}>
           {number}
         </span>
       </button>
@@ -54,7 +54,7 @@ export default function NumberedGoalRow({ number, goal, level, onToggle }: Numbe
       <span
         data-tauri-drag-region
         className={`
-          flex-1 text-left text-sm
+          flex-1 text-left text-xs leading-snug
           transition-all duration-200
           ${isCompleted
             ? 'text-secondary line-through'
