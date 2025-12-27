@@ -45,10 +45,33 @@ function isSameDay(date1: Date, date2: Date): boolean {
   );
 }
 
-function getGoalsForDate(goals: Goal[], date: Date): Goal[] {
+function getGoalsForDate(goals: Goal[], date: Date, level?: GoalLevel): Goal[] {
   return goals.filter((goal) => {
     const goalDate = new Date(goal.createdAt);
-    return isSameDay(goalDate, date);
+    const matchesDate = isSameDay(goalDate, date);
+    return level ? matchesDate && goal.level === level : matchesDate;
+  });
+}
+
+function getWeekNumber(date: Date): number {
+  const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+  const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
+  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+}
+
+function getWeekGoals(goals: Goal[], year: number, weekNum: number): Goal[] {
+  return goals.filter((goal) => {
+    if (goal.level !== 'weekly') return false;
+    const goalDate = new Date(goal.createdAt);
+    return goalDate.getFullYear() === year && getWeekNumber(goalDate) === weekNum;
+  });
+}
+
+function getMonthGoals(goals: Goal[], year: number, month: number): Goal[] {
+  return goals.filter((goal) => {
+    if (goal.level !== 'monthly') return false;
+    const goalDate = new Date(goal.createdAt);
+    return goalDate.getFullYear() === year && goalDate.getMonth() === month;
   });
 }
 
@@ -65,6 +88,9 @@ export default function HistoryView() {
   // Weekday names based on current language
   const weekdayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const weekdays = weekdayKeys.map(key => t(`weekdays.short.${key}`));
+
+  // Get monthly goals for current month
+  const monthlyGoals = useMemo(() => getMonthGoals(goals, year, month), [goals, year, month]);
 
   // Month names for English
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -94,7 +120,7 @@ export default function HistoryView() {
     <div className="flex flex-col h-full bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
       {/* Header */}
       <div className="px-3 py-2 border-b border-white/10" data-tauri-drag-region>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between">
           <button
             onClick={goToPreviousMonth}
             className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors"
@@ -104,12 +130,28 @@ export default function HistoryView() {
             </svg>
           </button>
 
-          <h2 className="text-lg font-semibold text-primary">
-            {i18n.language === 'ja'
-              ? t('history.monthYear', { year, month: month + 1 })
-              : t('history.monthYear', { month: monthNames[month], year })
-            }
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-primary">
+              {i18n.language === 'ja'
+                ? t('history.monthYear', { year, month: month + 1 })
+                : t('history.monthYear', { month: monthNames[month], year })
+              }
+            </h2>
+            {monthlyGoals.length > 0 && (
+              <div className="flex gap-1">
+                {Array.from({ length: Math.min(monthlyGoals.length, 3) }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-2 h-2 rounded-full ${
+                      monthlyGoals.filter(g => g.isCompleted).length === monthlyGoals.length
+                        ? 'bg-green-400'
+                        : 'bg-monthly-accent'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
           <button
             onClick={goToNextMonth}
@@ -120,64 +162,91 @@ export default function HistoryView() {
             </svg>
           </button>
         </div>
-
-        <button
-          onClick={goToToday}
-          className="w-full py-2 px-4 rounded-lg bg-white/5 hover:bg-white/10 text-primary text-sm font-medium transition-colors"
-        >
-          {t('history.backToToday')}
-        </button>
       </div>
 
       {/* Calendar Grid */}
-      <div className="flex-1 overflow-y-auto px-3 py-2">
+      <div className="flex-1 overflow-y-auto px-6">
         {/* Weekday headers */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="grid grid-cols-8 gap-1 pt-2">
+          <div className="text-center text-xs font-medium text-secondary">
+            {/* Empty cell for week column */}
+          </div>
           {weekdays.map((day, index) => (
-            <div key={index} className="text-center text-xs font-medium text-secondary py-1">
+            <div key={index} className="text-center text-xs font-medium text-secondary">
               {day}
             </div>
           ))}
         </div>
 
         {/* Calendar days */}
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((date, index) => {
-            const isCurrentMonth = date.getMonth() === month;
-            const isToday = isSameDay(date, new Date());
-            const isSelected = selectedDate && isSameDay(date, selectedDate);
-            const dayGoals = getGoalsForDate(goals, date);
-            const hasGoals = dayGoals.length > 0;
-            const completedCount = dayGoals.filter((g) => g.isCompleted).length;
-            const allCompleted = hasGoals && completedCount === dayGoals.length;
+        <div className="space-y-1">
+          {Array.from({ length: Math.ceil(days.length / 7) }).map((_, weekIndex) => {
+            const weekStart = weekIndex * 7;
+            const weekDays = days.slice(weekStart, weekStart + 7);
+            const firstDayOfWeek = weekDays[0];
+            const weekNum = getWeekNumber(firstDayOfWeek);
+            const weekGoals = getWeekGoals(goals, firstDayOfWeek.getFullYear(), weekNum);
+            const hasWeekGoals = weekGoals.length > 0;
+            const weekGoalsCompleted = weekGoals.filter(g => g.isCompleted).length === weekGoals.length;
 
             return (
-              <button
-                key={index}
-                onClick={() => setSelectedDate(date)}
-                className={`
-                  relative aspect-square rounded-lg p-1 text-sm transition-all
-                  ${isCurrentMonth ? 'text-primary' : 'text-secondary opacity-40'}
-                  ${isToday ? 'ring-2 ring-blue-400' : ''}
-                  ${isSelected ? 'bg-white/20' : 'hover:bg-white/5'}
-                `}
-              >
-                <div className="flex flex-col items-center justify-center h-full">
-                  <span className={isToday ? 'font-bold' : ''}>{date.getDate()}</span>
-                  {hasGoals && (
-                    <div className="flex gap-0.5 mt-1">
-                      {Array.from({ length: Math.min(dayGoals.length, 3) }).map((_, i) => (
+              <div key={weekIndex} className="grid grid-cols-8 gap-1">
+                {/* Week indicator with dots */}
+                <div className="flex items-center justify-center">
+                  {hasWeekGoals && (
+                    <div className="flex flex-col gap-1">
+                      {Array.from({ length: Math.min(weekGoals.length, 3) }).map((_, i) => (
                         <div
                           key={i}
-                          className={`w-1 h-1 rounded-full ${
-                            allCompleted ? 'bg-green-400' : 'bg-blue-400/60'
+                          className={`w-2 h-2 rounded-full ${
+                            weekGoalsCompleted ? 'bg-green-400' : 'bg-weekly-accent'
                           }`}
                         />
                       ))}
                     </div>
                   )}
                 </div>
-              </button>
+
+                {/* Days of the week */}
+                {weekDays.map((date, dayIndex) => {
+                  const isCurrentMonth = date.getMonth() === month;
+                  const isToday = isSameDay(date, new Date());
+                  const isSelected = selectedDate && isSameDay(date, selectedDate);
+                  const dayGoals = getGoalsForDate(goals, date, 'daily');
+                  const hasGoals = dayGoals.length > 0;
+                  const completedCount = dayGoals.filter((g) => g.isCompleted).length;
+                  const allCompleted = hasGoals && completedCount === dayGoals.length;
+
+                  return (
+                    <button
+                      key={dayIndex}
+                      onClick={() => setSelectedDate(date)}
+                      className={`
+                        relative aspect-square rounded-lg text-base transition-all
+                        ${isCurrentMonth ? 'text-primary' : 'text-secondary opacity-40'}
+                        ${isToday ? 'ring-2 ring-blue-400' : ''}
+                        ${isSelected ? 'bg-white/20' : 'hover:bg-white/5'}
+                      `}
+                    >
+                      <div className="flex flex-col items-center justify-center h-full gap-0">
+                        <span className={isToday ? 'font-bold' : ''}>{date.getDate()}</span>
+                        {hasGoals && (
+                          <div className="flex gap-0.5">
+                            {Array.from({ length: Math.min(dayGoals.length, 3) }).map((_, i) => (
+                              <div
+                                key={i}
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  allCompleted ? 'bg-green-400' : 'bg-daily-accent'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
         </div>
