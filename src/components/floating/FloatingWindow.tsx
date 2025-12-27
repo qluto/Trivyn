@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGoalStore } from '../../store/goalStore';
 import { GoalLevel } from '../../types';
 import LevelSwitcher from './LevelSwitcher';
@@ -6,6 +6,7 @@ import NumberedGoalRow from './NumberedGoalRow';
 import AddGoalField from './AddGoalField';
 import EmptyState from './EmptyState';
 import ConfettiView from '../common/ConfettiView';
+import { invoke } from '@tauri-apps/api/core';
 
 export default function FloatingWindow() {
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel>('daily');
@@ -13,6 +14,7 @@ export default function FloatingWindow() {
   const [confettiLevel, setConfettiLevel] = useState<GoalLevel>('daily');
   const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
   const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadGoals();
@@ -23,6 +25,26 @@ export default function FloatingWindow() {
   useEffect(() => {
     setShowConfetti(false);
   }, [selectedLevel]);
+
+  // Dynamically resize window based on content, preserving top position
+  useEffect(() => {
+    const resizeWindow = async () => {
+      if (!containerRef.current) return;
+
+      // Calculate required height based on content
+      const contentHeight = containerRef.current.scrollHeight;
+      const newHeight = Math.max(80, Math.min(300, contentHeight));
+
+      // Call Rust command to resize with top position fixed
+      try {
+        await invoke('resize_window_from_top', { newHeight });
+      } catch (error) {
+        console.error('Failed to resize window:', error);
+      }
+    };
+
+    resizeWindow();
+  }, [goals, selectedLevel]);
 
   const currentGoals = goals.filter((g) => g.level === selectedLevel);
   const canAdd = canAddGoal(selectedLevel);
@@ -57,8 +79,8 @@ export default function FloatingWindow() {
   };
 
   const handleClose = async () => {
-    const { getCurrentWindow } = await import('@tauri-apps/api/window');
-    await getCurrentWindow().hide();
+    const { Window } = await import('@tauri-apps/api/window');
+    await Window.getCurrent().hide();
   };
 
   const goalsCount = {
@@ -77,6 +99,7 @@ export default function FloatingWindow() {
         />
       )}
       <div
+        ref={containerRef}
         className="relative w-[220px] rounded-xl glass-dark border border-subtle shadow-2xl overflow-hidden select-none"
         data-tauri-drag-region
       >
