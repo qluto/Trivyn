@@ -149,7 +149,7 @@ export default function FloatingWindow() {
       <div className="h-px bg-white/10 mx-1" data-tauri-drag-region />
 
       {/* Goals List */}
-      <div className="px-1 py-1 space-y-0" data-tauri-drag-region>
+      <div className="px-1 py-1 space-y-0 overflow-hidden" data-tauri-drag-region>
         {currentGoals.length === 0 ? (
           <EmptyState level={selectedLevel} />
         ) : (
