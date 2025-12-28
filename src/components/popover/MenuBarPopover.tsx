@@ -44,7 +44,9 @@ export default function MenuBarPopover() {
     const cleanup = setupEventListeners();
     return () => {
       console.log('[MenuBarPopover] Component unmounting, cleaning up event listeners');
-      cleanup.then(unlisten => unlisten && unlisten());
+      cleanup.then(unlisten => {
+        if (unlisten) unlisten();
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -52,10 +54,10 @@ export default function MenuBarPopover() {
   // Reload goals when window becomes visible
   useEffect(() => {
     const setupVisibilityListener = async () => {
-      const { getCurrent } = await import('@tauri-apps/api/window');
-      const currentWindow = getCurrent();
+      const { Window } = await import('@tauri-apps/api/window');
+      const currentWindow = Window.getCurrent();
 
-      const unlisten = await currentWindow.onFocusChanged(({ payload: focused }) => {
+      const unlisten = await currentWindow.onFocusChanged(({ payload: focused }: { payload: boolean }) => {
         if (focused) {
           console.log('[MenuBarPopover] Window focused, reloading goals');
           loadGoals();
@@ -67,7 +69,9 @@ export default function MenuBarPopover() {
 
     const cleanup = setupVisibilityListener();
     return () => {
-      cleanup.then(unlisten => unlisten && unlisten());
+      cleanup.then(unlisten => {
+        if (unlisten) unlisten();
+      });
     };
   }, [loadGoals]);
 
@@ -90,7 +94,9 @@ export default function MenuBarPopover() {
 
     const cleanup = setupReflectionListener();
     return () => {
-      cleanup.then(unlisten => unlisten && unlisten());
+      cleanup.then(unlisten => {
+        if (unlisten) unlisten();
+      });
     };
   }, []);
 

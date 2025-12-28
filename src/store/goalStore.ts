@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
-import { listen, Event } from '@tauri-apps/api/event';
+import { listen, UnlistenFn } from '@tauri-apps/api/event';
 import { Goal, GoalLevel } from '../types';
 
 interface GoalStore {
@@ -16,7 +16,7 @@ interface GoalStore {
   updateGoal: (goalId: string, title: string) => Promise<void>;
   deleteGoal: (goalId: string) => Promise<void>;
   setSelectedLevel: (level: GoalLevel) => void;
-  setupEventListeners: () => Promise<void>;
+  setupEventListeners: () => Promise<UnlistenFn>;
 
   // Computed
   getDailyGoals: () => Goal[];

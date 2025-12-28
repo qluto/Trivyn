@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGoalStore } from '../../store/goalStore';
 import { useReflectionStore } from '../../store/reflectionStore';
-import { Goal, GoalLevel, Reflection } from '../../types';
+import { Goal, GoalLevel } from '../../types';
 
 interface HistoryViewProps {
   onHeightChange?: (height: number) => void;
@@ -296,7 +296,6 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
             const weekNum = getWeekNumber(firstDayOfWeek);
             const weekGoals = getWeekGoals(goals, firstDayOfWeek.getFullYear(), weekNum);
             const hasWeekGoals = weekGoals.length > 0;
-            const weekGoalsCompleted = weekGoals.filter(g => g.isCompleted).length === weekGoals.length;
 
             return (
               <div key={weekIndex} className="grid grid-cols-8 gap-1">
@@ -326,8 +325,6 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                   const isSelected = selection?.type === 'date' && isSameDay(date, selection.date);
                   const dayGoals = getGoalsForDate(goals, date, 'daily');
                   const hasGoals = dayGoals.length > 0;
-                  const completedCount = dayGoals.filter((g) => g.isCompleted).length;
-                  const allCompleted = hasGoals && completedCount === dayGoals.length;
 
                   return (
                     <button

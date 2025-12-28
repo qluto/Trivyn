@@ -26,9 +26,6 @@ export default function SettingsView() {
     { value: 'en', label: t('settings.language.en') },
   ];
 
-  const weekdayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const weekStartDayName = t(`weekdays.${weekdayKeys[(weekStart - 1) % 7]}`);
-
   const handleWeekStartChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setWeekStart(parseInt(e.target.value));
   };

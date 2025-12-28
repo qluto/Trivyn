@@ -9,7 +9,6 @@ import EmptyState from './EmptyState';
 import ConfettiView from '../common/ConfettiView';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import i18n from '../../i18n';
 
 export default function FloatingWindow() {
   const { i18n: i18nInstance } = useTranslation();
@@ -29,7 +28,9 @@ export default function FloatingWindow() {
     const cleanup = setupEventListeners();
     return () => {
       console.log('[FloatingWindow] Component unmounting, cleaning up event listeners');
-      cleanup.then(unlisten => unlisten && unlisten());
+      cleanup.then(unlisten => {
+        if (unlisten) unlisten();
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -49,7 +50,9 @@ export default function FloatingWindow() {
 
     const cleanup = setupLanguageListener();
     return () => {
-      cleanup.then(unlisten => unlisten && unlisten());
+      cleanup.then(unlisten => {
+        if (unlisten) unlisten();
+      });
     };
   }, [i18nInstance]);
 

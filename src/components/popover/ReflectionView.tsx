@@ -34,8 +34,6 @@ export default function ReflectionView() {
 
   // Calculate goals stats for this level
   const levelGoals = goals.filter((g) => g.level === level);
-  const completedGoals = levelGoals.filter((g) => g.isCompleted).length;
-  const totalGoals = levelGoals.length;
 
   // Load reflection when component mounts or level changes
   useEffect(() => {
@@ -82,7 +80,9 @@ export default function ReflectionView() {
 
     const cleanup = setupReflectionListener();
     return () => {
-      cleanup.then(unlisten => unlisten && unlisten());
+      cleanup.then(unlisten => {
+        if (unlisten) unlisten();
+      });
     };
   }, []);
 
