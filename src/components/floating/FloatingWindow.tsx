@@ -131,11 +131,11 @@ export default function FloatingWindow() {
           onComplete={() => setConfettiState(null)}
         />
       )}
-      <div
-        ref={containerRef}
-        className="relative w-[220px] rounded-xl glass-dark border border-subtle shadow-2xl overflow-hidden select-none"
-        data-tauri-drag-region
-      >
+      <div ref={containerRef} className="relative w-[220px] rounded-xl overflow-hidden shadow-2xl">
+        <div
+          className="relative glass-dark border border-subtle select-none overflow-hidden rounded-xl"
+          data-tauri-drag-region
+        >
       {/* Level Switcher */}
       <div data-tauri-drag-region>
         <LevelSwitcher
@@ -185,6 +185,7 @@ export default function FloatingWindow() {
       >
         <span className="text-xs text-white/70 group-hover:text-white">✕</span>
       </button>
+        </div>
       </div>
     </>
   );

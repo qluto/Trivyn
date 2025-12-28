@@ -16,13 +16,9 @@ function App() {
   }, [isPopover]);
 
   return (
-    <div className="w-full h-full overflow-hidden">
-      {isPopover ? <MenuBarPopover /> : (
-        <div className="w-full h-full flex items-center justify-center overflow-hidden">
-          <FloatingWindow />
-        </div>
-      )}
-    </div>
+    <>
+      {isPopover ? <MenuBarPopover /> : <FloatingWindow />}
+    </>
   );
 }
 
