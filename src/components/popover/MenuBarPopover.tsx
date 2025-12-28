@@ -162,19 +162,6 @@ export default function MenuBarPopover() {
                 {t('navigation.goals')}
               </button>
               <button
-                onClick={() => setBottomTab('history')}
-                className={`
-                  px-3 py-1.5 rounded-lg text-sm font-medium
-                  transition-all duration-200
-                  ${bottomTab === 'history'
-                    ? 'bg-white/15 text-primary'
-                    : 'text-secondary hover:bg-white/5 hover:text-primary'
-                  }
-                `}
-              >
-                {t('navigation.history')}
-              </button>
-              <button
                 onClick={() => setBottomTab('reflection')}
                 className={`
                   px-3 py-1.5 rounded-lg text-sm font-medium
@@ -186,6 +173,19 @@ export default function MenuBarPopover() {
                 `}
               >
                 {t('navigation.reflection')}
+              </button>
+              <button
+                onClick={() => setBottomTab('history')}
+                className={`
+                  px-3 py-1.5 rounded-lg text-sm font-medium
+                  transition-all duration-200
+                  ${bottomTab === 'history'
+                    ? 'bg-white/15 text-primary'
+                    : 'text-secondary hover:bg-white/5 hover:text-primary'
+                  }
+                `}
+              >
+                {t('navigation.history')}
               </button>
               <button
                 onClick={() => setBottomTab('settings')}
