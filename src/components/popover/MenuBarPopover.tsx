@@ -39,13 +39,37 @@ export default function MenuBarPopover() {
   const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
 
   useEffect(() => {
+    console.log('[MenuBarPopover] Component mounted, loading goals and setting up event listeners');
     loadGoals();
     const cleanup = setupEventListeners();
     return () => {
+      console.log('[MenuBarPopover] Component unmounting, cleaning up event listeners');
       cleanup.then(unlisten => unlisten && unlisten());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Reload goals when window becomes visible
+  useEffect(() => {
+    const setupVisibilityListener = async () => {
+      const { getCurrent } = await import('@tauri-apps/api/window');
+      const currentWindow = getCurrent();
+
+      const unlisten = await currentWindow.onFocusChanged(({ payload: focused }) => {
+        if (focused) {
+          console.log('[MenuBarPopover] Window focused, reloading goals');
+          loadGoals();
+        }
+      });
+
+      return unlisten;
+    };
+
+    const cleanup = setupVisibilityListener();
+    return () => {
+      cleanup.then(unlisten => unlisten && unlisten());
+    };
+  }, [loadGoals]);
 
   // Listen for reflection prompt trigger events
   useEffect(() => {

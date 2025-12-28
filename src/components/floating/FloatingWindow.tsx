@@ -24,9 +24,11 @@ export default function FloatingWindow() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    console.log('[FloatingWindow] Component mounted, loading goals and setting up event listeners');
     loadGoals();
     const cleanup = setupEventListeners();
     return () => {
+      console.log('[FloatingWindow] Component unmounting, cleaning up event listeners');
       cleanup.then(unlisten => unlisten && unlisten());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

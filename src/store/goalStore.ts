@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { listen, Event } from '@tauri-apps/api/event';
 import { Goal, GoalLevel } from '../types';
 
 interface GoalStore {
@@ -33,11 +33,14 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
   error: null,
 
   loadGoals: async () => {
+    console.log('[goalStore] loadGoals called');
     set({ loading: true, error: null });
     try {
       const goals = await invoke<Goal[]>('get_goals', {});
+      console.log('[goalStore] Goals loaded from backend:', goals.length, 'goals');
       set({ goals, loading: false });
     } catch (error) {
+      console.error('[goalStore] Error loading goals:', error);
       set({ error: String(error), loading: false });
     }
   },
@@ -60,10 +63,13 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
 
   toggleGoalCompletion: async (goalId: string) => {
     try {
+      console.log('[goalStore] Toggling goal completion for:', goalId);
       const updatedGoal = await invoke<Goal>('toggle_goal_completion', { goalId });
+      console.log('[goalStore] Goal toggled, updated goal:', updatedGoal);
       set((state) => ({
         goals: state.goals.map((g) => (g.id === goalId ? updatedGoal : g)),
       }));
+      console.log('[goalStore] Local state updated, Rust backend will emit goals-updated event');
       // Event is emitted from Rust backend
       return updatedGoal;
     } catch (error) {
