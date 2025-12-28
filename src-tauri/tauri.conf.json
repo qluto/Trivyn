@@ -24,7 +24,7 @@
         "language": "en-US"
       },
       "nsis": {
-        "languages": ["en-US", "ja-JP"]
+        "languages": ["English", "Japanese"]
       }
     },
     "macOS": {
