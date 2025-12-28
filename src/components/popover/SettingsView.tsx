@@ -39,21 +39,11 @@ export default function SettingsView() {
 
   return (
     <div className="px-3 py-2 pb-4 space-y-4">
-      <div data-tauri-drag-region>
-        <h2 className="text-lg font-semibold text-primary mb-2">{t('settings.title')}</h2>
-        <p className="text-sm text-secondary">
-          {t('settings.description')}
-        </p>
-      </div>
-
       {/* Week start setting */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-primary block">
           {t('settings.weekStart.label')}
         </label>
-        <p className="text-xs text-secondary mb-2">
-          {t('settings.weekStart.description')}
-        </p>
         <select
           className="
             w-full p-3 rounded-lg
@@ -61,12 +51,21 @@ export default function SettingsView() {
             text-sm text-primary
             focus:outline-none focus:ring-2 focus:ring-white/20
             cursor-pointer
+            appearance-none
+            [&>option]:bg-gray-900 [&>option]:text-white
           "
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+            backgroundPosition: 'right 0.5rem center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: '1.5em 1.5em',
+            paddingRight: '2.5rem'
+          }}
           value={weekStart}
           onChange={handleWeekStartChange}
         >
           {weekStartOptions.map((option) => (
-            <option key={option.value} value={option.value} className="bg-gray-800">
+            <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
@@ -78,9 +77,6 @@ export default function SettingsView() {
         <label className="text-sm font-medium text-primary block">
           {t('settings.language.label')}
         </label>
-        <p className="text-xs text-secondary mb-2">
-          {t('settings.language.description')}
-        </p>
         <select
           className="
             w-full p-3 rounded-lg
@@ -88,12 +84,21 @@ export default function SettingsView() {
             text-sm text-primary
             focus:outline-none focus:ring-2 focus:ring-white/20
             cursor-pointer
+            appearance-none
+            [&>option]:bg-gray-900 [&>option]:text-white
           "
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+            backgroundPosition: 'right 0.5rem center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: '1.5em 1.5em',
+            paddingRight: '2.5rem'
+          }}
           value={language}
           onChange={handleLanguageChange}
         >
           {languageOptions.map((option) => (
-            <option key={option.value} value={option.value} className="bg-gray-800">
+            <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
@@ -105,30 +110,42 @@ export default function SettingsView() {
         <label className="text-sm font-medium text-primary block">
           {t('settings.notifications.label')}
         </label>
-        <p className="text-xs text-secondary mb-2">
-          {t('settings.notifications.description')}
-        </p>
         <div className="space-y-2">
           <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer">
-            <input
-              type="checkbox"
-              className="w-4 h-4 rounded cursor-pointer"
-              checked={reflectionPromptEnabled}
-              onChange={(e) => setReflectionPromptEnabled(e.target.checked)}
-            />
+            <div className="relative flex-shrink-0">
+              <input
+                type="checkbox"
+                className="
+                  w-5 h-5 rounded cursor-pointer
+                  appearance-none
+                  bg-white/5 border border-white/10
+                  checked:bg-white/20 checked:border-white/30
+                  transition-all duration-200
+                "
+                checked={reflectionPromptEnabled}
+                onChange={(e) => setReflectionPromptEnabled(e.target.checked)}
+              />
+              {reflectionPromptEnabled && (
+                <svg
+                  className="absolute inset-0 w-5 h-5 pointer-events-none"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke="white"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+            </div>
             <div className="flex-1">
               <div className="text-sm text-primary">{t('settings.notifications.reflectionPrompt')}</div>
               <div className="text-xs text-secondary">{t('settings.notifications.reflectionPromptDesc')}</div>
             </div>
           </label>
-        </div>
-      </div>
-
-      {/* App info */}
-      <div className="pt-2 border-t border-white/10" data-tauri-drag-region>
-        <div className="text-xs text-secondary space-y-1">
-          <div>{t('app.name')} {t('app.version')}</div>
-          <div>{t('app.description')}</div>
         </div>
       </div>
     </div>
