@@ -14,9 +14,12 @@ import i18n from '../../i18n';
 export default function FloatingWindow() {
   const { i18n: i18nInstance } = useTranslation();
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel>('daily');
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [confettiLevel, setConfettiLevel] = useState<GoalLevel>('daily');
-  const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
+  const [confettiState, setConfettiState] = useState<{
+    show: boolean;
+    goalId: string;
+    level: GoalLevel;
+    position: { x: number; y: number };
+  } | null>(null);
   const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -50,7 +53,7 @@ export default function FloatingWindow() {
 
   // Reset confetti when changing tabs
   useEffect(() => {
-    setShowConfetti(false);
+    setConfettiState(null);
   }, [selectedLevel]);
 
   // Dynamically resize window based on content, preserving top position
@@ -86,19 +89,22 @@ export default function FloatingWindow() {
 
   const handleToggle = async (goalId: string, position: { x: number; y: number }) => {
     try {
-      // Toggle the goal and get the updated state
       const updatedGoal = await toggleGoalCompletion(goalId);
 
-      // Show confetti only if the goal was just completed (is now true)
       if (updatedGoal.isCompleted) {
-        setConfettiLevel(updatedGoal.level);
-        setConfettiPosition(position);
-        setShowConfetti(true);
-
-        // Safety timeout to ensure confetti is hidden after animation (3 seconds)
-        setTimeout(() => {
-          setShowConfetti(false);
-        }, 3500);
+        // 完了時：新しいconfettiを表示（前のconfettiは自動的に置き換わる）
+        setConfettiState({
+          show: true,
+          goalId: updatedGoal.id,
+          level: updatedGoal.level,
+          position,
+        });
+      } else {
+        // キャンセル時：同じゴールのconfettiが表示中であれば停止
+        if (confettiState?.goalId === goalId) {
+          setConfettiState(null);
+        }
+        // 異なるゴールのconfettiは継続（影響を与えない）
       }
     } catch (error) {
       console.error('Failed to toggle goal:', error);
@@ -118,11 +124,11 @@ export default function FloatingWindow() {
 
   return (
     <>
-      {showConfetti && (
+      {confettiState && confettiState.show && (
         <ConfettiView
-          level={confettiLevel}
-          startPosition={confettiPosition}
-          onComplete={() => setShowConfetti(false)}
+          level={confettiState.level}
+          startPosition={confettiState.position}
+          onComplete={() => setConfettiState(null)}
         />
       )}
       <div

@@ -28,6 +28,12 @@ const LEVEL_COLORS: Record<GoalLevel, string[]> = {
 export default function ConfettiView({ level, startPosition, onComplete }: ConfettiViewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number>();
+  const onCompleteRef = useRef(onComplete);
+
+  // 最新のonCompleteを常に参照
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -99,7 +105,7 @@ export default function ConfettiView({ level, startPosition, onComplete }: Confe
       if (progress < 1) {
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
-        onComplete?.();
+        onCompleteRef.current?.();
       }
     };
 
@@ -110,7 +116,7 @@ export default function ConfettiView({ level, startPosition, onComplete }: Confe
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [level, startPosition, onComplete]);
+  }, [level, startPosition]);
 
   return (
     <canvas
