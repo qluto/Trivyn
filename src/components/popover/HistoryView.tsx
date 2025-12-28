@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGoalStore } from '../../store/goalStore';
-import { Goal, GoalLevel } from '../../types';
+import { useReflectionStore } from '../../store/reflectionStore';
+import { Goal, GoalLevel, Reflection } from '../../types';
 
 interface HistoryViewProps {
   onHeightChange?: (height: number) => void;
@@ -85,9 +86,48 @@ type Selection =
   | { type: 'month'; year: number; month: number }
   | null;
 
+// Generate period key for a specific selection
+function generatePeriodKeyForSelection(selection: Selection): string | null {
+  if (!selection) return null;
+
+  switch (selection.type) {
+    case 'date':
+      // Format: YYYY-MM-DD
+      const year = selection.date.getFullYear();
+      const month = String(selection.date.getMonth() + 1).padStart(2, '0');
+      const day = String(selection.date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    case 'week':
+      // Format: YYYY-Www
+      return `${selection.year}-W${String(selection.week).padStart(2, '0')}`;
+    case 'month':
+      // Format: YYYY-MM
+      const monthStr = String(selection.month + 1).padStart(2, '0');
+      return `${selection.year}-${monthStr}`;
+    default:
+      return null;
+  }
+}
+
+// Get level from selection type
+function getLevelFromSelection(selection: Selection): GoalLevel | null {
+  if (!selection) return null;
+  switch (selection.type) {
+    case 'date':
+      return 'daily';
+    case 'week':
+      return 'weekly';
+    case 'month':
+      return 'monthly';
+    default:
+      return null;
+  }
+}
+
 export default function HistoryView({ onHeightChange }: HistoryViewProps) {
   const { t, i18n } = useTranslation();
   const { goals, deleteGoal } = useGoalStore();
+  const { loadReflection, getReflection } = useReflectionStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selection, setSelection] = useState<Selection>(null);
 
@@ -121,6 +161,26 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
     }
   }, [goals, selection]);
 
+  // Load reflection when selection changes
+  useEffect(() => {
+    const level = getLevelFromSelection(selection);
+    const periodKey = generatePeriodKeyForSelection(selection);
+
+    if (level && periodKey) {
+      loadReflection(level, periodKey);
+    }
+  }, [selection, loadReflection]);
+
+  // Get reflection for current selection
+  const selectedReflection = useMemo(() => {
+    const level = getLevelFromSelection(selection);
+    const periodKey = generatePeriodKeyForSelection(selection);
+
+    if (!level || !periodKey) return null;
+
+    return getReflection(level, periodKey);
+  }, [selection, getReflection]);
+
   const goToPreviousMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
     setSelection(null);
@@ -139,17 +199,33 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
       const baseHeight = 550; // Calendar base height
       const headerHeight = 50; // Selection header height
       const goalHeight = 48; // Height per goal
+      const reflectionHeaderHeight = 40; // Reflection section header
+      const reflectionItemHeight = 30; // Height per reflection insight
 
       if (!selection || selectedGoals.length === 0) {
         return 720; // Default height when nothing selected
       }
 
-      const selectionDetailHeight = headerHeight + (selectedGoals.length * goalHeight) + 80; // Extra padding
+      let selectionDetailHeight = headerHeight + (selectedGoals.length * goalHeight) + 80; // Extra padding
+
+      // Add height for reflection if it exists
+      if (selectedReflection) {
+        const insightCount = [
+          selectedReflection.insight1,
+          selectedReflection.insight2,
+          selectedReflection.insight3
+        ].filter(insight => insight && insight.trim() !== '').length;
+
+        if (insightCount > 0) {
+          selectionDetailHeight += reflectionHeaderHeight + (insightCount * reflectionItemHeight) + 40; // Extra padding
+        }
+      }
+
       return Math.min(baseHeight + selectionDetailHeight, 900); // Max 900px
     };
 
     onHeightChange(calculateHeight());
-  }, [selection, selectedGoals.length, onHeightChange]);
+  }, [selection, selectedGoals.length, selectedReflection, onHeightChange]);
 
   return (
     <div className="flex flex-col bg-black/20">
@@ -358,6 +434,31 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                   </div>
                 ))}
               </div>
+            )}
+
+            {/* Reflection display */}
+            {selectedReflection && (
+              <>
+                <div className="h-px bg-white/10 my-4" />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">💡</span>
+                    <h4 className="text-sm font-semibold text-primary">{t('reflection.insights')}</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {[selectedReflection.insight1, selectedReflection.insight2, selectedReflection.insight3]
+                      .filter(insight => insight && insight.trim() !== '')
+                      .map((insight, index) => (
+                        <div key={index} className="flex gap-2">
+                          <div className="flex-shrink-0 mt-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white/70" />
+                          </div>
+                          <p className="text-xs text-primary flex-1 leading-relaxed">{insight}</p>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </>
             )}
           </div>
         )}

@@ -235,22 +235,50 @@ export default function MenuBarPopover() {
               {/* Level tabs for goals */}
               <div className="border-b border-subtle px-3 py-2">
                 <div className="flex gap-2">
-                  {(['daily', 'weekly', 'monthly'] as GoalLevel[]).map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => setSelectedLevel(level)}
-                      className={`
-                        flex-1 px-4 py-1.5 rounded-lg text-sm font-medium
-                        transition-all duration-200
-                        ${selectedLevel === level
-                          ? 'bg-white/15 text-primary'
-                          : 'text-secondary hover:bg-white/5 hover:text-primary'
-                        }
-                      `}
-                    >
-                      {t(`levels.${level}`)}
-                    </button>
-                  ))}
+                  {(['daily', 'weekly', 'monthly'] as GoalLevel[]).map((level) => {
+                    const count = goals.filter((g) => g.level === level).length;
+                    const completedCount = goals.filter((g) => g.level === level && g.isCompleted).length;
+                    const levelColors: Record<GoalLevel, string> = {
+                      daily: 'bg-daily-accent',
+                      weekly: 'bg-weekly-accent',
+                      monthly: 'bg-monthly-accent',
+                    };
+
+                    return (
+                      <button
+                        key={level}
+                        onClick={() => setSelectedLevel(level)}
+                        className={`
+                          flex-1 px-4 py-1.5 rounded-lg text-sm font-medium
+                          transition-all duration-200 flex items-center justify-center gap-1.5
+                          ${selectedLevel === level
+                            ? 'bg-white/15 text-primary'
+                            : 'text-secondary hover:bg-white/5 hover:text-primary'
+                          }
+                        `}
+                      >
+                        {/* Progress dots */}
+                        <div className="flex gap-0.5">
+                          {[0, 1, 2].map((index) => (
+                            <div
+                              key={index}
+                              className={`
+                                w-1.5 h-1.5 rounded-full transition-all
+                                ${index < count
+                                  ? index < completedCount
+                                    ? levelColors[level]
+                                    : 'bg-white/30'
+                                  : 'bg-white/10'
+                                }
+                              `}
+                            />
+                          ))}
+                        </div>
+
+                        {t(`levels.${level}`)}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

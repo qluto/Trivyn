@@ -49,7 +49,7 @@ export default function LevelSwitcher({ selected, onChange, goalsCount }: LevelS
                 <div
                   key={index}
                   className={`
-                    w-1 h-1 rounded-full transition-all
+                    w-1.5 h-1.5 rounded-full transition-all
                     ${index < count
                       ? index < completedCount
                         ? LEVEL_COLORS[level]
