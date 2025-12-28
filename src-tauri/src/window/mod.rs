@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use tauri::{AppHandle, Manager, PhysicalPosition, Runtime};
 use crate::db::Database;
 

@@ -1,4 +1,4 @@
-use tauri::{State, Manager, AppHandle, Emitter};
+use tauri::{State, AppHandle, Emitter};
 use std::collections::HashMap;
 use serde::Serialize;
 use crate::db::Database;
