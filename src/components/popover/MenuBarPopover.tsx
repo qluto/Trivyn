@@ -109,6 +109,16 @@ export default function MenuBarPopover() {
   useEffect(() => {
     const resizeWindow = async () => {
       try {
+        // Only resize when window is visible
+        const { Window } = await import('@tauri-apps/api/window');
+        const currentWindow = Window.getCurrent();
+        const isVisible = await currentWindow.isVisible();
+
+        if (!isVisible) {
+          console.log('[MenuBarPopover] Window not visible, skipping resize');
+          return;
+        }
+
         const height = bottomTab === 'history' ? historyHeight : PAGE_HEIGHTS[bottomTab];
         console.log(`[MenuBarPopover] Resizing to ${height}px for tab: ${bottomTab}`);
         console.log(`[MenuBarPopover] Window size before: ${window.innerWidth}x${window.innerHeight}`);
