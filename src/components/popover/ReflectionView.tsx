@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { listen } from '@tauri-apps/api/event';
 import { GoalLevel } from '../../types';
 import { useReflectionStore, generatePeriodKey } from '../../store/reflectionStore';
 import { useGoalStore } from '../../store/goalStore';
+
+interface PeriodChangeEvent {
+  has_weekly_change: boolean;
+  has_monthly_change: boolean;
+  current_week_key: string;
+  current_month_key: string;
+}
 
 const LEVEL_COLORS: Record<GoalLevel, string> = {
   daily: 'bg-daily-accent',
@@ -19,6 +27,7 @@ export default function ReflectionView() {
     insight3: '',
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [showMonthlyNotice, setShowMonthlyNotice] = useState(false);
 
   const { loadReflection, saveReflection, getReflection } = useReflectionStore();
   const { goals } = useGoalStore();
@@ -53,6 +62,29 @@ export default function ReflectionView() {
       });
     }
   }, [level, getReflection]);
+
+  // Listen for reflection prompt trigger events
+  useEffect(() => {
+    const setupReflectionListener = async () => {
+      const unlisten = await listen<PeriodChangeEvent>('reflection-prompt-trigger', (event) => {
+        const { has_weekly_change, has_monthly_change } = event.payload;
+
+        console.log('[ReflectionView] Received reflection-prompt-trigger event:', event.payload);
+
+        // 週次と月次の両方が該当する場合、通知バナーを表示
+        if (has_weekly_change && has_monthly_change) {
+          setShowMonthlyNotice(true);
+        }
+      });
+
+      return unlisten;
+    };
+
+    const cleanup = setupReflectionListener();
+    return () => {
+      cleanup.then(unlisten => unlisten && unlisten());
+    };
+  }, []);
 
   const handleSave = async () => {
     if (isSaving) return;
@@ -103,6 +135,13 @@ export default function ReflectionView() {
 
       {/* Content */}
       <div className="overflow-y-auto px-3 py-3 pb-4 space-y-4">
+        {/* Monthly notice banner */}
+        {showMonthlyNotice && (
+          <div className="px-4 py-2 bg-blue-500/10 border-l-2 border-blue-500 text-sm text-blue-400 rounded">
+            月次の振り返りも期限を迎えています。週次の後にご記入ください。
+          </div>
+        )}
+
         {/* Goals List (Read-only) */}
         {levelGoals.length > 0 && (
           <div className="space-y-0">

@@ -7,6 +7,7 @@ interface SettingsStore {
   weekStart: number;
   language: AppLanguage;
   floatingWindowPosition: WindowPosition;
+  reflectionPromptEnabled: boolean;
   loading: boolean;
 
   // Actions
@@ -14,12 +15,14 @@ interface SettingsStore {
   setWeekStart: (day: number) => Promise<void>;
   setLanguage: (lang: AppLanguage) => Promise<void>;
   setFloatingWindowPosition: (pos: WindowPosition) => Promise<void>;
+  setReflectionPromptEnabled: (enabled: boolean) => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsStore>((set) => ({
   weekStart: 2, // Monday
   language: 'system',
   floatingWindowPosition: { x: 0, y: 0 },
+  reflectionPromptEnabled: true,
   loading: false,
 
   loadSettings: async () => {
@@ -42,6 +45,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         floatingWindowPosition: JSON.parse(
           settings.floating_window_position || '{"x":0,"y":0}'
         ),
+        reflectionPromptEnabled: settings.reflection_prompt_enabled !== 'false',
         loading: false,
       });
     } catch (error) {
@@ -85,6 +89,18 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       set({ floatingWindowPosition: pos });
     } catch (error) {
       console.error('Failed to set window position:', error);
+    }
+  },
+
+  setReflectionPromptEnabled: async (enabled: boolean) => {
+    try {
+      await invoke('set_setting', {
+        key: 'reflection_prompt_enabled',
+        value: String(enabled),
+      });
+      set({ reflectionPromptEnabled: enabled });
+    } catch (error) {
+      console.error('Failed to set reflection prompt enabled:', error);
     }
   },
 }));

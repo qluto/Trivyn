@@ -4,7 +4,7 @@ import { useSettingsStore } from '../../store/settingsStore';
 
 export default function SettingsView() {
   const { t } = useTranslation();
-  const { weekStart, language, loadSettings, setWeekStart, setLanguage } = useSettingsStore();
+  const { weekStart, language, reflectionPromptEnabled, loadSettings, setWeekStart, setLanguage, setReflectionPromptEnabled } = useSettingsStore();
 
   useEffect(() => {
     loadSettings();
@@ -112,32 +112,9 @@ export default function SettingsView() {
           <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer">
             <input
               type="checkbox"
-              className="w-4 h-4 rounded"
-              defaultChecked
-            />
-            <div className="flex-1">
-              <div className="text-sm text-primary">{t('settings.notifications.weeklyReminder')}</div>
-              <div className="text-xs text-secondary">{weekStartDayName}{t('settings.notifications.weeklyReminderDesc')}</div>
-            </div>
-          </label>
-
-          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer">
-            <input
-              type="checkbox"
-              className="w-4 h-4 rounded"
-              defaultChecked
-            />
-            <div className="flex-1">
-              <div className="text-sm text-primary">{t('settings.notifications.monthlyReminder')}</div>
-              <div className="text-xs text-secondary">{t('settings.notifications.monthlyReminderDesc')}</div>
-            </div>
-          </label>
-
-          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer">
-            <input
-              type="checkbox"
-              className="w-4 h-4 rounded"
-              defaultChecked
+              className="w-4 h-4 rounded cursor-pointer"
+              checked={reflectionPromptEnabled}
+              onChange={(e) => setReflectionPromptEnabled(e.target.checked)}
             />
             <div className="flex-1">
               <div className="text-sm text-primary">{t('settings.notifications.reflectionPrompt')}</div>

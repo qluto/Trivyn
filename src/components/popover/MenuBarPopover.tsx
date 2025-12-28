@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { useGoalStore } from '../../store/goalStore';
 import { GoalLevel } from '../../types';
 import HistoryView from './HistoryView';
@@ -11,6 +12,13 @@ import AddGoalField from '../floating/AddGoalField';
 import ConfettiView from '../common/ConfettiView';
 
 type BottomTab = 'goals' | 'reflection' | 'history' | 'settings';
+
+interface PeriodChangeEvent {
+  has_weekly_change: boolean;
+  has_monthly_change: boolean;
+  current_week_key: string;
+  current_month_key: string;
+}
 
 // Page heights for different tabs
 const PAGE_HEIGHTS: Record<BottomTab, number> = {
@@ -37,6 +45,29 @@ export default function MenuBarPopover() {
       cleanup.then(unlisten => unlisten && unlisten());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Listen for reflection prompt trigger events
+  useEffect(() => {
+    const setupReflectionListener = async () => {
+      const unlisten = await listen<PeriodChangeEvent>('reflection-prompt-trigger', (event) => {
+        const { has_weekly_change } = event.payload;
+
+        console.log('[MenuBarPopover] Received reflection-prompt-trigger event:', event.payload);
+
+        // 週次優先でReflectionViewに切り替え
+        if (has_weekly_change) {
+          setBottomTab('reflection');
+        }
+      });
+
+      return unlisten;
+    };
+
+    const cleanup = setupReflectionListener();
+    return () => {
+      cleanup.then(unlisten => unlisten && unlisten());
+    };
   }, []);
 
   // Reset confetti when changing tabs (level or bottom tab)

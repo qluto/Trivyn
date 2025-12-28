@@ -8,6 +8,7 @@ mod db;
 mod commands;
 mod tray;
 mod window;
+mod reflection_reminder;
 
 fn main() {
     tauri::Builder::default()
@@ -41,6 +42,25 @@ fn main() {
                 let _ = window.show();
             }
 
+            // Initialize reflection reminder
+            let db_state: tauri::State<db::Database> = app.state();
+            let reminder = std::sync::Arc::new(reflection_reminder::ReflectionReminder::new(
+                db_state.inner().clone(),
+            ));
+
+            // Run initial check
+            let app_handle_clone = app.handle().clone();
+            if let Err(e) = reminder.check_and_notify(&app_handle_clone) {
+                eprintln!("Initial reflection check failed: {}", e);
+            }
+
+            // Start background checker
+            let app_handle = app.handle().clone();
+            let reminder_clone = reminder.clone();
+            tauri::async_runtime::spawn(async move {
+                reflection_reminder::background::start_background_checker(reminder_clone, app_handle).await;
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -57,6 +77,8 @@ fn main() {
             commands::reflections::get_reflections_by_level,
             commands::periods::is_goal_in_period,
             commands::periods::get_period_start,
+            commands::periods::get_week_key,
+            commands::periods::get_month_key,
             commands::window::resize_window_from_top,
             commands::window::resize_popover,
         ])

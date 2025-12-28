@@ -1,22 +1,23 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager};
 
 pub mod goals;
 pub mod settings;
 pub mod reflections;
 
+#[derive(Clone)]
 pub struct Database {
-    pub conn: Mutex<Connection>,
+    pub conn: Arc<Mutex<Connection>>,
 }
 
 impl Database {
     pub fn new(path: PathBuf) -> Result<Self> {
         let conn = Connection::open(path)?;
         Ok(Self {
-            conn: Mutex::new(conn),
+            conn: Arc::new(Mutex::new(conn)),
         })
     }
 }
@@ -104,6 +105,22 @@ pub async fn init_database(app: &AppHandle) -> Result<()> {
     conn.execute(
         "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
         params!["last_monthly_reflection", "0"],
+    )?;
+    conn.execute(
+        "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+        params!["reflection_prompt_enabled", "true"],
+    )?;
+    conn.execute(
+        "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+        params!["last_period_check_timestamp", "0"],
+    )?;
+    conn.execute(
+        "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+        params!["last_weekly_reflection_prompt", ""],
+    )?;
+    conn.execute(
+        "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+        params!["last_monthly_reflection_prompt", ""],
     )?;
 
     // Create reflections table

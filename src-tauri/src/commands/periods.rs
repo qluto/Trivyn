@@ -87,6 +87,29 @@ fn get_month_start(dt: &DateTime<Local>) -> DateTime<Local> {
         .unwrap()
 }
 
+/// Get week key in format "2025-W01"
+#[tauri::command]
+pub fn get_week_key(date: i64, week_start: i32) -> Result<String, String> {
+    let dt = DateTime::from_timestamp_millis(date)
+        .ok_or("Invalid date timestamp")?
+        .with_timezone(&Local);
+
+    let week_start_dt = get_week_start(&dt, week_start);
+    let iso_week = week_start_dt.iso_week();
+
+    Ok(format!("{}-W{:02}", iso_week.year(), iso_week.week()))
+}
+
+/// Get month key in format "2025-01"
+#[tauri::command]
+pub fn get_month_key(date: i64) -> Result<String, String> {
+    let dt = DateTime::from_timestamp_millis(date)
+        .ok_or("Invalid date timestamp")?
+        .with_timezone(&Local);
+
+    Ok(format!("{}-{:02}", dt.year(), dt.month()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
