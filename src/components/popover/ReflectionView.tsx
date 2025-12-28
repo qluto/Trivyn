@@ -110,7 +110,7 @@ export default function ReflectionView() {
   };
 
   return (
-    <div className="flex flex-col bg-gradient-to-b from-[#1a2530] to-[#0f1419]">
+    <div className="flex flex-col bg-black/20">
       {/* Level tabs */}
       <div className="border-b border-white/10 px-3 py-2">
         <div className="flex gap-2">
