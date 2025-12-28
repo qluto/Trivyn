@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGoalStore } from '../../store/goalStore';
 import { GoalLevel } from '../../types';
 import LevelSwitcher from './LevelSwitcher';
@@ -7,8 +8,11 @@ import AddGoalField from './AddGoalField';
 import EmptyState from './EmptyState';
 import ConfettiView from '../common/ConfettiView';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import i18n from '../../i18n';
 
 export default function FloatingWindow() {
+  const { i18n: i18nInstance } = useTranslation();
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel>('daily');
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiLevel, setConfettiLevel] = useState<GoalLevel>('daily');
@@ -24,6 +28,25 @@ export default function FloatingWindow() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Listen for language changes from other windows
+  useEffect(() => {
+    const setupLanguageListener = async () => {
+      const unlisten = await listen<{ language: string; i18nLanguage: string }>(
+        'language-changed',
+        async (event) => {
+          console.log('[FloatingWindow] Language changed:', event.payload);
+          await i18nInstance.changeLanguage(event.payload.i18nLanguage);
+        }
+      );
+      return unlisten;
+    };
+
+    const cleanup = setupLanguageListener();
+    return () => {
+      cleanup.then(unlisten => unlisten && unlisten());
+    };
+  }, [i18nInstance]);
 
   // Reset confetti when changing tabs
   useEffect(() => {

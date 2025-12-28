@@ -71,6 +71,7 @@ fn main() {
             commands::goals::delete_goal,
             commands::settings::get_setting,
             commands::settings::set_setting,
+            commands::settings::set_language,
             commands::settings::get_all_settings,
             commands::reflections::get_reflection,
             commands::reflections::save_reflection,

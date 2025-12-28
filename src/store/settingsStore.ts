@@ -65,14 +65,18 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
 
   setLanguage: async (lang: AppLanguage) => {
     try {
-      await invoke('set_setting', { key: 'language', value: lang });
-
       // Apply language to i18n
       let i18nLang = lang;
       if (lang === 'system') {
         i18nLang = navigator.language.startsWith('ja') ? 'ja' : 'en';
       }
       await i18n.changeLanguage(i18nLang);
+
+      // Save to database and emit event to all windows via Rust
+      await invoke('set_language', {
+        language: lang,
+        i18nLanguage: i18nLang
+      });
 
       set({ language: lang });
     } catch (error) {
