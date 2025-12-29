@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGoalStore } from '../../store/goalStore';
 import { useReflectionStore } from '../../store/reflectionStore';
@@ -126,10 +126,11 @@ function getLevelFromSelection(selection: Selection): GoalLevel | null {
 
 export default function HistoryView({ onHeightChange }: HistoryViewProps) {
   const { t, i18n } = useTranslation();
-  const { goals, deleteGoal } = useGoalStore();
+  const { goals } = useGoalStore();
   const { loadReflection, getReflection } = useReflectionStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selection, setSelection] = useState<Selection>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -191,44 +192,31 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
     setSelection(null);
   };
 
-  // Notify parent of height changes based on selection
+  // Notify parent of height changes
   useEffect(() => {
-    if (!onHeightChange) return;
+    if (!onHeightChange || !contentRef.current) return;
 
-    const calculateHeight = () => {
-      const baseHeight = 550; // Calendar base height
-      const headerHeight = 50; // Selection header height
-      const goalHeight = 48; // Height per goal
-      const reflectionHeaderHeight = 40; // Reflection section header
-      const reflectionItemHeight = 30; // Height per reflection insight
-
-      if (!selection || selectedGoals.length === 0) {
-        return 720; // Default height when nothing selected
+    const updateHeight = () => {
+      if (contentRef.current) {
+        const height = contentRef.current.scrollHeight;
+        onHeightChange(height);
       }
-
-      let selectionDetailHeight = headerHeight + (selectedGoals.length * goalHeight) + 80; // Extra padding
-
-      // Add height for reflection if it exists
-      if (selectedReflection) {
-        const insightCount = [
-          selectedReflection.insight1,
-          selectedReflection.insight2,
-          selectedReflection.insight3
-        ].filter(insight => insight && insight.trim() !== '').length;
-
-        if (insightCount > 0) {
-          selectionDetailHeight += reflectionHeaderHeight + (insightCount * reflectionItemHeight) + 40; // Extra padding
-        }
-      }
-
-      return Math.min(baseHeight + selectionDetailHeight, 900); // Max 900px
     };
 
-    onHeightChange(calculateHeight());
+    // Update immediately
+    updateHeight();
+
+    // Use ResizeObserver to detect content changes
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(contentRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, [selection, selectedGoals.length, selectedReflection, onHeightChange]);
 
   return (
-    <div className="flex flex-col bg-transparent">
+    <div ref={contentRef} className="flex flex-col bg-transparent">
       {/* Header */}
       <div className="px-3 py-2 border-b border-gray-900/10 dark:border-white/10">
         <div className="flex items-center justify-between">
@@ -260,7 +248,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="overflow-hidden px-6 pb-4">
+      <div className="overflow-hidden px-6 pb-2">
         {/* Weekday headers */}
         <div className="grid grid-cols-8 gap-1 pt-2">
           <button
@@ -396,11 +384,11 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                 {selectedGoals.map((goal) => (
                   <div
                     key={goal.id}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-gray-900/5 dark:bg-white/5 group"
+                    className="flex items-center gap-2 p-2 rounded-lg bg-gray-900/5 dark:bg-white/5"
                   >
                     <div
                       className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                        goal.isCompleted ? 'bg-green-400' : LEVEL_COLORS[goal.level]
+                        goal.isCompleted ? LEVEL_COLORS[goal.level] : 'bg-gray-500'
                       }`}
                     />
                     <span
@@ -410,24 +398,6 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                     >
                       {goal.title}
                     </span>
-                    {goal.isCompleted && (
-                      <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                    <button
-                      onClick={() => deleteGoal(goal.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-500/20 rounded flex-shrink-0"
-                      title={t('history.delete')}
-                    >
-                      <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
                   </div>
                 ))}
               </div>
