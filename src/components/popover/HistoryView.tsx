@@ -260,7 +260,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="overflow-y-auto px-6 pb-4">
+      <div className="overflow-hidden px-6 pb-4">
         {/* Weekday headers */}
         <div className="grid grid-cols-8 gap-1 pt-2">
           <button
@@ -404,7 +404,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                       }`}
                     />
                     <span
-                      className={`text-sm flex-1 ${
+                      className={`text-sm flex-1 min-w-0 break-words whitespace-normal ${
                         goal.isCompleted ? 'text-secondary line-through' : 'text-primary'
                       }`}
                     >
@@ -446,11 +446,11 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                     {[selectedReflection.insight1, selectedReflection.insight2, selectedReflection.insight3]
                       .filter(insight => insight && insight.trim() !== '')
                       .map((insight, index) => (
-                        <div key={index} className="flex gap-2">
+                        <div key={index} className="flex gap-2 items-start">
                           <div className="flex-shrink-0 mt-1">
                             <div className="w-1.5 h-1.5 rounded-full bg-gray-900/70 dark:bg-white/70" />
                           </div>
-                          <p className="text-xs text-primary flex-1 leading-relaxed">{insight}</p>
+                          <p className="text-xs text-primary flex-1 min-w-0 leading-relaxed break-words whitespace-normal">{insight}</p>
                         </div>
                       ))}
                   </div>

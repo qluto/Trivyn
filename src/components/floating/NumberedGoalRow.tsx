@@ -54,7 +54,7 @@ export default function NumberedGoalRow({ number, goal, level, onToggle }: Numbe
       <span
         data-tauri-drag-region
         className={`
-          flex-1 text-left text-xs leading-snug
+          flex-1 min-w-0 text-left text-xs leading-snug break-words whitespace-normal
           transition-all duration-200
           ${isCompleted
             ? 'text-secondary line-through'

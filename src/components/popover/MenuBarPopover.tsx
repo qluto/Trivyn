@@ -36,8 +36,12 @@ export default function MenuBarPopover() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiLevel, setConfettiLevel] = useState<GoalLevel>('daily');
   const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
-  const [historyHeight, setHistoryHeight] = useState(720); // Dynamic height for history view
+  const [goalsHeight, setGoalsHeight] = useState(400);
+  const [reflectionHeight, setReflectionHeight] = useState(700);
+  const [historyHeight, setHistoryHeight] = useState(720);
+  const [settingsHeight, setSettingsHeight] = useState(650);
   const containerRef = useRef<HTMLDivElement>(null);
+  const goalsContentRef = useRef<HTMLDivElement>(null);
   const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
   const { loadSettings } = useSettingsStore();
 
@@ -109,7 +113,15 @@ export default function MenuBarPopover() {
     setShowConfetti(false);
   }, [selectedLevel, bottomTab]);
 
-  // Resize window when tab changes or history height changes
+  // Measure goals content height
+  useEffect(() => {
+    if (bottomTab === 'goals' && goalsContentRef.current) {
+      const height = goalsContentRef.current.scrollHeight;
+      setGoalsHeight(height);
+    }
+  }, [bottomTab, goals, selectedLevel]);
+
+  // Resize window when tab changes or content height changes
   useEffect(() => {
     const resizeWindow = async () => {
       try {
@@ -123,29 +135,27 @@ export default function MenuBarPopover() {
           return;
         }
 
-        // Wait for content to render, then measure actual height
-        setTimeout(async () => {
-          if (containerRef.current) {
-            const actualHeight = containerRef.current.offsetHeight;
-            console.log(`[MenuBarPopover] Actual content height: ${actualHeight}px for tab: ${bottomTab}`);
-            console.log(`[MenuBarPopover] Window size before: ${window.innerWidth}x${window.innerHeight}`);
-            await invoke('resize_popover', { height: actualHeight });
-            setTimeout(() => {
-              console.log(`[MenuBarPopover] Window size after: ${window.innerWidth}x${window.innerHeight}`);
-            }, 100);
-          } else {
-            // Fallback to fixed heights if ref not available
-            const height = bottomTab === 'history' ? historyHeight : PAGE_HEIGHTS[bottomTab];
-            console.log(`[MenuBarPopover] Using fallback height: ${height}px for tab: ${bottomTab}`);
-            await invoke('resize_popover', { height });
-          }
-        }, 50);
+        // Get height based on current tab
+        const heightMap: Record<BottomTab, number> = {
+          goals: goalsHeight,
+          reflection: reflectionHeight,
+          history: historyHeight,
+          settings: settingsHeight,
+        };
+
+        const targetHeight = heightMap[bottomTab];
+
+        // Add header height (approximately 60px for the Tria header)
+        const totalHeight = targetHeight + 60;
+
+        console.log(`[MenuBarPopover] Resizing to ${totalHeight}px for tab: ${bottomTab}`);
+        await invoke('resize_popover', { height: totalHeight });
       } catch (error) {
         console.error('Failed to resize window:', error);
       }
     };
     resizeWindow();
-  }, [bottomTab, historyHeight, goals]);
+  }, [bottomTab, goalsHeight, reflectionHeight, historyHeight, settingsHeight]);
 
   const currentGoals = goals.filter((g) => g.level === selectedLevel);
   const canAdd = canAddGoal(selectedLevel);
@@ -273,9 +283,9 @@ export default function MenuBarPopover() {
         </div>
 
         {/* Content area */}
-        <div className="overflow-y-auto">
+        <div className="overflow-hidden">
           {bottomTab === 'goals' && (
-            <div className="flex flex-col">
+            <div ref={goalsContentRef} className="flex flex-col">
               {/* Level tabs for goals */}
               <div className="border-b border-subtle px-3 py-2">
                 <div className="flex gap-2">
@@ -351,9 +361,9 @@ export default function MenuBarPopover() {
               </div>
             </div>
           )}
-          {bottomTab === 'reflection' && <ReflectionView />}
+          {bottomTab === 'reflection' && <ReflectionView onHeightChange={setReflectionHeight} />}
           {bottomTab === 'history' && <HistoryView onHeightChange={setHistoryHeight} />}
-          {bottomTab === 'settings' && <SettingsView />}
+          {bottomTab === 'settings' && <SettingsView onHeightChange={setSettingsHeight} />}
         </div>
       </div>
     </>

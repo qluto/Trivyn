@@ -1,14 +1,42 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettingsStore } from '../../store/settingsStore';
 
-export default function SettingsView() {
+interface SettingsViewProps {
+  onHeightChange?: (height: number) => void;
+}
+
+export default function SettingsView({ onHeightChange }: SettingsViewProps) {
   const { t } = useTranslation();
   const { weekStart, language, theme, reflectionPromptEnabled, loadSettings, setWeekStart, setLanguage, setTheme, setReflectionPromptEnabled } = useSettingsStore();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
+
+  // Notify parent of height changes
+  useEffect(() => {
+    if (!onHeightChange || !contentRef.current) return;
+
+    const updateHeight = () => {
+      if (contentRef.current) {
+        const height = contentRef.current.scrollHeight;
+        onHeightChange(height);
+      }
+    };
+
+    // Update immediately
+    updateHeight();
+
+    // Use ResizeObserver to detect content changes
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(contentRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [onHeightChange]);
 
   const weekStartOptions = [
     { value: 1, label: t('weekdays.sunday') },
@@ -45,7 +73,7 @@ export default function SettingsView() {
   };
 
   return (
-    <div className="px-3 py-2 pb-4 space-y-4">
+    <div ref={contentRef} className="px-3 py-2 pb-4 space-y-4">
       {/* Week start setting */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-primary block">

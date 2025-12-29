@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { listen } from '@tauri-apps/api/event';
 import { GoalLevel } from '../../types';
@@ -18,7 +18,11 @@ const LEVEL_COLORS: Record<GoalLevel, string> = {
   monthly: 'bg-monthly-accent',
 };
 
-export default function ReflectionView() {
+interface ReflectionViewProps {
+  onHeightChange?: (height: number) => void;
+}
+
+export default function ReflectionView({ onHeightChange }: ReflectionViewProps) {
   const { t } = useTranslation();
   const [level, setLevel] = useState<GoalLevel>('daily');
   const [insights, setInsights] = useState({
@@ -28,6 +32,7 @@ export default function ReflectionView() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [showMonthlyNotice, setShowMonthlyNotice] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const { loadReflection, saveReflection, getReflection } = useReflectionStore();
   const { goals } = useGoalStore();
@@ -109,8 +114,31 @@ export default function ReflectionView() {
     handleSave();
   };
 
+  // Notify parent of height changes
+  useEffect(() => {
+    if (!onHeightChange || !contentRef.current) return;
+
+    const updateHeight = () => {
+      if (contentRef.current) {
+        const height = contentRef.current.scrollHeight;
+        onHeightChange(height);
+      }
+    };
+
+    // Update immediately
+    updateHeight();
+
+    // Use ResizeObserver to detect content changes
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(contentRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [level, insights, showMonthlyNotice, levelGoals.length, onHeightChange]);
+
   return (
-    <div className="flex flex-col bg-transparent">
+    <div ref={contentRef} className="flex flex-col bg-transparent">
       {/* Level tabs */}
       <div className="border-b border-gray-900/10 dark:border-white/10 px-3 py-2">
         <div className="flex gap-2">
@@ -134,7 +162,7 @@ export default function ReflectionView() {
       </div>
 
       {/* Content */}
-      <div className="overflow-y-auto px-3 py-3 pb-4 space-y-4">
+      <div className="overflow-hidden px-3 py-3 pb-4 space-y-4">
         {/* Monthly notice banner */}
         {showMonthlyNotice && (
           <div className="px-4 py-2 bg-blue-500/10 border-l-2 border-blue-500 text-sm text-blue-400 rounded">
@@ -169,7 +197,7 @@ export default function ReflectionView() {
                 {/* Goal text */}
                 <span
                   className={`
-                    flex-1 text-left text-xs leading-snug
+                    flex-1 min-w-0 text-left text-xs leading-snug break-words whitespace-normal
                     ${goal.isCompleted
                       ? 'text-secondary line-through'
                       : 'text-primary'
