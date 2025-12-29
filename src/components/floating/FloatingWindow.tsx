@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGoalStore } from '../../store/goalStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import { GoalLevel } from '../../types';
 import LevelSwitcher from './LevelSwitcher';
 import NumberedGoalRow from './NumberedGoalRow';
@@ -20,11 +21,13 @@ export default function FloatingWindow() {
     position: { x: number; y: number };
   } | null>(null);
   const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
+  const { loadSettings } = useSettingsStore();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log('[FloatingWindow] Component mounted, loading goals and setting up event listeners');
+    console.log('[FloatingWindow] Component mounted, loading goals, settings and setting up event listeners');
     loadGoals();
+    loadSettings();
     const cleanup = setupEventListeners();
     return () => {
       console.log('[FloatingWindow] Component unmounting, cleaning up event listeners');
@@ -151,7 +154,7 @@ export default function FloatingWindow() {
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-white/10 mx-1" data-tauri-drag-region />
+      <div className="h-px bg-gray-900/10 dark:bg-white/10 mx-1" data-tauri-drag-region />
 
       {/* Goals List */}
       <div className="px-1 py-1 space-y-0 overflow-hidden" data-tauri-drag-region>
@@ -182,13 +185,13 @@ export default function FloatingWindow() {
       {/* Close button (hover to show) */}
       <button
         className="absolute top-2 right-2 w-5 h-5 rounded-full
-                   bg-white/10 backdrop-blur-sm
+                   bg-gray-900/10 dark:bg-white/10 backdrop-blur-sm
                    flex items-center justify-center
                    opacity-0 hover:opacity-100 transition-opacity
                    group z-10"
         onClick={handleClose}
       >
-        <span className="text-xs text-white/70 group-hover:text-white">✕</span>
+        <span className="text-xs text-gray-900/70 dark:text-white/70 group-hover:text-gray-900 dark:group-hover:text-white">✕</span>
       </button>
       </div>
     </>

@@ -49,6 +49,13 @@
       "ja": "日本語",
       "en": "English"
     },
+    "theme": {
+      "label": "Theme",
+      "description": "Set the application appearance",
+      "system": "System Default",
+      "light": "Light Mode",
+      "dark": "Dark Mode"
+    },
     "notifications": {
       "label": "Notifications",
       "description": "Configure reminder notifications",

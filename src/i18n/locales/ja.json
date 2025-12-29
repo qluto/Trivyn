@@ -49,6 +49,13 @@
       "ja": "日本語",
       "en": "English"
     },
+    "theme": {
+      "label": "テーマ",
+      "description": "アプリケーションの外観を設定します",
+      "system": "システム設定",
+      "light": "ライトモード",
+      "dark": "ダークモード"
+    },
     "notifications": {
       "label": "通知",
       "description": "リマインダー通知の設定",

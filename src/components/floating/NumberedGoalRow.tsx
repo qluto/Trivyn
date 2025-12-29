@@ -41,11 +41,11 @@ export default function NumberedGoalRow({ number, goal, level, onToggle }: Numbe
           hover:scale-110
           ${isCompleted
             ? `${colors.fill} ${colors.border}`
-            : `border-white/20 ${colors.border} hover:${colors.border}`
+            : `border-gray-900/15 dark:border-white/20 ${colors.border} hover:${colors.border}`
           }
         `}
       >
-        <span className={`text-[10px] leading-none font-semibold ${isCompleted ? 'text-white' : 'text-secondary'}`}>
+        <span className={`text-[10px] leading-none font-semibold ${isCompleted ? 'text-white dark:text-white' : 'text-secondary'}`}>
           {number}
         </span>
       </button>

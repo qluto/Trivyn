@@ -13,6 +13,7 @@ export interface Goal {
 }
 
 export type AppLanguage = 'system' | 'en' | 'ja';
+export type AppTheme = 'system' | 'light' | 'dark';
 
 export interface WindowPosition {
   x: number;
@@ -22,6 +23,7 @@ export interface WindowPosition {
 export interface AppSettings {
   weekStart: number;
   language: AppLanguage;
+  theme: AppTheme;
   floatingWindowPosition: WindowPosition;
 }
 

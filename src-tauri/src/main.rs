@@ -72,6 +72,7 @@ fn main() {
             commands::settings::get_setting,
             commands::settings::set_setting,
             commands::settings::set_language,
+            commands::settings::set_theme,
             commands::settings::get_all_settings,
             commands::reflections::get_reflection,
             commands::reflections::save_reflection,

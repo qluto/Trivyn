@@ -4,7 +4,7 @@ import { useSettingsStore } from '../../store/settingsStore';
 
 export default function SettingsView() {
   const { t } = useTranslation();
-  const { weekStart, language, reflectionPromptEnabled, loadSettings, setWeekStart, setLanguage, setReflectionPromptEnabled } = useSettingsStore();
+  const { weekStart, language, theme, reflectionPromptEnabled, loadSettings, setWeekStart, setLanguage, setTheme, setReflectionPromptEnabled } = useSettingsStore();
 
   useEffect(() => {
     loadSettings();
@@ -26,12 +26,22 @@ export default function SettingsView() {
     { value: 'en', label: t('settings.language.en') },
   ];
 
+  const themeOptions = [
+    { value: 'system', label: t('settings.theme.system') },
+    { value: 'light', label: t('settings.theme.light') },
+    { value: 'dark', label: t('settings.theme.dark') },
+  ];
+
   const handleWeekStartChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setWeekStart(parseInt(e.target.value));
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value as 'system' | 'en' | 'ja');
+  };
+
+  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTheme(e.target.value as 'system' | 'light' | 'dark');
   };
 
   return (
@@ -83,6 +93,8 @@ export default function SettingsView() {
             cursor-pointer
             appearance-none
             [&>option]:bg-gray-900 [&>option]:text-white
+            dark:[&>option]:bg-gray-900 dark:[&>option]:text-white
+            [&>option]:bg-white [&>option]:text-gray-900
           "
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
@@ -102,21 +114,57 @@ export default function SettingsView() {
         </select>
       </div>
 
+      {/* Theme setting */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-primary block">
+          {t('settings.theme.label')}
+        </label>
+        <select
+          className="
+            w-full p-3 rounded-lg
+            bg-white/5 border border-white/10
+            text-sm text-primary
+            focus:outline-none focus:ring-2 focus:ring-white/20
+            cursor-pointer
+            appearance-none
+            dark:[&>option]:bg-gray-900 dark:[&>option]:text-white
+            [&>option]:bg-white [&>option]:text-gray-900
+          "
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
+            backgroundPosition: 'right 0.5rem center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: '1.5em 1.5em',
+            paddingRight: '2.5rem'
+          }}
+          value={theme}
+          onChange={handleThemeChange}
+        >
+          {themeOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Notifications setting */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-primary block">
           {t('settings.notifications.label')}
         </label>
         <div className="space-y-2">
-          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer">
+          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-900/5 dark:hover:bg-white/5 cursor-pointer">
             <div className="relative flex-shrink-0">
               <input
                 type="checkbox"
                 className="
                   w-5 h-5 rounded cursor-pointer
                   appearance-none
-                  bg-white/5 border border-white/10
-                  checked:bg-white/20 checked:border-white/30
+                  bg-gray-900/5 dark:bg-white/5
+                  border border-gray-900/20 dark:border-white/10
+                  checked:bg-gray-900/20 dark:checked:bg-white/20
+                  checked:border-gray-900/40 dark:checked:border-white/30
                   transition-all duration-200
                 "
                 checked={reflectionPromptEnabled}
@@ -129,7 +177,7 @@ export default function SettingsView() {
                   viewBox="0 0 24 24"
                 >
                   <path
-                    stroke="white"
+                    className="stroke-gray-900 dark:stroke-white"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="3"

@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
-import { AppLanguage, WindowPosition } from '../types';
+import { listen } from '@tauri-apps/api/event';
+import { AppLanguage, AppTheme, WindowPosition } from '../types';
 import i18n from '../i18n';
 
 interface SettingsStore {
   weekStart: number;
   language: AppLanguage;
+  theme: AppTheme;
   floatingWindowPosition: WindowPosition;
   reflectionPromptEnabled: boolean;
   loading: boolean;
@@ -14,13 +16,30 @@ interface SettingsStore {
   loadSettings: () => Promise<void>;
   setWeekStart: (day: number) => Promise<void>;
   setLanguage: (lang: AppLanguage) => Promise<void>;
+  setTheme: (theme: AppTheme) => Promise<void>;
   setFloatingWindowPosition: (pos: WindowPosition) => Promise<void>;
   setReflectionPromptEnabled: (enabled: boolean) => Promise<void>;
+}
+
+// Detect system theme preference
+function getSystemTheme(): 'light' | 'dark' {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+// Apply theme to DOM
+function applyTheme(theme: AppTheme) {
+  const effectiveTheme = theme === 'system' ? getSystemTheme() : theme;
+  if (effectiveTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
 }
 
 export const useSettingsStore = create<SettingsStore>((set) => ({
   weekStart: 2, // Monday
   language: 'system',
+  theme: 'system',
   floatingWindowPosition: { x: 0, y: 0 },
   reflectionPromptEnabled: true,
   loading: false,
@@ -30,6 +49,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
     try {
       const settings = await invoke<Record<string, string>>('get_all_settings', {});
       const lang = (settings.language as AppLanguage) || 'system';
+      const theme = (settings.theme as AppTheme) || 'system';
 
       // Apply language to i18n
       let i18nLang = lang;
@@ -39,9 +59,27 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       }
       await i18n.changeLanguage(i18nLang);
 
+      // Apply theme
+      applyTheme(theme);
+
+      // Listen for system theme changes when theme is 'system'
+      if (theme === 'system') {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          applyTheme('system');
+        });
+      }
+
+      // Listen for theme-changed events from other windows
+      listen<{ theme: string }>('theme-changed', (event) => {
+        const newTheme = event.payload.theme as AppTheme;
+        set({ theme: newTheme });
+        applyTheme(newTheme);
+      });
+
       set({
         weekStart: parseInt(settings.week_start || '2'),
         language: lang,
+        theme: theme,
         floatingWindowPosition: JSON.parse(
           settings.floating_window_position || '{"x":0,"y":0}'
         ),
@@ -81,6 +119,27 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       set({ language: lang });
     } catch (error) {
       console.error('Failed to set language:', error);
+    }
+  },
+
+  setTheme: async (theme: AppTheme) => {
+    try {
+      // Apply theme immediately
+      applyTheme(theme);
+
+      // Save to database and emit event to all windows via Rust
+      await invoke('set_theme', { theme });
+
+      set({ theme });
+
+      // Update system theme listener
+      if (theme === 'system') {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          applyTheme('system');
+        });
+      }
+    } catch (error) {
+      console.error('Failed to set theme:', error);
     }
   },
 

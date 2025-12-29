@@ -110,9 +110,9 @@ export default function ReflectionView() {
   };
 
   return (
-    <div className="flex flex-col bg-black/20">
+    <div className="flex flex-col bg-transparent">
       {/* Level tabs */}
-      <div className="border-b border-white/10 px-3 py-2">
+      <div className="border-b border-gray-900/10 dark:border-white/10 px-3 py-2">
         <div className="flex gap-2">
           {(['daily', 'weekly', 'monthly'] as GoalLevel[]).map((lvl) => (
             <button
@@ -122,8 +122,8 @@ export default function ReflectionView() {
                 flex-1 px-4 py-1.5 rounded-lg text-sm font-medium
                 transition-all duration-200
                 ${level === lvl
-                  ? 'bg-white/15 text-primary'
-                  : 'text-secondary hover:bg-white/5 hover:text-primary'
+                  ? 'bg-gray-900/10 dark:bg-white/15 text-primary'
+                  : 'text-secondary hover:bg-gray-900/5 dark:hover:bg-white/5 hover:text-primary'
                 }
               `}
             >
@@ -156,8 +156,8 @@ export default function ReflectionView() {
                     flex items-center justify-center
                     w-5 h-5 rounded-full border-2
                     ${goal.isCompleted
-                      ? `${LEVEL_COLORS[level]} border-current`
-                      : 'border-white/20'
+                      ? `${LEVEL_COLORS[level]} border-transparent`
+                      : 'border-gray-900/15 dark:border-white/20'
                     }
                   `}
                 >
@@ -183,7 +183,7 @@ export default function ReflectionView() {
           </div>
         )}
 
-        <div className="h-px bg-white/10" />
+        <div className="h-px bg-gray-900/10 dark:bg-white/10" />
 
         {/* Reflection Section */}
         <div className="space-y-4">
@@ -200,15 +200,15 @@ export default function ReflectionView() {
             ].map((item, index) => (
               <div key={index} className="flex gap-3">
                 <div className="flex-shrink-0 mt-3">
-                  <div className="w-2 h-2 rounded-full bg-white/70" />
+                  <div className="w-2 h-2 rounded-full bg-gray-900/70 dark:bg-white/70" />
                 </div>
                 <textarea
                   value={insights[item.key]}
                   onChange={(e) => setInsights({ ...insights, [item.key]: e.target.value })}
                   onBlur={handleBlur}
                   className="
-                    flex-1 bg-white/5 border border-white/10 rounded-lg p-3
-                    text-sm text-primary placeholder-white/30
+                    flex-1 bg-gray-900/5 dark:bg-white/5 border border-gray-900/10 dark:border-white/10 rounded-lg p-3
+                    text-sm text-primary placeholder-gray-500/60 dark:placeholder-white/30
                     focus:outline-none focus:ring-2 focus:ring-purple-400/50
                     resize-none min-h-[60px]
                   "

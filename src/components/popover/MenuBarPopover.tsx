@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useGoalStore } from '../../store/goalStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import { GoalLevel } from '../../types';
 import HistoryView from './HistoryView';
 import ReflectionView from './ReflectionView';
@@ -38,10 +39,12 @@ export default function MenuBarPopover() {
   const [historyHeight, setHistoryHeight] = useState(720); // Dynamic height for history view
   const containerRef = useRef<HTMLDivElement>(null);
   const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
+  const { loadSettings } = useSettingsStore();
 
   useEffect(() => {
-    console.log('[MenuBarPopover] Component mounted, loading goals and setting up event listeners');
+    console.log('[MenuBarPopover] Component mounted, loading goals, settings and setting up event listeners');
     loadGoals();
+    loadSettings();
     const cleanup = setupEventListeners();
     return () => {
       console.log('[MenuBarPopover] Component unmounting, cleaning up event listeners');
@@ -203,8 +206,8 @@ export default function MenuBarPopover() {
                   px-3 py-1.5 rounded-lg text-sm font-medium
                   transition-all duration-200
                   ${bottomTab === 'goals'
-                    ? 'bg-white/15 text-primary'
-                    : 'text-secondary hover:bg-white/5 hover:text-primary'
+                    ? 'bg-gray-900/10 dark:bg-white/15 text-primary'
+                    : 'text-secondary hover:bg-gray-900/5 dark:hover:bg-white/5 hover:text-primary'
                   }
                 `}
               >
@@ -216,8 +219,8 @@ export default function MenuBarPopover() {
                   px-3 py-1.5 rounded-lg text-sm font-medium
                   transition-all duration-200
                   ${bottomTab === 'reflection'
-                    ? 'bg-white/15 text-primary'
-                    : 'text-secondary hover:bg-white/5 hover:text-primary'
+                    ? 'bg-gray-900/10 dark:bg-white/15 text-primary'
+                    : 'text-secondary hover:bg-gray-900/5 dark:hover:bg-white/5 hover:text-primary'
                   }
                 `}
               >
@@ -229,8 +232,8 @@ export default function MenuBarPopover() {
                   px-3 py-1.5 rounded-lg text-sm font-medium
                   transition-all duration-200
                   ${bottomTab === 'history'
-                    ? 'bg-white/15 text-primary'
-                    : 'text-secondary hover:bg-white/5 hover:text-primary'
+                    ? 'bg-gray-900/10 dark:bg-white/15 text-primary'
+                    : 'text-secondary hover:bg-gray-900/5 dark:hover:bg-white/5 hover:text-primary'
                   }
                 `}
               >
@@ -242,8 +245,8 @@ export default function MenuBarPopover() {
                   px-3 py-1.5 rounded-lg text-sm font-medium
                   transition-all duration-200
                   ${bottomTab === 'settings'
-                    ? 'bg-white/15 text-primary'
-                    : 'text-secondary hover:bg-white/5 hover:text-primary'
+                    ? 'bg-gray-900/10 dark:bg-white/15 text-primary'
+                    : 'text-secondary hover:bg-gray-900/5 dark:hover:bg-white/5 hover:text-primary'
                   }
                 `}
               >
@@ -258,7 +261,7 @@ export default function MenuBarPopover() {
                   const currentWindow = Window.getCurrent();
                   await currentWindow.hide();
                 }}
-                className="p-1.5 rounded-lg text-secondary hover:bg-white/5 hover:text-primary transition-all duration-200"
+                className="p-1.5 rounded-lg text-secondary hover:bg-gray-900/5 dark:hover:bg-white/5 hover:text-primary transition-all duration-200"
                 aria-label="Close"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,8 +296,8 @@ export default function MenuBarPopover() {
                           flex-1 px-4 py-1.5 rounded-lg text-sm font-medium
                           transition-all duration-200 flex items-center justify-center gap-1.5
                           ${selectedLevel === level
-                            ? 'bg-white/15 text-primary'
-                            : 'text-secondary hover:bg-white/5 hover:text-primary'
+                            ? 'bg-gray-900/10 dark:bg-white/15 text-primary'
+                            : 'text-secondary hover:bg-gray-900/5 dark:hover:bg-white/5 hover:text-primary'
                           }
                         `}
                       >
@@ -308,8 +311,8 @@ export default function MenuBarPopover() {
                                 ${index < count
                                   ? index < completedCount
                                     ? levelColors[level]
-                                    : 'bg-white/30'
-                                  : 'bg-white/10'
+                                    : 'bg-gray-900/30 dark:bg-white/30'
+                                  : 'bg-gray-900/10 dark:bg-white/10'
                                 }
                               `}
                             />

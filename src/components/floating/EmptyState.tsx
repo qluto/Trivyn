@@ -13,7 +13,7 @@ export default function EmptyState({ level }: EmptyStateProps) {
       <p className="text-sm text-secondary text-center">
         {t(`goals.empty.${level}`)}
       </p>
-      <p className="text-xs text-white/20 text-center mt-2">
+      <p className="text-xs text-gray-900/20 dark:text-white/20 text-center mt-2">
         {t('goals.maxHint')}
       </p>
     </div>

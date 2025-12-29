@@ -9,6 +9,11 @@ struct LanguageChangedPayload {
     i18n_language: String,
 }
 
+#[derive(Clone, Serialize)]
+struct ThemeChangedPayload {
+    theme: String,
+}
+
 #[tauri::command]
 pub async fn get_setting(
     key: String,
@@ -54,4 +59,22 @@ pub async fn get_all_settings(
 ) -> Result<HashMap<String, String>, String> {
     db.get_all_settings()
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn set_theme(
+    theme: String,
+    app: AppHandle,
+    db: State<'_, Database>,
+) -> Result<(), String> {
+    // Save theme setting to database
+    db.set_setting("theme", &theme)
+        .map_err(|e| e.to_string())?;
+
+    // Emit event to all windows
+    app.emit("theme-changed", ThemeChangedPayload {
+        theme,
+    }).map_err(|e: tauri::Error| e.to_string())?;
+
+    Ok(())
 }

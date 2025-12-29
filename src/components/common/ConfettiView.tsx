@@ -20,9 +20,9 @@ interface Particle {
 }
 
 const LEVEL_COLORS: Record<GoalLevel, string[]> = {
-  daily: ['#FF8C42', '#FFA94D', '#FFB366', '#FFC078'], // オレンジ系
-  weekly: ['#B794F6', '#C4A6FA', '#D1B8FC', '#DECAFE'], // パープル系
-  monthly: ['#5EEAD4', '#7EF4E0', '#99F6E4', '#B2FCEE'], // ティール系
+  daily: ['#FF6B1A', '#FF8C42', '#FFA94D', '#FF7F2A'], // オレンジ系（より濃く）
+  weekly: ['#9F7AEA', '#B794F6', '#A78BFA', '#8B5CF6'], // パープル系（より濃く）
+  monthly: ['#14B8A6', '#2DD4BF', '#5EEAD4', '#0D9488'], // ティール系（より濃く）
 };
 
 export default function ConfettiView({ level, startPosition, onComplete }: ConfettiViewProps) {
@@ -100,6 +100,13 @@ export default function ConfettiView({ level, startPosition, onComplete }: Confe
         ctx.translate(particle.x, particle.y);
         ctx.rotate((particle.rotation * Math.PI) / 180);
         ctx.globalAlpha = particle.opacity;
+
+        // Add shadow for better visibility
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+
         ctx.fillStyle = particle.color;
 
         // Draw rectangle
@@ -128,7 +135,6 @@ export default function ConfettiView({ level, startPosition, onComplete }: Confe
     <canvas
       ref={canvasRef}
       className="absolute inset-0 pointer-events-none z-50"
-      style={{ mixBlendMode: 'screen' }}
     />
   );
 }

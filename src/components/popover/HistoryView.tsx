@@ -228,13 +228,13 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
   }, [selection, selectedGoals.length, selectedReflection, onHeightChange]);
 
   return (
-    <div className="flex flex-col bg-black/20">
+    <div className="flex flex-col bg-transparent">
       {/* Header */}
-      <div className="px-3 py-2 border-b border-white/10">
+      <div className="px-3 py-2 border-b border-gray-900/10 dark:border-white/10">
         <div className="flex items-center justify-between">
           <button
             onClick={goToPreviousMonth}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-900/10 dark:hover:bg-white/10 transition-colors"
           >
             <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -250,7 +250,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
 
           <button
             onClick={goToNextMonth}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-900/10 dark:hover:bg-white/10 transition-colors"
           >
             <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -265,7 +265,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
         <div className="grid grid-cols-8 gap-1 pt-2">
           <button
             onClick={() => setSelection({ type: 'month', year, month })}
-            className="flex items-center justify-center hover:bg-white/5 transition-colors rounded"
+            className="flex items-center justify-center hover:bg-gray-900/5 dark:hover:bg-white/5 transition-colors rounded"
           >
             {monthlyGoals.length > 0 && (
               <div className="flex flex-col gap-1">
@@ -302,7 +302,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                 {/* Week indicator with dots */}
                 <button
                   onClick={() => setSelection({ type: 'week', year: firstDayOfWeek.getFullYear(), week: weekNum })}
-                  className="flex items-center justify-center hover:bg-white/5 transition-colors rounded"
+                  className="flex items-center justify-center hover:bg-gray-900/5 dark:hover:bg-white/5 transition-colors rounded"
                 >
                   {hasWeekGoals && (
                     <div className="flex flex-col gap-1">
@@ -334,7 +334,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                         relative aspect-square rounded-lg text-base transition-all
                         ${isCurrentMonth ? 'text-primary' : 'text-secondary opacity-40'}
                         ${isToday ? 'ring-2 ring-blue-400' : ''}
-                        ${isSelected ? 'bg-white/20' : 'hover:bg-white/5'}
+                        ${isSelected ? 'bg-gray-900/20 dark:bg-white/20' : 'hover:bg-gray-900/5 dark:hover:bg-white/5'}
                       `}
                     >
                       <div className="flex flex-col items-center justify-center h-full gap-0">
@@ -362,7 +362,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
 
         {/* Selection details */}
         {selection && (
-          <div className="mt-6 p-4 rounded-lg bg-white/5 border border-white/10">
+          <div className="mt-6 p-4 rounded-lg bg-gray-900/5 dark:bg-white/5 border border-gray-900/10 dark:border-white/10">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-primary">
                 {selection.type === 'date' && (
@@ -396,7 +396,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                 {selectedGoals.map((goal) => (
                   <div
                     key={goal.id}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-white/5 group"
+                    className="flex items-center gap-2 p-2 rounded-lg bg-gray-900/5 dark:bg-white/5 group"
                   >
                     <div
                       className={`w-2 h-2 rounded-full flex-shrink-0 ${
@@ -436,7 +436,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
             {/* Reflection display */}
             {selectedReflection && (
               <>
-                <div className="h-px bg-white/10 my-4" />
+                <div className="h-px bg-gray-900/10 dark:bg-white/10 my-4" />
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="text-base">💡</span>
@@ -448,7 +448,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                       .map((insight, index) => (
                         <div key={index} className="flex gap-2">
                           <div className="flex-shrink-0 mt-1">
-                            <div className="w-1.5 h-1.5 rounded-full bg-white/70" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-900/70 dark:bg-white/70" />
                           </div>
                           <p className="text-xs text-primary flex-1 leading-relaxed">{insight}</p>
                         </div>

@@ -38,8 +38,8 @@ export default function LevelSwitcher({ selected, onChange, goalsCount }: LevelS
               flex-1 flex flex-row items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg
               transition-all duration-200
               ${isSelected
-                ? 'bg-white/10 backdrop-blur-sm'
-                : 'hover:bg-white/5'
+                ? 'bg-gray-900/10 dark:bg-white/10 backdrop-blur-sm'
+                : 'hover:bg-gray-900/5 dark:hover:bg-white/5'
               }
             `}
           >
@@ -53,8 +53,8 @@ export default function LevelSwitcher({ selected, onChange, goalsCount }: LevelS
                     ${index < count
                       ? index < completedCount
                         ? LEVEL_COLORS[level]
-                        : 'bg-white/30'
-                      : 'bg-white/10'
+                        : 'bg-gray-900/30 dark:bg-white/30'
+                      : 'bg-gray-900/10 dark:bg-white/10'
                     }
                   `}
                 />
