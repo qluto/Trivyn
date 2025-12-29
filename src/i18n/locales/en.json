@@ -92,5 +92,9 @@
     "monthYear": "{{month}} {{year}}",
     "dateDetail": "{{month}} {{day}}",
     "delete": "Delete"
+  },
+  "tray": {
+    "showFloating": "Show Floating Window",
+    "quit": "Quit"
   }
 }

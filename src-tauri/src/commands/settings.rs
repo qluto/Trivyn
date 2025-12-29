@@ -2,6 +2,7 @@ use tauri::{State, AppHandle, Emitter};
 use std::collections::HashMap;
 use serde::Serialize;
 use crate::db::Database;
+use crate::tray;
 
 #[derive(Clone, Serialize)]
 struct LanguageChangedPayload {
@@ -42,6 +43,10 @@ pub async fn set_language(
 ) -> Result<(), String> {
     // Save language setting to database
     db.set_setting("language", &language)
+        .map_err(|e| e.to_string())?;
+
+    // Update tray menu with new language
+    tray::update_tray_menu(&app, &i18n_language)
         .map_err(|e| e.to_string())?;
 
     // Emit event to all windows

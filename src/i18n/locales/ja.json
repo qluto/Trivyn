@@ -92,5 +92,9 @@
     "monthYear": "{{year}}年{{month}}月",
     "dateDetail": "{{month}}月{{day}}日",
     "delete": "削除"
+  },
+  "tray": {
+    "showFloating": "フローティングウィンドウを表示",
+    "quit": "終了"
   }
 }
