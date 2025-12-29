@@ -12,7 +12,8 @@ pub fn setup_main_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
         #[cfg(target_os = "macos")]
         {
             use cocoa::appkit::{NSWindow, NSWindowCollectionBehavior};
-            use cocoa::base::id;
+            use cocoa::base::{id, YES};
+            use objc::{msg_send, sel, sel_impl};
 
             let ns_window = window.ns_window().unwrap() as id;
             unsafe {
@@ -23,6 +24,13 @@ pub fn setup_main_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                 let behavior = NSWindowCollectionBehavior::NSWindowCollectionBehaviorCanJoinAllSpaces
                     | NSWindowCollectionBehavior::NSWindowCollectionBehaviorStationary;
                 ns_window.setCollectionBehavior_(behavior);
+
+                // Enable rounded corners through content view layer
+                let content_view: id = msg_send![ns_window, contentView];
+                let _: () = msg_send![content_view, setWantsLayer: YES];
+                let layer: id = msg_send![content_view, layer];
+                let _: () = msg_send![layer, setCornerRadius: 12.0f64];
+                let _: () = msg_send![layer, setMasksToBounds: YES];
             }
         }
 
@@ -75,6 +83,23 @@ pub fn setup_popover_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()>
     if let Some(window) = app.get_webview_window("popover") {
         // Always on top
         window.set_always_on_top(true)?;
+
+        // Set corner radius for rounded corners (macOS)
+        #[cfg(target_os = "macos")]
+        {
+            use cocoa::base::{id, YES};
+            use objc::{msg_send, sel, sel_impl};
+
+            let ns_window = window.ns_window().unwrap() as id;
+            unsafe {
+                // Enable rounded corners through content view layer
+                let content_view: id = msg_send![ns_window, contentView];
+                let _: () = msg_send![content_view, setWantsLayer: YES];
+                let layer: id = msg_send![content_view, layer];
+                let _: () = msg_send![layer, setCornerRadius: 12.0f64];
+                let _: () = msg_send![layer, setMasksToBounds: YES];
+            }
+        }
 
         // Don't hide on blur - keep visible until explicitly closed
         let app_handle = app.clone();
