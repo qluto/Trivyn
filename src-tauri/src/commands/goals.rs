@@ -52,23 +52,16 @@ pub async fn toggle_goal_completion(
     app: AppHandle,
     db: State<'_, Database>,
 ) -> Result<Goal, String> {
-    println!("[Rust] Toggling goal completion for: {}", goal_id);
     let goal = db.toggle_goal_completion(&goal_id)
         .map_err(|e| e.to_string())?;
 
     // Broadcast event to all windows explicitly
-    println!("[Rust] Broadcasting goals-updated event to all windows");
-
-    // Emit to main window
     if let Some(main_window) = app.get_webview_window("main") {
         let _ = main_window.emit("goals-updated", ());
-        println!("[Rust] Emitted to main window");
     }
 
-    // Emit to popover window
     if let Some(popover_window) = app.get_webview_window("popover") {
         let _ = popover_window.emit("goals-updated", ());
-        println!("[Rust] Emitted to popover window");
     }
 
     Ok(goal)
