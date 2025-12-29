@@ -3,6 +3,7 @@
 Build/
 DerivedData/
 target/
+dist/
 
 # node
 node_modules/

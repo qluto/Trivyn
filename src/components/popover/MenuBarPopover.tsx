@@ -21,14 +21,6 @@ interface PeriodChangeEvent {
   current_month_key: string;
 }
 
-// Page heights for different tabs
-const PAGE_HEIGHTS: Record<BottomTab, number> = {
-  goals: 400,
-  history: 720,
-  reflection: 700,
-  settings: 650,
-};
-
 export default function MenuBarPopover() {
   const { t } = useTranslation();
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel>('daily');
