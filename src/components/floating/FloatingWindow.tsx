@@ -138,7 +138,7 @@ export default function FloatingWindow() {
       )}
       <div ref={containerRef} className="relative w-[220px] rounded-xl overflow-hidden shadow-2xl">
         <div
-          className="relative glass-dark border border-subtle select-none overflow-hidden rounded-xl"
+          className="relative glass-dark border border-subtle select-none"
           data-tauri-drag-region
         >
       {/* Level Switcher */}
