@@ -177,7 +177,7 @@ export default function MenuBarPopover() {
   };
 
   return (
-    <div ref={containerRef} className="relative w-[420px] h-fit rounded-xl overflow-hidden">
+    <>
       {showConfetti && (
         <ConfettiView
           level={confettiLevel}
@@ -185,11 +185,10 @@ export default function MenuBarPopover() {
           onComplete={() => setShowConfetti(false)}
         />
       )}
-      {/* Arrow pointing up to tray icon */}
-      <div className="absolute -top-2 right-12 w-4 h-4 bg-[rgba(20,25,30,0.85)] border-l border-t border-subtle rotate-45" />
-
-      {/* Main popover container */}
-      <div className="relative glass-dark border border-subtle shadow-2xl flex flex-col">
+      <div
+        ref={containerRef}
+        className="relative w-full h-full overflow-hidden glass-dark border border-subtle flex flex-col"
+      >
         {/* Header with Tria logo and main navigation */}
         <div className="border-b border-subtle" data-tauri-drag-region>
           <div className="flex items-center justify-between px-3 py-2">
@@ -354,6 +353,6 @@ export default function MenuBarPopover() {
           {bottomTab === 'settings' && <SettingsView />}
         </div>
       </div>
-    </div>
+    </>
   );
 }

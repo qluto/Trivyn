@@ -7,21 +7,20 @@ function App() {
   // Determine which view to show based on window label
   const isPopover = window.location.search.includes('popover');
 
-  // Disable scrolling for floating window
+  // Ensure containers fill window completely
   useEffect(() => {
-    if (!isPopover) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-    } else {
-      // For popover, allow content to fit its size
-      document.documentElement.style.height = 'fit-content';
-      document.body.style.height = 'fit-content';
-      const root = document.getElementById('root');
-      if (root) {
-        root.style.height = 'fit-content';
-      }
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.width = '100%';
+    document.documentElement.style.height = '100%';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    const root = document.getElementById('root');
+    if (root) {
+      root.style.width = '100%';
+      root.style.height = '100%';
     }
-  }, [isPopover]);
+  }, []);
 
   return (
     <>
