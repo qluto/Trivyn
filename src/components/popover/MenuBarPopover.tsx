@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
@@ -36,6 +36,7 @@ export default function MenuBarPopover() {
   const [confettiLevel, setConfettiLevel] = useState<GoalLevel>('daily');
   const [confettiPosition, setConfettiPosition] = useState({ x: 0, y: 0 });
   const [historyHeight, setHistoryHeight] = useState(720); // Dynamic height for history view
+  const containerRef = useRef<HTMLDivElement>(null);
   const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
 
   useEffect(() => {
@@ -119,20 +120,29 @@ export default function MenuBarPopover() {
           return;
         }
 
-        const height = bottomTab === 'history' ? historyHeight : PAGE_HEIGHTS[bottomTab];
-        console.log(`[MenuBarPopover] Resizing to ${height}px for tab: ${bottomTab}`);
-        console.log(`[MenuBarPopover] Window size before: ${window.innerWidth}x${window.innerHeight}`);
-        await invoke('resize_popover', { height });
-        // Wait a bit for the resize to take effect
-        setTimeout(() => {
-          console.log(`[MenuBarPopover] Window size after: ${window.innerWidth}x${window.innerHeight}`);
-        }, 100);
+        // Wait for content to render, then measure actual height
+        setTimeout(async () => {
+          if (containerRef.current) {
+            const actualHeight = containerRef.current.offsetHeight;
+            console.log(`[MenuBarPopover] Actual content height: ${actualHeight}px for tab: ${bottomTab}`);
+            console.log(`[MenuBarPopover] Window size before: ${window.innerWidth}x${window.innerHeight}`);
+            await invoke('resize_popover', { height: actualHeight });
+            setTimeout(() => {
+              console.log(`[MenuBarPopover] Window size after: ${window.innerWidth}x${window.innerHeight}`);
+            }, 100);
+          } else {
+            // Fallback to fixed heights if ref not available
+            const height = bottomTab === 'history' ? historyHeight : PAGE_HEIGHTS[bottomTab];
+            console.log(`[MenuBarPopover] Using fallback height: ${height}px for tab: ${bottomTab}`);
+            await invoke('resize_popover', { height });
+          }
+        }, 50);
       } catch (error) {
         console.error('Failed to resize window:', error);
       }
     };
     resizeWindow();
-  }, [bottomTab, historyHeight]);
+  }, [bottomTab, historyHeight, goals]);
 
   const currentGoals = goals.filter((g) => g.level === selectedLevel);
   const canAdd = canAddGoal(selectedLevel);
@@ -167,7 +177,7 @@ export default function MenuBarPopover() {
   };
 
   return (
-    <>
+    <div ref={containerRef} className="relative w-[420px] h-fit rounded-xl overflow-hidden">
       {showConfetti && (
         <ConfettiView
           level={confettiLevel}
@@ -175,19 +185,19 @@ export default function MenuBarPopover() {
           onComplete={() => setShowConfetti(false)}
         />
       )}
-      <div className="relative w-[420px] h-full">
       {/* Arrow pointing up to tray icon */}
       <div className="absolute -top-2 right-12 w-4 h-4 bg-[rgba(20,25,30,0.85)] border-l border-t border-subtle rotate-45" />
 
       {/* Main popover container */}
-      <div className="relative rounded-xl glass-dark border border-subtle shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative glass-dark border border-subtle shadow-2xl flex flex-col">
         {/* Header with Tria logo and main navigation */}
         <div className="border-b border-subtle" data-tauri-drag-region>
           <div className="flex items-center justify-between px-3 py-2">
             <h1 className="text-2xl font-bold text-primary">Tria</h1>
 
             {/* Main navigation tabs */}
-            <div className="flex gap-1">
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1">
               <button
                 onClick={() => setBottomTab('goals')}
                 className={`
@@ -239,6 +249,22 @@ export default function MenuBarPopover() {
                 `}
               >
                 {t('navigation.settings')}
+              </button>
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={async () => {
+                  const { Window } = await import('@tauri-apps/api/window');
+                  const currentWindow = Window.getCurrent();
+                  await currentWindow.hide();
+                }}
+                className="p-1.5 rounded-lg text-secondary hover:bg-white/5 hover:text-primary transition-all duration-200"
+                aria-label="Close"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
@@ -328,7 +354,6 @@ export default function MenuBarPopover() {
           {bottomTab === 'settings' && <SettingsView />}
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 }

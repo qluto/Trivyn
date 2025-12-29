@@ -42,9 +42,15 @@ export default function ConfettiView({ level, startPosition, onComplete }: Confe
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // Set canvas size to parent container size
+    const parent = canvas.parentElement;
+    if (parent) {
+      canvas.width = parent.offsetWidth;
+      canvas.height = parent.offsetHeight;
+    } else {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
 
     // Create particles
     const particles: Particle[] = [];
@@ -121,7 +127,7 @@ export default function ConfettiView({ level, startPosition, onComplete }: Confe
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-50"
+      className="absolute inset-0 pointer-events-none z-50"
       style={{ mixBlendMode: 'screen' }}
     />
   );

@@ -50,6 +50,8 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                         let window_size = window.outer_size().unwrap_or(PhysicalSize { width: 420, height: 400 });
                         let monitor = window.current_monitor().ok().flatten();
 
+                        // Platform-specific positioning logic
+                        #[cfg(target_os = "macos")]
                         let (x, y) = if let Some(monitor) = monitor {
                             let monitor_size = monitor.size();
                             let monitor_pos = monitor.position();
@@ -73,7 +75,7 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                                 // Tray is on top (macOS) - position window below tray
                                 (tray_y + 10).min(monitor_bottom - window_size.height as i32)
                             } else {
-                                // Tray is on bottom (Windows/Linux) - position window above tray
+                                // Tray is on bottom - position window above tray
                                 (tray_y - window_size.height as i32 - 10).max(monitor_top)
                             };
 
@@ -82,6 +84,24 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
                             // Fallback if monitor info unavailable
                             let x = position.x as i32 - 210;
                             let y = position.y as i32 + 10;
+                            (x, y)
+                        };
+
+                        // Windows/Linux: Center popover on screen
+                        #[cfg(not(target_os = "macos"))]
+                        let (x, y) = if let Some(monitor) = monitor {
+                            let monitor_size = monitor.size();
+                            let monitor_pos = monitor.position();
+
+                            // Center both horizontally and vertically on screen
+                            let x = monitor_pos.x + (monitor_size.width as i32 - window_size.width as i32) / 2;
+                            let y = monitor_pos.y + (monitor_size.height as i32 - window_size.height as i32) / 2;
+
+                            (x, y)
+                        } else {
+                            // Fallback if monitor info unavailable - approximate center
+                            let x = position.x as i32 - (window_size.width as i32 / 2);
+                            let y = position.y as i32 - (window_size.height as i32 / 2);
                             (x, y)
                         };
 

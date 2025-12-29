@@ -12,6 +12,14 @@ function App() {
     if (!isPopover) {
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
+    } else {
+      // For popover, allow content to fit its size
+      document.documentElement.style.height = 'fit-content';
+      document.body.style.height = 'fit-content';
+      const root = document.getElementById('root');
+      if (root) {
+        root.style.height = 'fit-content';
+      }
     }
   }, [isPopover]);
 
