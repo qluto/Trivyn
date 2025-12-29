@@ -42,7 +42,7 @@ export default function MenuBarPopover() {
   const [settingsHeight, setSettingsHeight] = useState(650);
   const containerRef = useRef<HTMLDivElement>(null);
   const goalsContentRef = useRef<HTMLDivElement>(null);
-  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
+  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, deleteGoal, setupEventListeners } = useGoalStore();
   const { loadSettings } = useSettingsStore();
 
   useEffect(() => {
@@ -186,6 +186,14 @@ export default function MenuBarPopover() {
       }
     } catch (error) {
       console.error('Failed to toggle goal:', error);
+    }
+  };
+
+  const handleDeleteGoal = async (goalId: string) => {
+    try {
+      await deleteGoal(goalId);
+    } catch (error) {
+      console.error('Failed to delete goal:', error);
     }
   };
 
@@ -345,6 +353,7 @@ export default function MenuBarPopover() {
                     goal={goal}
                     level={selectedLevel}
                     onToggle={(position) => handleToggle(goal.id, position)}
+                    onDelete={() => handleDeleteGoal(goal.id)}
                   />
                 ))}
 
