@@ -34,6 +34,41 @@ pub fn setup_main_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
             }
         }
 
+        // Set window region to rounded rectangle on Windows
+        // This clips the window shape itself to match CSS border-radius
+        #[cfg(target_os = "windows")]
+        {
+            use windows::Win32::Foundation::HWND;
+            use windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_DONOTROUND};
+            use windows::Win32::Graphics::Gdi::{CreateRoundRectRgn, SetWindowRgn};
+
+            if let Ok(hwnd) = window.hwnd() {
+                let hwnd = HWND(hwnd.0 as _);
+
+                // Disable native DWM corner rounding
+                let preference = DWMWCP_DONOTROUND;
+                unsafe {
+                    let _ = DwmSetWindowAttribute(
+                        hwnd,
+                        DWMWA_WINDOW_CORNER_PREFERENCE,
+                        &preference as *const _ as *const _,
+                        std::mem::size_of_val(&preference) as u32,
+                    );
+                }
+
+                // Get window size
+                if let Ok(size) = window.outer_size() {
+                    unsafe {
+                        // Create rounded rectangle region (12px corner radius to match CSS)
+                        let region = CreateRoundRectRgn(0, 0, size.width as i32, size.height as i32, 24, 24);
+                        // Apply region to window (true = window redraws)
+                        let _ = SetWindowRgn(hwnd, region, true);
+                        // Note: SetWindowRgn takes ownership of the region, so we don't delete it
+                    }
+                }
+            }
+        }
+
         // Restore saved position (with validation)
         if let Some(db) = app.try_state::<Database>() {
             if let Ok(pos_json) = db.get_setting("floating_window_position") {
@@ -98,6 +133,41 @@ pub fn setup_popover_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()>
                 let layer: id = msg_send![content_view, layer];
                 let _: () = msg_send![layer, setCornerRadius: 12.0f64];
                 let _: () = msg_send![layer, setMasksToBounds: YES];
+            }
+        }
+
+        // Set window region to rounded rectangle on Windows
+        // This clips the window shape itself to match CSS border-radius
+        #[cfg(target_os = "windows")]
+        {
+            use windows::Win32::Foundation::HWND;
+            use windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_DONOTROUND};
+            use windows::Win32::Graphics::Gdi::{CreateRoundRectRgn, SetWindowRgn};
+
+            if let Ok(hwnd) = window.hwnd() {
+                let hwnd = HWND(hwnd.0 as _);
+
+                // Disable native DWM corner rounding
+                let preference = DWMWCP_DONOTROUND;
+                unsafe {
+                    let _ = DwmSetWindowAttribute(
+                        hwnd,
+                        DWMWA_WINDOW_CORNER_PREFERENCE,
+                        &preference as *const _ as *const _,
+                        std::mem::size_of_val(&preference) as u32,
+                    );
+                }
+
+                // Get window size
+                if let Ok(size) = window.outer_size() {
+                    unsafe {
+                        // Create rounded rectangle region (12px corner radius to match CSS)
+                        let region = CreateRoundRectRgn(0, 0, size.width as i32, size.height as i32, 24, 24);
+                        // Apply region to window (true = window redraws)
+                        let _ = SetWindowRgn(hwnd, region, true);
+                        // Note: SetWindowRgn takes ownership of the region, so we don't delete it
+                    }
+                }
             }
         }
 
