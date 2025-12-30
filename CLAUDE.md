@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm install           # Install dependencies
 npm run tauri:dev     # Run dev server (hot reload)
 npm run tauri:build   # Build production app
-pkill -f triskly      # Kill running instance
+pkill -f Triskly      # Kill running instance
 ```
 
 **Important**: Always keep the development server running (`npm run tauri:dev`) when working on this project. The server provides hot reload functionality for both frontend and backend changes.
