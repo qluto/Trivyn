@@ -1,4 +1,5 @@
 use tauri::{State, AppHandle, Emitter};
+use tauri_plugin_autostart::ManagerExt;
 use std::collections::HashMap;
 use serde::Serialize;
 use crate::db::Database;
@@ -82,4 +83,46 @@ pub async fn set_theme(
     }).map_err(|e: tauri::Error| e.to_string())?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn enable_autostart(
+    app: AppHandle,
+    db: State<'_, Database>,
+) -> Result<(), String> {
+    let autostart_manager = app.autolaunch();
+    autostart_manager
+        .enable()
+        .map_err(|e| e.to_string())?;
+
+    // Save setting to database
+    db.set_setting("autostart_enabled", "true")
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn disable_autostart(
+    app: AppHandle,
+    db: State<'_, Database>,
+) -> Result<(), String> {
+    let autostart_manager = app.autolaunch();
+    autostart_manager
+        .disable()
+        .map_err(|e| e.to_string())?;
+
+    // Save setting to database
+    db.set_setting("autostart_enabled", "false")
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn is_autostart_enabled(app: AppHandle) -> Result<bool, String> {
+    let autostart_manager = app.autolaunch();
+    autostart_manager
+        .is_enabled()
+        .map_err(|e| e.to_string())
 }

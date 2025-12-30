@@ -8,7 +8,7 @@ interface SettingsViewProps {
 
 export default function SettingsView({ onHeightChange }: SettingsViewProps) {
   const { t } = useTranslation();
-  const { weekStart, language, theme, reflectionPromptEnabled, loadSettings, setWeekStart, setLanguage, setTheme, setReflectionPromptEnabled } = useSettingsStore();
+  const { weekStart, language, theme, reflectionPromptEnabled, autostartEnabled, loadSettings, setWeekStart, setLanguage, setTheme, setReflectionPromptEnabled, setAutostartEnabled } = useSettingsStore();
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -217,6 +217,52 @@ export default function SettingsView({ onHeightChange }: SettingsViewProps) {
             <div className="flex-1">
               <div className="text-sm text-primary">{t('settings.notifications.reflectionPrompt')}</div>
               <div className="text-xs text-secondary">{t('settings.notifications.reflectionPromptDesc')}</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {/* Autostart setting */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-primary block">
+          {t('settings.autostart.label')}
+        </label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-900/5 dark:hover:bg-white/5 cursor-pointer">
+            <div className="relative flex-shrink-0">
+              <input
+                type="checkbox"
+                className="
+                  w-5 h-5 rounded cursor-pointer
+                  appearance-none
+                  bg-gray-900/5 dark:bg-white/5
+                  border border-gray-900/20 dark:border-white/10
+                  checked:bg-gray-900/20 dark:checked:bg-white/20
+                  checked:border-gray-900/40 dark:checked:border-white/30
+                  transition-all duration-200
+                "
+                checked={autostartEnabled}
+                onChange={(e) => setAutostartEnabled(e.target.checked)}
+              />
+              {autostartEnabled && (
+                <svg
+                  className="absolute inset-0 w-5 h-5 pointer-events-none"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    className="stroke-gray-900 dark:stroke-white"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-primary">{t('settings.autostart.enabled')}</div>
+              <div className="text-xs text-secondary">{t('settings.autostart.description')}</div>
             </div>
           </label>
         </div>

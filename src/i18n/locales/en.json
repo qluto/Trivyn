@@ -65,6 +65,11 @@
       "monthlyReminderDesc": "Notify at the beginning of the month",
       "reflectionPrompt": "Reflection Prompt",
       "reflectionPromptDesc": "Notify on weekends and end of month"
+    },
+    "autostart": {
+      "label": "Startup",
+      "enabled": "Launch at system startup",
+      "description": "Automatically start the app when your system boots"
     }
   },
   "weekdays": {

@@ -65,6 +65,11 @@
       "monthlyReminderDesc": "月初に通知",
       "reflectionPrompt": "振り返りプロンプト",
       "reflectionPromptDesc": "週末・月末に通知"
+    },
+    "autostart": {
+      "label": "起動設定",
+      "enabled": "OS起動時に自動起動",
+      "description": "システム起動時にアプリを自動的に起動します"
     }
   },
   "weekdays": {

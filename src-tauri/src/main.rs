@@ -13,6 +13,10 @@ mod reflection_reminder;
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ))
         .setup(|app| {
             // Initialize database
             let app_handle = app.handle().clone();
@@ -74,6 +78,9 @@ fn main() {
             commands::settings::set_language,
             commands::settings::set_theme,
             commands::settings::get_all_settings,
+            commands::settings::enable_autostart,
+            commands::settings::disable_autostart,
+            commands::settings::is_autostart_enabled,
             commands::reflections::get_reflection,
             commands::reflections::save_reflection,
             commands::reflections::get_reflections_by_level,

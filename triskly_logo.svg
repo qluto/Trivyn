@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- 丸みを帯びた背景 -->
+  <rect width="512" height="512" rx="115" fill="#f8fafc" />
+
+  <!-- トリスケリオン（三脚巴） -->
+  <g transform="translate(256, 256) scale(0.8)">
+    <!-- 色はダークスレート系で視認性を確保 -->
+    <g fill="#0f172a">
+       <!-- 1つ目の巴 -->
+      <path d="M0,0 L0,-220 A220,220 0 0,1 190.5,110 A110,110 0 1,0 0,0 Z" transform="rotate(0)"/>
+      <!-- 2つ目の巴 -->
+      <path d="M0,0 L0,-220 A220,220 0 0,1 190.5,110 A110,110 0 1,0 0,0 Z" transform="rotate(120)"/>
+      <!-- 3つ目の巴 -->
+      <path d="M0,0 L0,-220 A220,220 0 0,1 190.5,110 A110,110 0 1,0 0,0 Z" transform="rotate(240)"/>
+    </g>
+    
+    <!-- 中央の余白（オプション：より紋章らしく見せるための隙間） -->
+    <circle cx="0" cy="0" r="15" fill="#f8fafc" />
+  </g>
+</svg>

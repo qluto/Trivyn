@@ -10,6 +10,7 @@ interface SettingsStore {
   theme: AppTheme;
   floatingWindowPosition: WindowPosition;
   reflectionPromptEnabled: boolean;
+  autostartEnabled: boolean;
   loading: boolean;
 
   // Actions
@@ -19,6 +20,7 @@ interface SettingsStore {
   setTheme: (theme: AppTheme) => Promise<void>;
   setFloatingWindowPosition: (pos: WindowPosition) => Promise<void>;
   setReflectionPromptEnabled: (enabled: boolean) => Promise<void>;
+  setAutostartEnabled: (enabled: boolean) => Promise<void>;
 }
 
 // Detect system theme preference
@@ -42,6 +44,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   theme: 'system',
   floatingWindowPosition: { x: 0, y: 0 },
   reflectionPromptEnabled: true,
+  autostartEnabled: false,
   loading: false,
 
   loadSettings: async () => {
@@ -76,6 +79,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
         applyTheme(newTheme);
       });
 
+      // Check autostart status
+      const autostartEnabled = await invoke<boolean>('is_autostart_enabled', {});
+
       set({
         weekStart: parseInt(settings.week_start || '2'),
         language: lang,
@@ -84,6 +90,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
           settings.floating_window_position || '{"x":0,"y":0}'
         ),
         reflectionPromptEnabled: settings.reflection_prompt_enabled !== 'false',
+        autostartEnabled,
         loading: false,
       });
     } catch (error) {
@@ -164,6 +171,19 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
       set({ reflectionPromptEnabled: enabled });
     } catch (error) {
       console.error('Failed to set reflection prompt enabled:', error);
+    }
+  },
+
+  setAutostartEnabled: async (enabled: boolean) => {
+    try {
+      if (enabled) {
+        await invoke('enable_autostart', {});
+      } else {
+        await invoke('disable_autostart', {});
+      }
+      set({ autostartEnabled: enabled });
+    } catch (error) {
+      console.error('Failed to set autostart:', error);
     }
   },
 }));
