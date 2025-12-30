@@ -137,7 +137,7 @@ export default function MenuBarPopover() {
 
         const targetHeight = heightMap[bottomTab];
 
-        // Add header height (approximately 60px for the Tria header)
+        // Add header height (approximately 60px for the Triskly header)
         const totalHeight = targetHeight + 60;
 
         console.log(`[MenuBarPopover] Resizing to ${totalHeight}px for tab: ${bottomTab}`);
@@ -202,10 +202,10 @@ export default function MenuBarPopover() {
         ref={containerRef}
         className="relative w-full h-full overflow-hidden glass-dark border border-subtle flex flex-col"
       >
-        {/* Header with Tria logo and main navigation */}
+        {/* Header with Triskly logo and main navigation */}
         <div className="border-b border-subtle" data-tauri-drag-region>
           <div className="flex items-center justify-between px-3 py-2">
-            <h1 className="text-2xl font-bold text-primary">Tria</h1>
+            <h1 className="text-2xl font-bold text-primary">Triskly</h1>
 
             {/* Main navigation tabs */}
             <div className="flex items-center gap-3">

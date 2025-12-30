@@ -1,8 +1,8 @@
-# Tria
+# Triskly
 
 **Sharpen your days quietly with three focuses**
 
-Tria is a macOS menu bar app for practicing the "Three Wins" method (Rule of 3) proposed by J.D. Meier.
+Triskly is a cross-platform desktop app for practicing the "Three Wins" method (Rule of 3) proposed by J.D. Meier.
 
 ## Features
 
@@ -14,12 +14,12 @@ Tria is a macOS menu bar app for practicing the "Three Wins" method (Rule of 3) 
 
 ## Requirements
 
-- macOS 13.0 (Ventura) or later
+- macOS, Windows, or Linux
 
 ## Installation
 
-1. Download the latest `Tria.app.zip` from [Releases](../../releases)
-2. Extract and copy `Tria.app` to `/Applications`
+1. Download the latest release from [Releases](../../releases)
+2. Install the application for your platform
 3. Launch the app
 
 ## Usage
