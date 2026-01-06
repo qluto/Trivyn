@@ -20,17 +20,14 @@ export default function AddGoalField({ level, nextNumber, onAdd }: AddGoalFieldP
   const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
+    console.log('📨 FORM SUBMIT EVENT - title:', title);
     e.preventDefault();
     if (title.trim()) {
+      console.log('  ✅ Submitting goal:', title.trim());
       onAdd(title.trim());
       setTitle('');
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
+    } else {
+      console.log('  ⏭️  Empty title, not submitting');
     }
   };
 
@@ -50,7 +47,6 @@ export default function AddGoalField({ level, nextNumber, onAdd }: AddGoalFieldP
         onChange={(e) => setTitle(e.target.value)}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        onKeyDown={handleKeyDown}
         placeholder={t('goals.addPlaceholder')}
         className={`
           flex-1 bg-transparent border-b-2 border-transparent
