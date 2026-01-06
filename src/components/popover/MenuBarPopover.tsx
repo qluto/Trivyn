@@ -35,7 +35,19 @@ export default function MenuBarPopover() {
   const containerRef = useRef<HTMLDivElement>(null);
   const goalsContentRef = useRef<HTMLDivElement>(null);
   const lastCheckDateRef = useRef<string>(new Date().toDateString());
-  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, deleteGoal, setupEventListeners, setWeekStart } = useGoalStore();
+  const {
+    goals,
+    loadGoals,
+    addGoal,
+    toggleGoalCompletion,
+    canAddGoal,
+    deleteGoal,
+    setupEventListeners,
+    setWeekStart,
+    getDailyGoals,
+    getWeeklyGoals,
+    getMonthlyGoals
+  } = useGoalStore();
   const { loadSettings, weekStart } = useSettingsStore();
 
   // Sync weekStart from settings to goal store
@@ -169,7 +181,9 @@ export default function MenuBarPopover() {
     resizeWindow();
   }, [bottomTab, goalsHeight, reflectionHeight, historyHeight, settingsHeight]);
 
-  const currentGoals = goals.filter((g) => g.level === selectedLevel);
+  const currentGoals = selectedLevel === 'daily' ? getDailyGoals()
+    : selectedLevel === 'weekly' ? getWeeklyGoals()
+    : getMonthlyGoals();
   const canAdd = canAddGoal(selectedLevel);
 
   const handleAddGoal = async (title: string) => {
@@ -310,8 +324,11 @@ export default function MenuBarPopover() {
               <div className="border-b border-subtle px-3 py-2">
                 <div className="flex gap-2">
                   {(['daily', 'weekly', 'monthly'] as GoalLevel[]).map((level) => {
-                    const count = goals.filter((g) => g.level === level).length;
-                    const completedCount = goals.filter((g) => g.level === level && g.isCompleted).length;
+                    const levelGoals = level === 'daily' ? getDailyGoals()
+                      : level === 'weekly' ? getWeeklyGoals()
+                      : getMonthlyGoals();
+                    const count = levelGoals.length;
+                    const completedCount = levelGoals.filter((g) => g.isCompleted).length;
                     const levelColors: Record<GoalLevel, string> = {
                       daily: 'bg-daily-accent',
                       weekly: 'bg-weekly-accent',

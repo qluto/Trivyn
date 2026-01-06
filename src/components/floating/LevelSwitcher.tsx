@@ -20,7 +20,7 @@ const LEVEL_COLORS: Record<GoalLevel, string> = {
 
 export default function LevelSwitcher({ selected, onChange, goalsCount }: LevelSwitcherProps) {
   const { t } = useTranslation();
-  const { goals } = useGoalStore();
+  const { getDailyGoals, getWeeklyGoals, getMonthlyGoals } = useGoalStore();
   const levels: GoalLevel[] = ['daily', 'weekly', 'monthly'];
 
   return (
@@ -28,7 +28,10 @@ export default function LevelSwitcher({ selected, onChange, goalsCount }: LevelS
       {levels.map((level) => {
         const isSelected = selected === level;
         const count = goalsCount[level];
-        const completedCount = goals.filter((g) => g.level === level && g.isCompleted).length;
+        const levelGoals = level === 'daily' ? getDailyGoals()
+          : level === 'weekly' ? getWeeklyGoals()
+          : getMonthlyGoals();
+        const completedCount = levelGoals.filter((g) => g.isCompleted).length;
 
         return (
           <button

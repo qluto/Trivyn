@@ -191,8 +191,9 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
   },
 
   canAddGoal: (level: GoalLevel) => {
-    const { goals } = get();
-    const levelGoals = goals.filter((g) => g.level === level);
+    const levelGoals = level === 'daily' ? get().getDailyGoals()
+      : level === 'weekly' ? get().getWeeklyGoals()
+      : get().getMonthlyGoals();
     return levelGoals.length < 3;
   },
 

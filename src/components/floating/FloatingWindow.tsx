@@ -20,7 +20,19 @@ export default function FloatingWindow() {
     level: GoalLevel;
     position: { x: number; y: number };
   } | null>(null);
-  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners, setWeekStart } = useGoalStore();
+  const {
+    goals,
+    loadGoals,
+    addGoal,
+    toggleGoalCompletion,
+    canAddGoal,
+    setupEventListeners,
+    setWeekStart,
+    getDailyGoals,
+    getWeeklyGoals,
+    getMonthlyGoals,
+    getCurrentGoals
+  } = useGoalStore();
   const { loadSettings, weekStart } = useSettingsStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const lastCheckDateRef = useRef<string>(new Date().toDateString());
@@ -104,7 +116,9 @@ export default function FloatingWindow() {
     resizeWindow();
   }, [goals, selectedLevel]);
 
-  const currentGoals = goals.filter((g) => g.level === selectedLevel);
+  const currentGoals = selectedLevel === 'daily' ? getDailyGoals()
+    : selectedLevel === 'weekly' ? getWeeklyGoals()
+    : getMonthlyGoals();
   const canAdd = canAddGoal(selectedLevel);
 
   const handleAddGoal = async (title: string) => {
@@ -145,9 +159,9 @@ export default function FloatingWindow() {
   };
 
   const goalsCount = {
-    daily: goals.filter((g) => g.level === 'daily').length,
-    weekly: goals.filter((g) => g.level === 'weekly').length,
-    monthly: goals.filter((g) => g.level === 'monthly').length,
+    daily: getDailyGoals().length,
+    weekly: getWeeklyGoals().length,
+    monthly: getMonthlyGoals().length,
   };
 
   return (
