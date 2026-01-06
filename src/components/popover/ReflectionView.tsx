@@ -35,10 +35,12 @@ export default function ReflectionView({ onHeightChange }: ReflectionViewProps) 
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { loadReflection, saveReflection, getReflection } = useReflectionStore();
-  const { goals } = useGoalStore();
+  const { getDailyGoals, getWeeklyGoals, getMonthlyGoals } = useGoalStore();
 
-  // Calculate goals stats for this level
-  const levelGoals = goals.filter((g) => g.level === level);
+  // Calculate goals stats for this level (current period only)
+  const levelGoals = level === 'daily' ? getDailyGoals()
+    : level === 'weekly' ? getWeeklyGoals()
+    : getMonthlyGoals();
 
   // Load reflection when component mounts or level changes
   useEffect(() => {
