@@ -30,7 +30,7 @@ pub async fn init_database(app: &AppHandle) -> Result<()> {
         std::fs::create_dir_all(&app_dir)?;
     }
 
-    let db_path = app_dir.join("triskly.db");
+    let db_path = app_dir.join("trivyn.db");
     let db = Database::new(db_path)?;
 
     // Run migrations
