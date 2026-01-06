@@ -256,11 +256,11 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
             className="flex items-center justify-center hover:bg-gray-900/5 dark:hover:bg-white/5 transition-colors rounded"
           >
             {monthlyGoals.length > 0 && (
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-row gap-0.5">
                 {monthlyGoals.map((goal, i) => (
                   <div
                     key={i}
-                    className={`w-2 h-2 rounded-full ${
+                    className={`w-1.5 h-1.5 rounded-full ${
                       goal.isCompleted ? 'bg-monthly-accent' : 'bg-gray-500'
                     }`}
                   />
@@ -293,11 +293,11 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                   className="flex items-center justify-center hover:bg-gray-900/5 dark:hover:bg-white/5 transition-colors rounded"
                 >
                   {hasWeekGoals && (
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-row gap-0.5">
                       {weekGoals.map((goal, i) => (
                         <div
                           key={i}
-                          className={`w-2 h-2 rounded-full ${
+                          className={`w-1.5 h-1.5 rounded-full ${
                             goal.isCompleted ? 'bg-weekly-accent' : 'bg-gray-500'
                           }`}
                         />
