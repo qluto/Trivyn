@@ -3,11 +3,45 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
 import { Goal, GoalLevel } from '../types';
 
+// Period filtering helper functions
+function isSameDay(date1: Date, date2: Date): boolean {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+}
+
+function isSameWeek(date1: Date, date2: Date, weekStart: number): boolean {
+  const getWeekStart = (date: Date): Date => {
+    const d = new Date(date);
+    const day = d.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    // weekStart: 1 = Sunday (0), 2 = Monday (1), ..., 7 = Saturday (6)
+    const targetDay = (weekStart - 1) % 7;
+    const diff = (day - targetDay + 7) % 7;
+    d.setDate(d.getDate() - diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const week1Start = getWeekStart(date1);
+  const week2Start = getWeekStart(date2);
+  return isSameDay(week1Start, week2Start);
+}
+
+function isSameMonth(date1: Date, date2: Date): boolean {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth()
+  );
+}
+
 interface GoalStore {
   goals: Goal[];
   selectedLevel: GoalLevel;
   loading: boolean;
   error: string | null;
+  weekStart: number; // Week start day setting
 
   // Actions
   loadGoals: () => Promise<void>;
@@ -16,6 +50,7 @@ interface GoalStore {
   updateGoal: (goalId: string, title: string) => Promise<void>;
   deleteGoal: (goalId: string) => Promise<void>;
   setSelectedLevel: (level: GoalLevel) => void;
+  setWeekStart: (weekStart: number) => void;
   setupEventListeners: () => Promise<UnlistenFn>;
 
   // Computed
@@ -31,6 +66,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
   selectedLevel: 'daily',
   loading: false,
   error: null,
+  weekStart: 2, // Default to Monday, will be updated from settings
 
   loadGoals: async () => {
     console.log('[goalStore] loadGoals called');
@@ -108,19 +144,38 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     set({ selectedLevel: level });
   },
 
+  setWeekStart: (weekStart: number) => {
+    set({ weekStart });
+  },
+
   getDailyGoals: () => {
     const { goals } = get();
-    return goals.filter((g) => g.level === 'daily');
+    const now = new Date();
+    return goals.filter((g) => {
+      if (g.level !== 'daily') return false;
+      const goalDate = new Date(g.periodStart);
+      return isSameDay(goalDate, now);
+    });
   },
 
   getWeeklyGoals: () => {
-    const { goals } = get();
-    return goals.filter((g) => g.level === 'weekly');
+    const { goals, weekStart } = get();
+    const now = new Date();
+    return goals.filter((g) => {
+      if (g.level !== 'weekly') return false;
+      const goalDate = new Date(g.periodStart);
+      return isSameWeek(goalDate, now, weekStart);
+    });
   },
 
   getMonthlyGoals: () => {
     const { goals } = get();
-    return goals.filter((g) => g.level === 'monthly');
+    const now = new Date();
+    return goals.filter((g) => {
+      if (g.level !== 'monthly') return false;
+      const goalDate = new Date(g.periodStart);
+      return isSameMonth(goalDate, now);
+    });
   },
 
   getCurrentGoals: () => {

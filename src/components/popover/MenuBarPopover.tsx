@@ -34,8 +34,14 @@ export default function MenuBarPopover() {
   const [settingsHeight, setSettingsHeight] = useState(650);
   const containerRef = useRef<HTMLDivElement>(null);
   const goalsContentRef = useRef<HTMLDivElement>(null);
-  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, deleteGoal, setupEventListeners } = useGoalStore();
-  const { loadSettings } = useSettingsStore();
+  const lastCheckDateRef = useRef<string>(new Date().toDateString());
+  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, deleteGoal, setupEventListeners, setWeekStart } = useGoalStore();
+  const { loadSettings, weekStart } = useSettingsStore();
+
+  // Sync weekStart from settings to goal store
+  useEffect(() => {
+    setWeekStart(weekStart);
+  }, [weekStart, setWeekStart]);
 
   useEffect(() => {
     console.log('[MenuBarPopover] Component mounted, loading goals, settings and setting up event listeners');
@@ -50,6 +56,20 @@ export default function MenuBarPopover() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Check for date changes and reload goals
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      const currentDate = new Date().toDateString();
+      if (currentDate !== lastCheckDateRef.current) {
+        console.log('[MenuBarPopover] Date changed, reloading goals');
+        lastCheckDateRef.current = currentDate;
+        loadGoals();
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(checkInterval);
+  }, [loadGoals]);
 
   // Reload goals when window becomes visible
   useEffect(() => {

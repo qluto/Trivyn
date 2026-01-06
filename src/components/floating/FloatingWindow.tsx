@@ -20,9 +20,15 @@ export default function FloatingWindow() {
     level: GoalLevel;
     position: { x: number; y: number };
   } | null>(null);
-  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners } = useGoalStore();
-  const { loadSettings } = useSettingsStore();
+  const { goals, loadGoals, addGoal, toggleGoalCompletion, canAddGoal, setupEventListeners, setWeekStart } = useGoalStore();
+  const { loadSettings, weekStart } = useSettingsStore();
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastCheckDateRef = useRef<string>(new Date().toDateString());
+
+  // Sync weekStart from settings to goal store
+  useEffect(() => {
+    setWeekStart(weekStart);
+  }, [weekStart, setWeekStart]);
 
   useEffect(() => {
     console.log('[FloatingWindow] Component mounted, loading goals, settings and setting up event listeners');
@@ -37,6 +43,20 @@ export default function FloatingWindow() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Check for date changes and reload goals
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      const currentDate = new Date().toDateString();
+      if (currentDate !== lastCheckDateRef.current) {
+        console.log('[FloatingWindow] Date changed, reloading goals');
+        lastCheckDateRef.current = currentDate;
+        loadGoals();
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(checkInterval);
+  }, [loadGoals]);
 
   // Listen for language changes from other windows
   useEffect(() => {
