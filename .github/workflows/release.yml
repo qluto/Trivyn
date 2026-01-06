@@ -62,6 +62,37 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Update version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          # Extract version from tag (remove 'v' prefix)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Setting version to: $VERSION"
+
+          # Update package.json
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+          else
+            sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" package.json
+          fi
+
+          # Update tauri.conf.json
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
+          else
+            sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
+          fi
+
+          # Update Cargo.toml
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
+          else
+            sed -i "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
+          fi
+
+          echo "Version updated to $VERSION"
+
       - name: Build Tauri app
         run: npm run tauri:build -- --target ${{ matrix.target }}
         env:
