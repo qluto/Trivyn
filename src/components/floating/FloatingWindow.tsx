@@ -30,8 +30,7 @@ export default function FloatingWindow() {
     setWeekStart,
     getDailyGoals,
     getWeeklyGoals,
-    getMonthlyGoals,
-    getCurrentGoals
+    getMonthlyGoals
   } = useGoalStore();
   const { loadSettings, weekStart } = useSettingsStore();
   const containerRef = useRef<HTMLDivElement>(null);
