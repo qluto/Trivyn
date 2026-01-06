@@ -1,8 +1,8 @@
-# Triskly
+# Trivyn
 
 **Sharpen your days quietly with three focuses**
 
-Triskly is a cross-platform desktop app for practicing the "Three Wins" method (Rule of 3) proposed by J.D. Meier.
+Trivyn is a cross-platform desktop app for practicing the "Three Wins" method (Rule of 3) proposed by J.D. Meier.
 
 ## Features
 

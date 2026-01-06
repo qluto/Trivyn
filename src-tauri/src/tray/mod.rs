@@ -53,7 +53,7 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     // Create tray icon
     let tray = TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
-        .tooltip("Triskly")
+        .tooltip("Trivyn")
         .menu(&menu)
         .show_menu_on_left_click(false) // Disable menu on left click
         .on_menu_event(|app, event| {

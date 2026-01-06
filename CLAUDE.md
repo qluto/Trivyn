@@ -8,14 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm install           # Install dependencies
 npm run tauri:dev     # Run dev server (hot reload)
 npm run tauri:build   # Build production app
-pkill -f Triskly      # Kill running instance
+pkill -f Trivyn      # Kill running instance
 ```
 
 **Important**: Always keep the development server running (`npm run tauri:dev`) when working on this project. The server provides hot reload functionality for both frontend and backend changes.
 
 ## Architecture
 
-Triskly is a **multiplatform desktop app** (macOS, Windows, Linux) built with **Tauri 2.x** implementing the "Three Wins" productivity method. Users set 3 goals each for daily, weekly, and monthly timeframes.
+Trivyn is a **multiplatform desktop app** (macOS, Windows, Linux) built with **Tauri 2.x** implementing the "Three Wins" productivity method. Users set 3 goals each for daily, weekly, and monthly timeframes.
 
 ### Tech Stack
 
@@ -47,7 +47,7 @@ Triskly is a **multiplatform desktop app** (macOS, Windows, Linux) built with **
   - `EmptyState.tsx`: Empty state message
 
 - **MenuBarPopover** (`src/components/popover/`): Popup window from tray icon
-  - `MenuBarPopover.tsx`: Main container with Triskly branding and bottom navigation
+  - `MenuBarPopover.tsx`: Main container with Trivyn branding and bottom navigation
   - `HistoryView.tsx`: Goal history grouped by level
   - `ReflectionView.tsx`: Reflection input with 3 prompts
   - `SettingsView.tsx`: App settings (week start, language, notifications)

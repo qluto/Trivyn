@@ -4,7 +4,7 @@ Last Updated: January 6, 2026
 
 ## Overview
 
-Triskly (hereinafter referred to as "the App") respects your privacy. This Privacy Policy explains what information the App collects and how it is used.
+Trivyn (hereinafter referred to as "the App") respects your privacy. This Privacy Policy explains what information the App collects and how it is used.
 
 ## Information Collection and Storage
 
