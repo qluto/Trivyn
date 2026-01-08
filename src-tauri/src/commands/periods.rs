@@ -41,21 +41,21 @@ pub fn get_period_start(date: i64, level: String, week_start: i32) -> Result<i64
     Ok(period_start.timestamp_millis())
 }
 
-fn is_same_day(dt1: &DateTime<Local>, dt2: &DateTime<Local>) -> bool {
+pub fn is_same_day(dt1: &DateTime<Local>, dt2: &DateTime<Local>) -> bool {
     dt1.year() == dt2.year() && dt1.ordinal() == dt2.ordinal()
 }
 
-fn is_same_week(dt1: &DateTime<Local>, dt2: &DateTime<Local>, week_start: i32) -> bool {
+pub fn is_same_week(dt1: &DateTime<Local>, dt2: &DateTime<Local>, week_start: i32) -> bool {
     let week1_start = get_week_start(dt1, week_start);
     let week2_start = get_week_start(dt2, week_start);
     is_same_day(&week1_start, &week2_start)
 }
 
-fn is_same_month(dt1: &DateTime<Local>, dt2: &DateTime<Local>) -> bool {
+pub fn is_same_month(dt1: &DateTime<Local>, dt2: &DateTime<Local>) -> bool {
     dt1.year() == dt2.year() && dt1.month() == dt2.month()
 }
 
-fn get_day_start(dt: &DateTime<Local>) -> DateTime<Local> {
+pub fn get_day_start(dt: &DateTime<Local>) -> DateTime<Local> {
     dt.date_naive()
         .and_hms_opt(0, 0, 0)
         .unwrap()
@@ -63,7 +63,7 @@ fn get_day_start(dt: &DateTime<Local>) -> DateTime<Local> {
         .unwrap()
 }
 
-fn get_week_start(dt: &DateTime<Local>, week_start: i32) -> DateTime<Local> {
+pub fn get_week_start(dt: &DateTime<Local>, week_start: i32) -> DateTime<Local> {
     let current_weekday = dt.weekday().num_days_from_sunday() as i32;
     // week_start: 1 = Sunday (0), 2 = Monday (1), ..., 7 = Saturday (6)
     let target_weekday = (week_start - 1) % 7;
@@ -78,7 +78,7 @@ fn get_week_start(dt: &DateTime<Local>, week_start: i32) -> DateTime<Local> {
         .unwrap()
 }
 
-fn get_month_start(dt: &DateTime<Local>) -> DateTime<Local> {
+pub fn get_month_start(dt: &DateTime<Local>) -> DateTime<Local> {
     let month_start_date = NaiveDate::from_ymd_opt(dt.year(), dt.month(), 1).unwrap();
     month_start_date
         .and_hms_opt(0, 0, 0)

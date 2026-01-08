@@ -1,6 +1,7 @@
 use tauri::{State, AppHandle, Emitter, Manager};
 use crate::db::Database;
 use crate::models::{Goal, GoalLevel};
+use chrono::{DateTime, Local};
 
 #[tauri::command]
 pub async fn get_goals(
@@ -22,12 +23,33 @@ pub async fn add_goal(
     let goal_level = GoalLevel::from_str(&level)
         .ok_or_else(|| "Invalid goal level".to_string())?;
 
+    // Get week_start setting for period calculations
+    let week_start = db.get_setting("week_start")
+        .ok()
+        .and_then(|v| v.parse::<i32>().ok())
+        .unwrap_or(2); // Default to Monday
+
     // Check if we already have 3 goals for this level in the current period
     let existing_goals = db.get_goals(Some(&level))
         .map_err(|e| e.to_string())?;
 
-    // TODO: Filter by period (need period calculation logic)
-    if existing_goals.len() >= 3 {
+    // Filter goals by current period
+    let now = Local::now();
+    let current_period_goals: Vec<&Goal> = existing_goals.iter()
+        .filter(|goal| {
+            let goal_dt = DateTime::from_timestamp_millis(goal.period_start)
+                .map(|dt| dt.with_timezone(&Local))
+                .unwrap_or_else(|| now);
+
+            match goal_level {
+                GoalLevel::Daily => crate::commands::periods::is_same_day(&goal_dt, &now),
+                GoalLevel::Weekly => crate::commands::periods::is_same_week(&goal_dt, &now, week_start),
+                GoalLevel::Monthly => crate::commands::periods::is_same_month(&goal_dt, &now),
+            }
+        })
+        .collect();
+
+    if current_period_goals.len() >= 3 {
         return Err("Maximum 3 goals per level".to_string());
     }
 
