@@ -1,6 +1,6 @@
 {
   "name": "trivyn",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "description": "Three Wins productivity app - マルチプラットフォーム版",
   "type": "module",
   "scripts": {
