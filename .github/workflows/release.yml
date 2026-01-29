@@ -93,16 +93,49 @@ jobs:
 
           echo "Version updated to $VERSION"
 
+      - name: Import Apple Certificate
+        if: runner.os == 'macOS'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Create a temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+          # Create keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate
+          echo "$APPLE_CERTIFICATE" | base64 --decode > $RUNNER_TEMP/certificate.p12
+          security import $RUNNER_TEMP/certificate.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          # Clean up certificate file
+          rm $RUNNER_TEMP/certificate.p12
+
       - name: Build Tauri app
         run: npm run tauri:build -- --target ${{ matrix.target }}
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # macOS code signing
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          # macOS notarization
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
-      - name: Ad-hoc code signing for macOS
-        if: runner.os == 'macOS'
+      - name: Cleanup keychain
+        if: runner.os == 'macOS' && always()
         run: |
-          codesign -s - --force --deep src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.app
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          if [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain "$KEYCHAIN_PATH" || true
+          fi
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
@@ -110,11 +143,97 @@ jobs:
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
             src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.app.tar.gz
+            src-tauri/target/${{ matrix.target }}/release/bundle/macos/*.app.tar.gz.sig
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
             src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage
+            src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*.AppImage.sig
             src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi
+            src-tauri/target/${{ matrix.target }}/release/bundle/msi/*.msi.sig
             src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe
+            src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe.sig
           draft: false
           generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Generate latest.json for updater
+  update-manifest:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Generate latest.json
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          cat > latest.json << EOF
+          {
+            "version": "${VERSION}",
+            "notes": "Release v${VERSION}",
+            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "platforms": {
+              "darwin-aarch64": {
+                "signature": "",
+                "url": "https://github.com/qluto/trivyn/releases/download/v${VERSION}/Trivyn_${VERSION}_aarch64.app.tar.gz"
+              },
+              "darwin-x86_64": {
+                "signature": "",
+                "url": "https://github.com/qluto/trivyn/releases/download/v${VERSION}/Trivyn_${VERSION}_x64.app.tar.gz"
+              },
+              "linux-x86_64": {
+                "signature": "",
+                "url": "https://github.com/qluto/trivyn/releases/download/v${VERSION}/trivyn_${VERSION}_amd64.AppImage"
+              },
+              "windows-x86_64": {
+                "signature": "",
+                "url": "https://github.com/qluto/trivyn/releases/download/v${VERSION}/Trivyn_${VERSION}_x64-setup.exe"
+              }
+            }
+          }
+          EOF
+
+      - name: Download signatures and update manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+
+          # Download signature files
+          gh release download "v${VERSION}" -p "*.sig" -D sigs/ || true
+
+          # Read signatures and update latest.json
+          if [ -f "sigs/Trivyn_${VERSION}_aarch64.app.tar.gz.sig" ]; then
+            SIG=$(cat "sigs/Trivyn_${VERSION}_aarch64.app.tar.gz.sig")
+            jq --arg sig "$SIG" '.platforms["darwin-aarch64"].signature = $sig' latest.json > tmp.json && mv tmp.json latest.json
+          fi
+
+          if [ -f "sigs/Trivyn_${VERSION}_x64.app.tar.gz.sig" ]; then
+            SIG=$(cat "sigs/Trivyn_${VERSION}_x64.app.tar.gz.sig")
+            jq --arg sig "$SIG" '.platforms["darwin-x86_64"].signature = $sig' latest.json > tmp.json && mv tmp.json latest.json
+          fi
+
+          if [ -f "sigs/trivyn_${VERSION}_amd64.AppImage.sig" ]; then
+            SIG=$(cat "sigs/trivyn_${VERSION}_amd64.AppImage.sig")
+            jq --arg sig "$SIG" '.platforms["linux-x86_64"].signature = $sig' latest.json > tmp.json && mv tmp.json latest.json
+          fi
+
+          if [ -f "sigs/Trivyn_${VERSION}_x64-setup.exe.sig" ]; then
+            SIG=$(cat "sigs/Trivyn_${VERSION}_x64-setup.exe.sig")
+            jq --arg sig "$SIG" '.platforms["windows-x86_64"].signature = $sig' latest.json > tmp.json && mv tmp.json latest.json
+          fi
+
+          cat latest.json
+
+      - name: Upload latest.json
+        uses: softprops/action-gh-release@v1
+        with:
+          files: latest.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
