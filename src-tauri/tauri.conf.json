@@ -28,7 +28,10 @@
       }
     },
     "macOS": {
-      "minimumSystemVersion": "10.15"
+      "minimumSystemVersion": "10.15",
+      "signingIdentity": "-",
+      "hardenedRuntime": true,
+      "entitlements": "./Entitlements.plist"
     }
   },
   "app": {
@@ -75,6 +78,14 @@
     ],
     "security": {
       "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg5NkQyNDc1REYzOUZFNDEKUldSQi9qbmZkU1J0aVNBS25WRlVqWXQwM1N2SlJPQ3FTZmZ1c2NVM2Nvb2crL3FpdkdxbTFmcFIK",
+      "endpoints": [
+        "https://github.com/qluto/trivyn/releases/latest/download/latest.json"
+      ]
     }
   }
 }
