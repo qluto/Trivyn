@@ -4,6 +4,12 @@
 
 Trivyn is a cross-platform desktop app for practicing the "Three Wins" method (Rule of 3) proposed by J.D. Meier.
 
+## Download
+
+👉 **[Download Page](https://qluto.github.io/trivyn/)**
+
+Or download directly from [Releases](../../releases).
+
 ## Features
 
 - **Three Goals** - Set 3 goals each for today, this week, and this month
@@ -12,13 +18,15 @@ Trivyn is a cross-platform desktop app for practicing the "Three Wins" method (R
 - **Achievement Animation** - Confetti animation when completing goals
 - **Reflection Feature** - Support continuous improvement through daily reflection
 
-## Requirements
+## Supported Platforms
 
-- macOS, Windows, or Linux
+- macOS (Apple Silicon & Intel)
+- Windows (x64)
+- Linux (Debian/Ubuntu, AppImage)
 
 ## Installation
 
-1. Download the latest release from [Releases](../../releases)
+1. Download the latest release from the [Download Page](https://qluto.github.io/trivyn/) or [Releases](../../releases)
 2. Install the application for your platform
 3. Launch the app
 
