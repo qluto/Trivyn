@@ -100,16 +100,22 @@ export default function FloatingWindow() {
     const resizeWindow = async () => {
       if (!containerRef.current) return;
 
-      // Calculate required height based on content
-      const contentHeight = containerRef.current.scrollHeight;
-      const newHeight = Math.max(80, Math.min(300, contentHeight));
+      // Use requestAnimationFrame to ensure DOM is fully rendered
+      requestAnimationFrame(async () => {
+        if (!containerRef.current) return;
 
-      // Call Rust command to resize with top position fixed
-      try {
-        await invoke('resize_window_from_top', { newHeight });
-      } catch (error) {
-        console.error('Failed to resize window:', error);
-      }
+        // Get actual content height
+        const contentHeight = containerRef.current.scrollHeight;
+        // Minimum height for empty state, max for 3 goals
+        const newHeight = Math.max(60, Math.min(200, contentHeight));
+
+        // Call Rust command to resize with top position fixed
+        try {
+          await invoke('resize_window_from_top', { newHeight });
+        } catch (error) {
+          console.error('Failed to resize window:', error);
+        }
+      });
     };
 
     resizeWindow();
@@ -174,58 +180,57 @@ export default function FloatingWindow() {
       )}
       <div
         ref={containerRef}
-        className="relative w-full h-full overflow-hidden glass-dark border border-subtle select-none"
+        className="relative w-full overflow-hidden glass-card select-none"
         data-tauri-drag-region
       >
-      {/* Level Switcher */}
-      <div data-tauri-drag-region>
-        <LevelSwitcher
-          selected={selectedLevel}
-          onChange={setSelectedLevel}
-          goalsCount={goalsCount}
-        />
-      </div>
-
-      {/* Divider */}
-      <div className="h-px bg-gray-900/10 dark:bg-white/10 mx-1" data-tauri-drag-region />
-
-      {/* Goals List */}
-      <div className="px-1 py-1 space-y-0 overflow-hidden" data-tauri-drag-region>
-        {currentGoals.length === 0 ? (
-          <EmptyState level={selectedLevel} />
-        ) : (
-          currentGoals.map((goal, index) => (
-            <NumberedGoalRow
-              key={goal.id}
-              number={index + 1}
-              goal={goal}
-              level={selectedLevel}
-              onToggle={(position) => handleToggle(goal.id, position)}
-            />
-          ))
-        )}
-
-        {/* Add new goal field */}
-        {canAdd && (
-          <AddGoalField
-            level={selectedLevel}
-            nextNumber={currentGoals.length + 1}
-            onAdd={handleAddGoal}
+        {/* Level Switcher */}
+        <div data-tauri-drag-region>
+          <LevelSwitcher
+            selected={selectedLevel}
+            onChange={setSelectedLevel}
+            goalsCount={goalsCount}
           />
-        )}
-      </div>
+        </div>
 
-      {/* Close button (hover to show) */}
-      <button
-        className="absolute top-2 right-2 w-5 h-5 rounded-full
-                   bg-gray-900/10 dark:bg-white/10 backdrop-blur-sm
-                   flex items-center justify-center
-                   opacity-0 hover:opacity-100 transition-opacity
-                   group z-10"
-        onClick={handleClose}
-      >
-        <span className="text-xs text-gray-900/70 dark:text-white/70 group-hover:text-gray-900 dark:group-hover:text-white">✕</span>
-      </button>
+        {/* Goals List - padding matches design [4,8,10,8] */}
+        <div className="pt-1 px-2 pb-2.5 overflow-hidden" data-tauri-drag-region>
+          {currentGoals.length === 0 ? (
+            <EmptyState level={selectedLevel} />
+          ) : (
+            currentGoals.map((goal, index) => (
+              <NumberedGoalRow
+                key={goal.id}
+                number={index + 1}
+                goal={goal}
+                level={selectedLevel}
+                onToggle={(position) => handleToggle(goal.id, position)}
+              />
+            ))
+          )}
+
+          {/* Add new goal field */}
+          {canAdd && (
+            <AddGoalField
+              level={selectedLevel}
+              nextNumber={currentGoals.length + 1}
+              onAdd={handleAddGoal}
+            />
+          )}
+        </div>
+
+        {/* Close button (hover to show) */}
+        <button
+          className="absolute top-2 right-2 w-6 h-6 rounded-full
+                     bg-surface-elevated dark:bg-surface-dark-elevated
+                     flex items-center justify-center
+                     opacity-0 hover:opacity-100 transition-opacity
+                     group z-10"
+          onClick={handleClose}
+        >
+          <svg className="w-3 h-3 text-tertiary group-hover:text-primary" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </>
   );

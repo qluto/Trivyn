@@ -26,9 +26,9 @@ pub async fn resize_window_from_top(window: Window, new_height: f64) -> Result<(
         .outer_position()
         .map_err(|e| format!("Failed to get position: {}", e))?;
 
-    // Resize window to new height, keeping width the same
+    // Resize window to new height, keeping width the same (180px matches design)
     window
-        .set_size(LogicalSize::new(220.0, new_height))
+        .set_size(LogicalSize::new(180.0, new_height))
         .map_err(|e| format!("Failed to resize window: {}", e))?;
 
     // Restore the top position using the same physical position
@@ -50,9 +50,9 @@ pub async fn resize_popover(window: Window, height: f64) -> Result<(), String> {
         .outer_position()
         .map_err(|e| format!("Failed to get position: {}", e))?;
 
-    // Resize window (420px width for popover)
+    // Resize window (340px width for popover, matches design)
     window
-        .set_size(LogicalSize::new(420.0, height))
+        .set_size(LogicalSize::new(340.0, height))
         .map_err(|e| format!("Failed to resize window: {}", e))?;
 
     // Restore the top position

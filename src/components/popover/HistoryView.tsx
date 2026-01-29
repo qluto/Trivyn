@@ -8,12 +8,6 @@ interface HistoryViewProps {
   onHeightChange?: (height: number) => void;
 }
 
-const LEVEL_COLORS: Record<GoalLevel, string> = {
-  daily: 'bg-daily-accent',
-  weekly: 'bg-weekly-accent',
-  monthly: 'bg-monthly-accent',
-};
-
 function getDaysInMonth(year: number, month: number): Date[] {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -137,8 +131,9 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
   const days = useMemo(() => getDaysInMonth(year, month), [year, month]);
 
   // Weekday names based on current language
-  const weekdayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const weekdays = weekdayKeys.map(key => t(`weekdays.short.${key}`));
+  const weekdays = i18n.language === 'ja'
+    ? ['日', '月', '火', '水', '木', '金', '土']
+    : ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
   // Get monthly goals for current month
   const monthlyGoals = useMemo(() => getMonthGoals(goals, year, month), [goals, year, month]);
@@ -216,60 +211,60 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
   }, [selection, selectedGoals.length, selectedReflection, onHeightChange]);
 
   return (
-    <div ref={contentRef} className="flex flex-col bg-transparent">
-      {/* Header */}
-      <div className="px-3 py-2 border-b border-gray-900/10 dark:border-white/10">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={goToPreviousMonth}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-900/10 dark:hover:bg-white/10 transition-colors"
-          >
-            <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+    <div ref={contentRef} className="flex flex-col">
+      {/* Month navigation */}
+      <div className="px-4 py-3 flex items-center justify-between">
+        <button
+          onClick={goToPreviousMonth}
+          className="nav-btn"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
 
-          <h2 className="text-lg font-semibold text-primary">
+        {/* Monthly progress dots */}
+        <div className="flex items-center gap-3">
+          {monthlyGoals.length > 0 && (
+            <button
+              onClick={() => setSelection({ type: 'month', year, month })}
+              className="flex gap-1"
+            >
+              {monthlyGoals.map((goal, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full ${
+                    goal.isCompleted ? 'bg-monthly-accent' : 'bg-border'
+                  }`}
+                />
+              ))}
+            </button>
+          )}
+          <h2 className="text-base font-bold text-primary">
             {i18n.language === 'ja'
               ? t('history.monthYear', { year, month: month + 1 })
               : t('history.monthYear', { month: monthNames[month], year })
             }
           </h2>
-
-          <button
-            onClick={goToNextMonth}
-            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-900/10 dark:hover:bg-white/10 transition-colors"
-          >
-            <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
         </div>
+
+        <button
+          onClick={goToNextMonth}
+          className="nav-btn"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
 
       {/* Calendar Grid */}
-      <div className="overflow-hidden px-6 pb-2">
+      <div className="px-4 pb-4">
         {/* Weekday headers */}
-        <div className="grid grid-cols-8 gap-1 pt-2">
-          <button
-            onClick={() => setSelection({ type: 'month', year, month })}
-            className="flex items-center justify-center hover:bg-gray-900/5 dark:hover:bg-white/5 transition-colors rounded"
-          >
-            {monthlyGoals.length > 0 && (
-              <div className="flex flex-row gap-0.5">
-                {monthlyGoals.map((goal, i) => (
-                  <div
-                    key={i}
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      goal.isCompleted ? 'bg-monthly-accent' : 'bg-gray-500'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </button>
+        <div className="grid grid-cols-8 gap-1 mb-1">
+          <div /> {/* Week indicator column */}
           {weekdays.map((day, index) => (
-            <div key={index} className="text-center text-xs font-medium text-secondary">
+            <div key={index} className="text-center text-xs font-medium text-tertiary py-2">
               {day}
             </div>
           ))}
@@ -290,15 +285,15 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                 {/* Week indicator with dots */}
                 <button
                   onClick={() => setSelection({ type: 'week', year: firstDayOfWeek.getFullYear(), week: weekNum })}
-                  className="flex items-center justify-center hover:bg-gray-900/5 dark:hover:bg-white/5 transition-colors rounded"
+                  className="flex items-center justify-center h-10 hover:bg-surface-elevated/50 dark:hover:bg-surface-dark-elevated/50 transition-colors rounded-md"
                 >
                   {hasWeekGoals && (
-                    <div className="flex flex-row gap-0.5">
+                    <div className="flex flex-col gap-0.5">
                       {weekGoals.map((goal, i) => (
                         <div
                           key={i}
                           className={`w-1.5 h-1.5 rounded-full ${
-                            goal.isCompleted ? 'bg-weekly-accent' : 'bg-gray-500'
+                            goal.isCompleted ? 'bg-weekly-accent' : 'bg-border'
                           }`}
                         />
                       ))}
@@ -319,27 +314,27 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                       key={dayIndex}
                       onClick={() => setSelection({ type: 'date', date })}
                       className={`
-                        relative aspect-square rounded-lg text-base transition-all
-                        ${isCurrentMonth ? 'text-primary' : 'text-secondary opacity-40'}
-                        ${isToday ? 'ring-2 ring-blue-400' : ''}
-                        ${isSelected ? 'bg-gray-900/20 dark:bg-white/20' : 'hover:bg-gray-900/5 dark:hover:bg-white/5'}
+                        relative h-10 rounded-md text-sm transition-all flex flex-col items-center justify-center
+                        ${isCurrentMonth ? 'text-primary' : 'text-tertiary opacity-40'}
+                        ${isSelected ? 'text-white' : 'hover:bg-surface-elevated/50 dark:hover:bg-surface-dark-elevated/50'}
                       `}
+                      style={isSelected ? { background: 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)' } : {}}
                     >
-                      <div className="flex flex-col items-center justify-center h-full gap-0">
-                        <span className={isToday ? 'font-bold' : ''}>{date.getDate()}</span>
-                        {hasGoals && (
-                          <div className="flex gap-0.5">
-                            {dayGoals.map((goal, i) => (
-                              <div
-                                key={i}
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  goal.isCompleted ? 'bg-daily-accent' : 'bg-gray-500'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      <span className={`${isToday && !isSelected ? 'font-bold text-brand-primary' : ''}`}>
+                        {date.getDate()}
+                      </span>
+                      {hasGoals && !isSelected && (
+                        <div className="flex gap-0.5 mt-0.5">
+                          {dayGoals.map((goal, i) => (
+                            <div
+                              key={i}
+                              className={`w-1 h-1 rounded-full ${
+                                goal.isCompleted ? 'bg-daily-accent' : 'bg-border'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </button>
                   );
                 })}
@@ -350,50 +345,62 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
 
         {/* Selection details */}
         {selection && (
-          <div className="mt-6 p-4 rounded-lg bg-gray-900/5 dark:bg-white/5 border border-gray-900/10 dark:border-white/10">
+          <div className="mt-4 p-4 bg-surface-elevated/50 dark:bg-surface-dark-elevated/50 rounded-lg">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-primary">
-                {selection.type === 'date' && (
-                  i18n.language === 'ja'
-                    ? `${selection.date.getMonth() + 1}月${selection.date.getDate()}日の目標`
-                    : `${monthNames[selection.date.getMonth()]} ${selection.date.getDate()}`
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-primary">
+                  {selection.type === 'date' && (
+                    i18n.language === 'ja'
+                      ? `${selection.date.getMonth() + 1}月${selection.date.getDate()}日（${weekdays[selection.date.getDay()]}）`
+                      : `${monthNames[selection.date.getMonth()]} ${selection.date.getDate()}`
+                  )}
+                  {selection.type === 'week' && (
+                    i18n.language === 'ja'
+                      ? `第${selection.week}週`
+                      : `Week ${selection.week}`
+                  )}
+                  {selection.type === 'month' && (
+                    i18n.language === 'ja'
+                      ? `${selection.month + 1}月`
+                      : `${monthNames[selection.month]}`
+                  )}
+                </h3>
+                {selectedGoals.length > 0 && (
+                  <span className="px-2 py-0.5 text-xs font-bold text-white rounded-md" style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)' }}>
+                    {selectedGoals.filter(g => g.isCompleted).length}/{selectedGoals.length} 完了
+                  </span>
                 )}
-                {selection.type === 'week' && (
-                  i18n.language === 'ja'
-                    ? `第${selection.week}週の目標`
-                    : `Week ${selection.week}`
-                )}
-                {selection.type === 'month' && (
-                  i18n.language === 'ja'
-                    ? `${selection.month + 1}月の目標`
-                    : `${monthNames[selection.month]}`
-                )}
-              </h3>
+              </div>
               <button
                 onClick={() => setSelection(null)}
-                className="text-xs text-secondary hover:text-primary"
+                className="text-xs text-secondary hover:text-primary transition-colors"
               >
                 {t('history.close')}
               </button>
             </div>
 
             {selectedGoals.length === 0 ? (
-              <p className="text-xs text-secondary italic">{t('history.noGoalsOnDate')}</p>
+              <p className="text-sm text-tertiary">{t('history.noGoalsOnDate')}</p>
             ) : (
               <div className="space-y-2">
                 {selectedGoals.map((goal) => (
                   <div
                     key={goal.id}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-gray-900/5 dark:bg-white/5"
+                    className="flex items-center gap-3 py-2"
                   >
                     <div
-                      className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                        goal.isCompleted ? LEVEL_COLORS[goal.level] : 'bg-gray-500'
-                      }`}
-                    />
+                      className={`check-circle ${goal.level} ${goal.isCompleted ? 'checked' : ''} flex-shrink-0`}
+                      style={{ width: '20px', height: '20px' }}
+                    >
+                      {goal.isCompleted && (
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
                     <span
                       className={`text-sm flex-1 min-w-0 break-words whitespace-normal ${
-                        goal.isCompleted ? 'text-secondary line-through' : 'text-primary'
+                        goal.isCompleted ? 'text-tertiary line-through' : 'text-primary'
                       }`}
                     >
                       {goal.title}
@@ -406,22 +413,14 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
             {/* Reflection display */}
             {selectedReflection && (
               <>
-                <div className="h-px bg-gray-900/10 dark:bg-white/10 my-4" />
+                <div className="h-px bg-border-subtle dark:bg-gray-700 my-4" />
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">💡</span>
-                    <h4 className="text-sm font-semibold text-primary">{t('reflection.insights')}</h4>
-                  </div>
+                  <h4 className="text-sm font-bold text-primary">{t('reflection.insights')}</h4>
                   <div className="space-y-2">
                     {[selectedReflection.insight1, selectedReflection.insight2, selectedReflection.insight3]
                       .filter(insight => insight && insight.trim() !== '')
                       .map((insight, index) => (
-                        <div key={index} className="flex gap-2 items-start">
-                          <div className="flex-shrink-0 mt-1">
-                            <div className="w-1.5 h-1.5 rounded-full bg-gray-900/70 dark:bg-white/70" />
-                          </div>
-                          <p className="text-xs text-primary flex-1 min-w-0 leading-relaxed break-words whitespace-normal">{insight}</p>
-                        </div>
+                        <p key={index} className="text-sm text-secondary leading-relaxed">{insight}</p>
                       ))}
                   </div>
                 </div>

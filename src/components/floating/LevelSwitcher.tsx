@@ -12,22 +12,21 @@ interface LevelSwitcherProps {
   };
 }
 
-const LEVEL_COLORS: Record<GoalLevel, string> = {
+const ACCENT_COLORS: Record<GoalLevel, string> = {
   daily: 'bg-daily-accent',
   weekly: 'bg-weekly-accent',
   monthly: 'bg-monthly-accent',
 };
 
-export default function LevelSwitcher({ selected, onChange, goalsCount }: LevelSwitcherProps) {
+export default function LevelSwitcher({ selected, onChange }: LevelSwitcherProps) {
   const { t } = useTranslation();
   const { getDailyGoals, getWeeklyGoals, getMonthlyGoals } = useGoalStore();
   const levels: GoalLevel[] = ['daily', 'weekly', 'monthly'];
 
   return (
-    <div className="flex items-center justify-around p-1 gap-0.5">
+    <div className="flex items-center gap-0.5 px-1.5 pt-1 pb-0.5">
       {levels.map((level) => {
         const isSelected = selected === level;
-        const count = goalsCount[level];
         const levelGoals = level === 'daily' ? getDailyGoals()
           : level === 'weekly' ? getWeeklyGoals()
           : getMonthlyGoals();
@@ -38,35 +37,39 @@ export default function LevelSwitcher({ selected, onChange, goalsCount }: LevelS
             key={level}
             onClick={() => onChange(level)}
             className={`
-              flex-1 flex flex-row items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg
-              transition-all duration-200
-              ${isSelected
-                ? 'bg-gray-900/10 dark:bg-white/10 backdrop-blur-sm'
-                : 'hover:bg-gray-900/5 dark:hover:bg-white/5'
-              }
+              flex-1 flex items-center justify-center gap-1 py-1 rounded-lg transition-all duration-200
+              ${isSelected ? 'bg-surface-elevated dark:bg-surface-dark-elevated' : 'bg-transparent'}
             `}
           >
-            {/* Progress dots */}
-            <div className="flex gap-0.5">
-              {[0, 1, 2].map((index) => (
-                <div
-                  key={index}
-                  className={`
-                    w-1.5 h-1.5 rounded-full transition-all
-                    ${index < count
-                      ? index < completedCount
-                        ? LEVEL_COLORS[level]
-                        : 'bg-gray-900/30 dark:bg-white/30'
-                      : 'bg-gray-900/10 dark:bg-white/10'
-                    }
-                  `}
-                />
-              ))}
-            </div>
-
-            <span className={`text-[11px] leading-none font-medium ${isSelected ? 'text-primary' : 'text-secondary'}`}>
+            {/* Level label */}
+            <span className={`
+              text-[11px] tracking-wide
+              ${isSelected
+                ? `font-semibold ${level === 'daily' ? 'text-daily-accent' : level === 'weekly' ? 'text-weekly-accent' : 'text-monthly-accent'}`
+                : 'font-medium text-secondary dark:text-content-dark-secondary'
+              }
+            `}>
               {t(`levels.${level}`)}
             </span>
+
+            {/* Progress dots - always show 3 dots, horizontal layout */}
+            <div className="flex items-center gap-0.5">
+              {[0, 1, 2].map((dotIndex) => {
+                const isCompleted = dotIndex < completedCount;
+                return (
+                  <div
+                    key={dotIndex}
+                    className={`
+                      w-[3px] h-[3px] rounded-full transition-colors duration-200
+                      ${isCompleted
+                        ? ACCENT_COLORS[level]
+                        : 'bg-border dark:bg-gray-600'
+                      }
+                    `}
+                  />
+                );
+              })}
+            </div>
           </button>
         );
       })}
