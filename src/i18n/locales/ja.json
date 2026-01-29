@@ -5,9 +5,9 @@
     "version": "v0.1.0"
   },
   "levels": {
-    "daily": "今日",
-    "weekly": "今週",
-    "monthly": "今月"
+    "daily": "日",
+    "weekly": "週",
+    "monthly": "月"
   },
   "goals": {
     "empty": {
@@ -15,8 +15,10 @@
       "weekly": "今週の目標を設定しましょう",
       "monthly": "今月の目標を設定しましょう"
     },
+    "emptyFloating": "目標がありません",
+    "clickToAdd": "クリックして追加",
     "maxHint": "最大3つまで設定できます",
-    "addPlaceholder": "目標を入力...",
+    "addPlaceholder": "目標を追加...",
     "completed": "達成",
     "noGoals": "ゴールが設定されていませんでした"
   },
@@ -55,6 +57,9 @@
       "system": "システム設定",
       "light": "ライトモード",
       "dark": "ダークモード"
+    },
+    "appearance": {
+      "label": "外観"
     },
     "notifications": {
       "label": "通知",

@@ -5,9 +5,9 @@
     "version": "v0.1.0"
   },
   "levels": {
-    "daily": "Today",
-    "weekly": "This Week",
-    "monthly": "This Month"
+    "daily": "Day",
+    "weekly": "Week",
+    "monthly": "Month"
   },
   "goals": {
     "empty": {
@@ -15,8 +15,10 @@
       "weekly": "Set your goals for this week",
       "monthly": "Set your goals for this month"
     },
+    "emptyFloating": "No goals yet",
+    "clickToAdd": "Click to add",
     "maxHint": "Maximum 3 goals",
-    "addPlaceholder": "Enter a goal...",
+    "addPlaceholder": "Add goal...",
     "completed": "Completed",
     "noGoals": "No goals were set"
   },
@@ -55,6 +57,9 @@
       "system": "System Default",
       "light": "Light Mode",
       "dark": "Dark Mode"
+    },
+    "appearance": {
+      "label": "Appearance"
     },
     "notifications": {
       "label": "Notifications",

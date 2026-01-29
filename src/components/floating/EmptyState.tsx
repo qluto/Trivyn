@@ -5,16 +5,36 @@ interface EmptyStateProps {
   level: GoalLevel;
 }
 
-export default function EmptyState({ level }: EmptyStateProps) {
+export default function EmptyState(_props: EmptyStateProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col items-center justify-center py-8 px-4" data-tauri-drag-region>
-      <p className="text-sm text-secondary text-center">
-        {t(`goals.empty.${level}`)}
+    <div className="flex flex-col items-center justify-center gap-2 py-6 px-4" data-tauri-drag-region>
+      {/* Circle dashed icon */}
+      <svg
+        className="w-6 h-6 text-tertiary dark:text-content-dark-tertiary"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M10.1 2.18a9.93 9.93 0 0 1 3.8 0" />
+        <path d="M17.6 3.71a9.95 9.95 0 0 1 2.69 2.7" />
+        <path d="M21.82 10.1a9.93 9.93 0 0 1 0 3.8" />
+        <path d="M20.29 17.6a9.95 9.95 0 0 1-2.7 2.69" />
+        <path d="M13.9 21.82a9.94 9.94 0 0 1-3.8 0" />
+        <path d="M6.4 20.29a9.95 9.95 0 0 1-2.69-2.7" />
+        <path d="M2.18 13.9a9.93 9.93 0 0 1 0-3.8" />
+        <path d="M3.71 6.4a9.95 9.95 0 0 1 2.7-2.69" />
+      </svg>
+
+      <p className="text-[11px] font-medium text-tertiary dark:text-content-dark-tertiary text-center tracking-wide">
+        {t('goals.emptyFloating')}
       </p>
-      <p className="text-xs text-gray-900/20 dark:text-white/20 text-center mt-2">
-        {t('goals.maxHint')}
+      <p className="text-[10px] text-tertiary dark:text-content-dark-tertiary text-center">
+        {t('goals.clickToAdd')}
       </p>
     </div>
   );

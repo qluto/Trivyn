@@ -12,19 +12,13 @@ interface PeriodChangeEvent {
   current_month_key: string;
 }
 
-const LEVEL_COLORS: Record<GoalLevel, string> = {
-  daily: 'bg-daily-accent',
-  weekly: 'bg-weekly-accent',
-  monthly: 'bg-monthly-accent',
-};
-
 interface ReflectionViewProps {
   onHeightChange?: (height: number) => void;
 }
 
 export default function ReflectionView({ onHeightChange }: ReflectionViewProps) {
   const { t } = useTranslation();
-  const [level, setLevel] = useState<GoalLevel>('daily');
+  const [level, setLevel] = useState<GoalLevel>('weekly');
   const [insights, setInsights] = useState({
     insight1: '',
     insight2: '',
@@ -140,22 +134,15 @@ export default function ReflectionView({ onHeightChange }: ReflectionViewProps) 
   }, [level, insights, showMonthlyNotice, levelGoals.length, onHeightChange]);
 
   return (
-    <div ref={contentRef} className="flex flex-col bg-transparent">
-      {/* Level tabs */}
-      <div className="border-b border-gray-900/10 dark:border-white/10 px-3 py-2">
-        <div className="flex gap-2">
-          {(['daily', 'weekly', 'monthly'] as GoalLevel[]).map((lvl) => (
+    <div ref={contentRef} className="flex flex-col">
+      {/* Level tabs - only weekly and monthly for reflection */}
+      <div className="px-4 py-3">
+        <div className="flex gap-1 p-1 bg-surface-elevated/50 dark:bg-surface-dark-elevated/50 rounded-lg">
+          {(['weekly', 'monthly'] as GoalLevel[]).map((lvl) => (
             <button
               key={lvl}
               onClick={() => setLevel(lvl)}
-              className={`
-                flex-1 px-4 py-1.5 rounded-lg text-sm font-medium
-                transition-all duration-200
-                ${level === lvl
-                  ? 'bg-gray-900/10 dark:bg-white/15 text-primary'
-                  : 'text-secondary hover:bg-gray-900/5 dark:hover:bg-white/5 hover:text-primary'
-                }
-              `}
+              className={`tab-pill flex-1 ${level === lvl ? 'active' : ''}`}
             >
               {t(`levels.${lvl}`)}
             </button>
@@ -164,45 +151,40 @@ export default function ReflectionView({ onHeightChange }: ReflectionViewProps) 
       </div>
 
       {/* Content */}
-      <div className="overflow-hidden px-3 py-3 pb-4 space-y-4">
+      <div className="px-4 pb-6 space-y-5">
         {/* Monthly notice banner */}
         {showMonthlyNotice && (
-          <div className="px-4 py-2 bg-blue-500/10 border-l-2 border-blue-500 text-sm text-blue-400 rounded">
+          <div className="px-4 py-3 bg-brand-primary/10 border-l-3 border-brand-primary text-sm text-brand-primary rounded-md">
             月次の振り返りも期限を迎えています。週次の後にご記入ください。
           </div>
         )}
 
         {/* Goals List (Read-only) */}
         {levelGoals.length > 0 && (
-          <div className="space-y-0">
-            {levelGoals.map((goal, index) => (
+          <div className="space-y-1">
+            {levelGoals.map((goal) => (
               <div
                 key={goal.id}
-                className="w-full flex items-center gap-2 py-1 px-1.5 rounded-lg"
+                className="w-full flex items-center gap-3 py-2 px-3 rounded-lg"
               >
-                {/* Number circle */}
+                {/* Check circle */}
                 <div
-                  className={`
-                    flex items-center justify-center
-                    w-5 h-5 rounded-full border-2
-                    ${goal.isCompleted
-                      ? `${LEVEL_COLORS[level]} border-transparent`
-                      : 'border-gray-900/15 dark:border-white/20'
-                    }
-                  `}
+                  className={`check-circle ${level} ${goal.isCompleted ? 'checked' : ''} flex-shrink-0`}
                 >
-                  <span className={`text-[10px] leading-none font-semibold ${goal.isCompleted ? 'text-white' : 'text-secondary'}`}>
-                    {index + 1}
-                  </span>
+                  {goal.isCompleted && (
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
                 </div>
 
                 {/* Goal text */}
                 <span
                   className={`
-                    flex-1 min-w-0 text-left text-xs leading-snug break-words whitespace-normal
+                    flex-1 min-w-0 text-left text-sm leading-snug break-words whitespace-normal
                     ${goal.isCompleted
-                      ? 'text-secondary line-through'
-                      : 'text-primary'
+                      ? 'text-tertiary dark:text-content-dark-tertiary line-through'
+                      : 'text-primary font-medium'
                     }
                   `}
                 >
@@ -213,14 +195,9 @@ export default function ReflectionView({ onHeightChange }: ReflectionViewProps) 
           </div>
         )}
 
-        <div className="h-px bg-gray-900/10 dark:bg-white/10" />
-
         {/* Reflection Section */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">💡</span>
-            <h2 className="text-base font-semibold text-primary">{t('reflection.insights')}</h2>
-          </div>
+          <h2 className="text-base font-bold text-primary">{t('reflection.insights')}</h2>
 
           <div className="space-y-3">
             {[
@@ -228,28 +205,19 @@ export default function ReflectionView({ onHeightChange }: ReflectionViewProps) 
               { key: 'insight2' as const, placeholder: t('reflection.placeholder') },
               { key: 'insight3' as const, placeholder: t('reflection.placeholder') },
             ].map((item, index) => (
-              <div key={index} className="flex gap-3">
-                <div className="flex-shrink-0 mt-3">
-                  <div className="w-2 h-2 rounded-full bg-gray-900/70 dark:bg-white/70" />
-                </div>
-                <textarea
-                  value={insights[item.key]}
-                  onChange={(e) => setInsights({ ...insights, [item.key]: e.target.value })}
-                  onBlur={handleBlur}
-                  className="
-                    flex-1 bg-gray-900/5 dark:bg-white/5 border border-gray-900/10 dark:border-white/10 rounded-lg p-3
-                    text-sm text-primary placeholder-gray-500/60 dark:placeholder-white/30
-                    focus:outline-none focus:ring-2 focus:ring-purple-400/50
-                    resize-none min-h-[60px]
-                  "
-                  placeholder={item.placeholder}
-                  rows={2}
-                />
-              </div>
+              <textarea
+                key={index}
+                value={insights[item.key]}
+                onChange={(e) => setInsights({ ...insights, [item.key]: e.target.value })}
+                onBlur={handleBlur}
+                className="input-field resize-none min-h-[56px]"
+                placeholder={item.placeholder}
+                rows={2}
+              />
             ))}
           </div>
 
-          <p className="text-xs text-secondary pl-5">
+          <p className="text-xs text-tertiary">
             {t('reflection.hint')}
           </p>
         </div>
