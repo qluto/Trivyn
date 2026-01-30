@@ -6,7 +6,7 @@ Trivyn is a cross-platform desktop app for practicing the "Three Wins" method (R
 
 ## Download
 
-👉 **[Download Page](https://qluto.github.io/trivyn/)**
+👉 **[Download Page](https://qluto.github.io/Trivyn/)**
 
 Or download directly from [Releases](../../releases).
 
@@ -26,7 +26,7 @@ Or download directly from [Releases](../../releases).
 
 ## Installation
 
-1. Download the latest release from the [Download Page](https://qluto.github.io/trivyn/) or [Releases](../../releases)
+1. Download the latest release from the [Download Page](https://qluto.github.io/Trivyn/) or [Releases](../../releases)
 2. Install the application for your platform
 3. Launch the app
 
