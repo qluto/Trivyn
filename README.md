@@ -6,6 +6,14 @@ Trivyn is a cross-platform desktop app for practicing the "Three Wins" method (R
 
 ## Download
 
+### Homebrew (macOS)
+
+```bash
+brew install --cask qluto/trivyn/trivyn
+```
+
+### Direct Download
+
 👉 **[Download Page](https://qluto.github.io/Trivyn/)**
 
 Or download directly from [Releases](../../releases).

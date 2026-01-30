@@ -223,6 +223,9 @@
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             overflow: hidden;
+            width: 100%;
+            cursor: pointer;
+            font-family: var(--font-display);
         }
 
         .download-btn::before {
@@ -262,9 +265,14 @@
             transform: translateX(4px);
         }
 
-        .download-btn[href="#"] {
+        .download-btn[href="#"]:not(button) {
             opacity: 0.3;
             pointer-events: none;
+        }
+
+        #homebrew-install {
+            opacity: 1;
+            pointer-events: auto;
         }
 
         /* Footer */
@@ -376,12 +384,16 @@
             <i class="fa-brands fa-apple platform-icon"></i>
             <h2 class="platform-name">macOS</h2>
             <div class="download-options">
+                <button class="download-btn" id="homebrew-install" onclick="copyBrewCommand(event)">
+                    <span>Homebrew (Recommended)</span>
+                    <span class="arrow">📋</span>
+                </button>
                 <a href="#" class="download-btn" id="macos-apple-silicon">
-                    <span>Apple Silicon</span>
+                    <span>Apple Silicon (.dmg)</span>
                     <span class="arrow">→</span>
                 </a>
                 <a href="#" class="download-btn" id="macos-intel">
-                    <span>Intel Chip</span>
+                    <span>Intel Chip (.dmg)</span>
                     <span class="arrow">→</span>
                 </a>
             </div>
@@ -435,6 +447,26 @@
     </footer>
 
     <script>
+        // Copy Homebrew command to clipboard
+        async function copyBrewCommand(event) {
+            event.preventDefault();
+            const command = 'brew install --cask qluto/trivyn/trivyn';
+
+            try {
+                await navigator.clipboard.writeText(command);
+                const btn = event.currentTarget;
+                const arrow = btn.querySelector('.arrow');
+                const originalText = arrow.textContent;
+
+                arrow.textContent = '✓';
+                setTimeout(() => {
+                    arrow.textContent = originalText;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy command:', err);
+            }
+        }
+
         // GitHub Releases API Integration
         async function loadLatestRelease() {
             const versionText = document.getElementById('version-text');
