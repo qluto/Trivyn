@@ -52,24 +52,28 @@ export default function LevelSwitcher({ selected, onChange }: LevelSwitcherProps
               {t(`levels.${level}`)}
             </span>
 
-            {/* Progress dots - always show 3 dots, horizontal layout */}
-            <div className="flex items-center gap-0.5">
-              {[0, 1, 2].map((dotIndex) => {
-                const isCompleted = dotIndex < completedCount;
-                return (
-                  <div
-                    key={dotIndex}
-                    className={`
-                      w-[3px] h-[3px] rounded-full transition-colors duration-200
-                      ${isCompleted
-                        ? ACCENT_COLORS[level]
-                        : 'bg-border dark:bg-gray-600'
-                      }
-                    `}
-                  />
-                );
-              })}
-            </div>
+            {/* Progress dots or notification badge */}
+            {levelGoals.length > 0 ? (
+              <div className="flex items-center gap-0.5">
+                {[0, 1, 2].map((dotIndex) => {
+                  const isCompleted = dotIndex < completedCount;
+                  return (
+                    <div
+                      key={dotIndex}
+                      className={`
+                        w-[3px] h-[3px] rounded-full transition-colors duration-200
+                        ${isCompleted
+                          ? ACCENT_COLORS[level]
+                          : 'bg-border dark:bg-gray-600'
+                        }
+                      `}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="w-[5px] h-[5px] rounded-full bg-red-500" />
+            )}
           </button>
         );
       })}

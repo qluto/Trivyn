@@ -347,13 +347,20 @@ export default function MenuBarPopover() {
                 <div className="flex gap-1 p-1 bg-surface-elevated/50 dark:bg-surface-dark-elevated/50 rounded-lg">
                   {(['daily', 'weekly', 'monthly'] as GoalLevel[]).map((level) => {
                     const isSelected = selectedLevel === level;
+                    const levelGoals = level === 'daily' ? getDailyGoals()
+                      : level === 'weekly' ? getWeeklyGoals()
+                      : getMonthlyGoals();
+                    const isEmpty = levelGoals.length === 0;
                     return (
                       <button
                         key={level}
                         onClick={() => setSelectedLevel(level)}
-                        className={`tab-pill flex-1 ${isSelected ? 'active' : ''}`}
+                        className={`tab-pill flex-1 ${isSelected ? 'active' : ''} relative`}
                       >
                         {t(`levels.${level}`)}
+                        {!isSelected && isEmpty && (
+                          <span className="absolute top-1 right-1 w-[6px] h-[6px] rounded-full bg-red-500" />
+                        )}
                       </button>
                     );
                   })}
