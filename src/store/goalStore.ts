@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { invoke } from '@tauri-apps/api/core';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
 import { Goal, GoalLevel } from '../types';
+import { addPeriods, getParentLevel } from '../utils/periods';
 
 // Period filtering helper functions
 function isSameDay(date1: Date, date2: Date): boolean {
@@ -45,7 +46,8 @@ interface GoalStore {
 
   // Actions
   loadGoals: () => Promise<void>;
-  addGoal: (title: string, level: GoalLevel) => Promise<void>;
+  addGoal: (title: string, level: GoalLevel, parentGoalId?: string | null) => Promise<void>;
+  carryOverGoal: (goal: Goal) => Promise<void>;
   toggleGoalCompletion: (goalId: string) => Promise<Goal>;
   updateGoal: (goalId: string, title: string) => Promise<void>;
   deleteGoal: (goalId: string) => Promise<void>;
@@ -58,6 +60,10 @@ interface GoalStore {
   getWeeklyGoals: () => Goal[];
   getMonthlyGoals: () => Goal[];
   getCurrentGoals: () => Goal[];
+  getGoalsForPeriod: (level: GoalLevel, targetDate: Date) => Goal[];
+  getParentGoals: (level: GoalLevel) => Goal[];
+  getChildStats: (goalId: string) => { completed: number; total: number } | null;
+  getPreviousPeriodUnfinished: (level: GoalLevel) => Goal[];
   canAddGoal: (level: GoalLevel) => boolean;
 }
 
@@ -81,13 +87,14 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     }
   },
 
-  addGoal: async (title: string, level: GoalLevel) => {
+  addGoal: async (title: string, level: GoalLevel, parentGoalId?: string | null) => {
     try {
       const periodStart = Date.now();
       const newGoal = await invoke<Goal>('add_goal', {
         title,
         level,
-        periodStart
+        periodStart,
+        parentGoalId: parentGoalId ?? null
       });
       set((state) => ({ goals: [...state.goals, newGoal] }));
       // Event is emitted from Rust backend
@@ -95,6 +102,21 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       set({ error: String(error) });
       throw error;
     }
+  },
+
+  carryOverGoal: async (goal: Goal) => {
+    // 親目標の期間がまだ現在進行中の場合のみリンクを引き継ぐ
+    let parentGoalId: string | null = null;
+    if (goal.parentGoalId) {
+      const parent = get().goals.find((g) => g.id === goal.parentGoalId);
+      if (
+        parent &&
+        get().getGoalsForPeriod(parent.level, new Date()).some((g) => g.id === parent.id)
+      ) {
+        parentGoalId = parent.id;
+      }
+    }
+    await get().addGoal(goal.title, goal.level, parentGoalId);
   },
 
   toggleGoalCompletion: async (goalId: string) => {
@@ -188,6 +210,47 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       case 'monthly':
         return get().getMonthlyGoals();
     }
+  },
+
+  getGoalsForPeriod: (level: GoalLevel, targetDate: Date) => {
+    const { goals, weekStart } = get();
+    return goals.filter((g) => {
+      if (g.level !== level) return false;
+      const goalDate = new Date(g.periodStart);
+      switch (level) {
+        case 'daily':
+          return isSameDay(goalDate, targetDate);
+        case 'weekly':
+          return isSameWeek(goalDate, targetDate, weekStart);
+        case 'monthly':
+          return isSameMonth(goalDate, targetDate);
+      }
+    });
+  },
+
+  getParentGoals: (level: GoalLevel) => {
+    const parentLevel = getParentLevel(level);
+    if (!parentLevel) return [];
+    return get().getGoalsForPeriod(parentLevel, new Date());
+  },
+
+  getChildStats: (goalId: string) => {
+    // リンクは現在期間の親に対してのみ作成されるため、children は親の期間内の
+    // 下位目標の累計になる（例: 週目標には週内の各日の日次目標が積み上がり、
+    // 2/5 のような 3 を超える合計は意図した表示）
+    const children = get().goals.filter((g) => g.parentGoalId === goalId);
+    if (children.length === 0) return null;
+    return {
+      completed: children.filter((c) => c.isCompleted).length,
+      total: children.length,
+    };
+  },
+
+  getPreviousPeriodUnfinished: (level: GoalLevel) => {
+    const previousDate = addPeriods(level, new Date(), -1);
+    return get()
+      .getGoalsForPeriod(level, previousDate)
+      .filter((g) => !g.isCompleted);
   },
 
   canAddGoal: (level: GoalLevel) => {

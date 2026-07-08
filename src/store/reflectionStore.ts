@@ -19,27 +19,6 @@ interface ReflectionStore {
   getReflection: (level: GoalLevel, periodKey: string) => Reflection | null;
 }
 
-// Helper to generate period key
-export function generatePeriodKey(level: GoalLevel): string {
-  const now = new Date();
-
-  if (level === 'daily') {
-    // Format: YYYY-MM-DD
-    return now.toISOString().split('T')[0];
-  } else if (level === 'weekly') {
-    // Format: YYYY-Www (ISO week)
-    const year = now.getFullYear();
-    const onejan = new Date(year, 0, 1);
-    const week = Math.ceil((((now.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
-    return `${year}-W${String(week).padStart(2, '0')}`;
-  } else {
-    // monthly: Format: YYYY-MM
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`;
-  }
-}
-
 export const useReflectionStore = create<ReflectionStore>((set, get) => ({
   reflections: new Map(),
   loading: false,

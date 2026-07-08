@@ -18,16 +18,20 @@ export default {
           DEFAULT: '#FEF3E8',
           dark: '#FDE7D0',
           accent: '#F97316',
+          // ライト背景上の小さなテキスト用（WCAG AA 4.5:1 を満たす暗めのアクセント）
+          'accent-text': '#C2410C',
         },
         weekly: {
           DEFAULT: '#F3F0FF',
           dark: '#E9E3FF',
           accent: '#8B5CF6',
+          'accent-text': '#6D28D9',
         },
         monthly: {
           DEFAULT: '#E6FAF7',
           dark: '#CCF5EF',
           accent: '#14B8A6',
+          'accent-text': '#0F766E',
         },
         // Semantic colors
         surface: {

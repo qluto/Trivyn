@@ -43,7 +43,7 @@ impl GoalLevel {
 }
 
 impl Goal {
-    pub fn new(title: String, level: GoalLevel, period_start: i64) -> Self {
+    pub fn new(title: String, level: GoalLevel, period_start: i64, parent_goal_id: Option<String>) -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
             title,
@@ -52,7 +52,7 @@ impl Goal {
             completed_at: None,
             created_at: chrono::Utc::now().timestamp_millis(),
             period_start,
-            parent_goal_id: None,
+            parent_goal_id,
             note: None,
         }
     }

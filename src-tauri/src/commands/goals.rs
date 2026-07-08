@@ -17,11 +17,29 @@ pub async fn add_goal(
     title: String,
     level: String,
     period_start: i64,
+    parent_goal_id: Option<String>,
     app: AppHandle,
     db: State<'_, Database>,
 ) -> Result<Goal, String> {
     let goal_level = GoalLevel::from_str(&level)
         .ok_or_else(|| "Invalid goal level".to_string())?;
+
+    // Validate parent link: must reference an existing goal exactly one level up
+    if let Some(ref parent_id) = parent_goal_id {
+        let expected_parent_level = match goal_level {
+            GoalLevel::Daily => GoalLevel::Weekly,
+            GoalLevel::Weekly => GoalLevel::Monthly,
+            GoalLevel::Monthly => return Err("Monthly goals cannot have a parent goal".to_string()),
+        };
+        let all_goals = db.get_goals(None).map_err(|e| e.to_string())?;
+        let parent = all_goals
+            .iter()
+            .find(|g| &g.id == parent_id)
+            .ok_or_else(|| "Parent goal not found".to_string())?;
+        if parent.level != expected_parent_level {
+            return Err("Invalid parent goal level".to_string());
+        }
+    }
 
     // Get week_start setting for period calculations
     let week_start = db.get_setting("week_start")
@@ -53,7 +71,7 @@ pub async fn add_goal(
         return Err("Maximum 3 goals per level".to_string());
     }
 
-    let goal = Goal::new(title, goal_level, period_start);
+    let goal = Goal::new(title, goal_level, period_start, parent_goal_id);
     db.add_goal(&goal)
         .map_err(|e| e.to_string())?;
 

@@ -2,19 +2,22 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGoalStore } from '../../store/goalStore';
 import { useReflectionStore } from '../../store/reflectionStore';
+import { useSettingsStore } from '../../store/settingsStore';
 import { Goal, GoalLevel } from '../../types';
+import { getPeriodKey, getWeekNumber, isSamePeriod } from '../../utils/periods';
 
 interface HistoryViewProps {
   onHeightChange?: (height: number) => void;
 }
 
-function getDaysInMonth(year: number, month: number): Date[] {
+function getDaysInMonth(year: number, month: number, weekStart: number): Date[] {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const days: Date[] = [];
 
-  // Add padding for days before the month starts
-  const firstDayOfWeek = firstDay.getDay();
+  // Add padding for days before the month starts (respecting week start setting)
+  const targetWeekday = (weekStart - 1) % 7;
+  const firstDayOfWeek = (firstDay.getDay() - targetWeekday + 7) % 7;
   for (let i = firstDayOfWeek - 1; i >= 0; i--) {
     const date = new Date(year, month, -i);
     days.push(date);
@@ -44,60 +47,47 @@ function isSameDay(date1: Date, date2: Date): boolean {
   );
 }
 
+// 目標の所属期間は periodStart で判定する（作成日時ではなく）
 function getGoalsForDate(goals: Goal[], date: Date, level?: GoalLevel): Goal[] {
   return goals.filter((goal) => {
-    const goalDate = new Date(goal.createdAt);
+    const goalDate = new Date(goal.periodStart);
     const matchesDate = isSameDay(goalDate, date);
     return level ? matchesDate && goal.level === level : matchesDate;
   });
 }
 
-function getWeekNumber(date: Date): number {
-  const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-  const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
-  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-}
-
-function getWeekGoals(goals: Goal[], year: number, weekNum: number): Goal[] {
+function getWeekGoals(goals: Goal[], weekDate: Date, weekStart: number): Goal[] {
   return goals.filter((goal) => {
     if (goal.level !== 'weekly') return false;
-    const goalDate = new Date(goal.createdAt);
-    return goalDate.getFullYear() === year && getWeekNumber(goalDate) === weekNum;
+    return isSamePeriod('weekly', new Date(goal.periodStart), weekDate, weekStart);
   });
 }
 
 function getMonthGoals(goals: Goal[], year: number, month: number): Goal[] {
   return goals.filter((goal) => {
     if (goal.level !== 'monthly') return false;
-    const goalDate = new Date(goal.createdAt);
+    const goalDate = new Date(goal.periodStart);
     return goalDate.getFullYear() === year && goalDate.getMonth() === month;
   });
 }
 
 type Selection =
   | { type: 'date'; date: Date }
-  | { type: 'week'; year: number; week: number }
+  | { type: 'week'; date: Date }
   | { type: 'month'; year: number; month: number }
   | null;
 
 // Generate period key for a specific selection
-function generatePeriodKeyForSelection(selection: Selection): string | null {
+function generatePeriodKeyForSelection(selection: Selection, weekStart: number): string | null {
   if (!selection) return null;
 
   switch (selection.type) {
     case 'date':
-      // Format: YYYY-MM-DD
-      const year = selection.date.getFullYear();
-      const month = String(selection.date.getMonth() + 1).padStart(2, '0');
-      const day = String(selection.date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+      return getPeriodKey('daily', selection.date, weekStart);
     case 'week':
-      // Format: YYYY-Www
-      return `${selection.year}-W${String(selection.week).padStart(2, '0')}`;
+      return getPeriodKey('weekly', selection.date, weekStart);
     case 'month':
-      // Format: YYYY-MM
-      const monthStr = String(selection.month + 1).padStart(2, '0');
-      return `${selection.year}-${monthStr}`;
+      return getPeriodKey('monthly', new Date(selection.year, selection.month, 1), weekStart);
     default:
       return null;
   }
@@ -122,18 +112,24 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
   const { t, i18n } = useTranslation();
   const { goals } = useGoalStore();
   const { loadReflection, getReflection } = useReflectionStore();
+  const { weekStart } = useSettingsStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selection, setSelection] = useState<Selection>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const days = useMemo(() => getDaysInMonth(year, month), [year, month]);
+  const days = useMemo(() => getDaysInMonth(year, month, weekStart), [year, month, weekStart]);
 
-  // Weekday names based on current language
-  const weekdays = i18n.language === 'ja'
+  // Weekday names based on current language (headers rotated by week start setting)
+  const weekdayNames = i18n.language === 'ja'
     ? ['日', '月', '火', '水', '木', '金', '土']
     : ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const weekdayOffset = (weekStart - 1) % 7;
+  const weekdayHeaders = [
+    ...weekdayNames.slice(weekdayOffset),
+    ...weekdayNames.slice(0, weekdayOffset),
+  ];
 
   // Get monthly goals for current month
   const monthlyGoals = useMemo(() => getMonthGoals(goals, year, month), [goals, year, month]);
@@ -149,33 +145,33 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
       case 'date':
         return getGoalsForDate(goals, selection.date, 'daily');
       case 'week':
-        return getWeekGoals(goals, selection.year, selection.week);
+        return getWeekGoals(goals, selection.date, weekStart);
       case 'month':
         return getMonthGoals(goals, selection.year, selection.month);
       default:
         return [];
     }
-  }, [goals, selection]);
+  }, [goals, selection, weekStart]);
 
   // Load reflection when selection changes
   useEffect(() => {
     const level = getLevelFromSelection(selection);
-    const periodKey = generatePeriodKeyForSelection(selection);
+    const periodKey = generatePeriodKeyForSelection(selection, weekStart);
 
     if (level && periodKey) {
       loadReflection(level, periodKey);
     }
-  }, [selection, loadReflection]);
+  }, [selection, weekStart, loadReflection]);
 
   // Get reflection for current selection
   const selectedReflection = useMemo(() => {
     const level = getLevelFromSelection(selection);
-    const periodKey = generatePeriodKeyForSelection(selection);
+    const periodKey = generatePeriodKeyForSelection(selection, weekStart);
 
     if (!level || !periodKey) return null;
 
     return getReflection(level, periodKey);
-  }, [selection, getReflection]);
+  }, [selection, weekStart, getReflection]);
 
   const goToPreviousMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
@@ -263,7 +259,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
         {/* Weekday headers */}
         <div className="grid grid-cols-8 gap-1 mb-1">
           <div /> {/* Week indicator column */}
-          {weekdays.map((day, index) => (
+          {weekdayHeaders.map((day, index) => (
             <div key={index} className="text-center text-xs font-medium text-tertiary py-2">
               {day}
             </div>
@@ -273,18 +269,17 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
         {/* Calendar days */}
         <div className="space-y-1">
           {Array.from({ length: Math.ceil(days.length / 7) }).map((_, weekIndex) => {
-            const weekStart = weekIndex * 7;
-            const weekDays = days.slice(weekStart, weekStart + 7);
+            const weekOffset = weekIndex * 7;
+            const weekDays = days.slice(weekOffset, weekOffset + 7);
             const firstDayOfWeek = weekDays[0];
-            const weekNum = getWeekNumber(firstDayOfWeek);
-            const weekGoals = getWeekGoals(goals, firstDayOfWeek.getFullYear(), weekNum);
+            const weekGoals = getWeekGoals(goals, firstDayOfWeek, weekStart);
             const hasWeekGoals = weekGoals.length > 0;
 
             return (
               <div key={weekIndex} className="grid grid-cols-8 gap-1">
                 {/* Week indicator with dots */}
                 <button
-                  onClick={() => setSelection({ type: 'week', year: firstDayOfWeek.getFullYear(), week: weekNum })}
+                  onClick={() => setSelection({ type: 'week', date: firstDayOfWeek })}
                   className="flex items-center justify-center h-10 hover:bg-surface-elevated/50 dark:hover:bg-surface-dark-elevated/50 transition-colors rounded-md"
                 >
                   {hasWeekGoals && (
@@ -351,13 +346,13 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                 <h3 className="text-sm font-bold text-primary">
                   {selection.type === 'date' && (
                     i18n.language === 'ja'
-                      ? `${selection.date.getMonth() + 1}月${selection.date.getDate()}日（${weekdays[selection.date.getDay()]}）`
+                      ? `${selection.date.getMonth() + 1}月${selection.date.getDate()}日（${weekdayNames[selection.date.getDay()]}）`
                       : `${monthNames[selection.date.getMonth()]} ${selection.date.getDate()}`
                   )}
                   {selection.type === 'week' && (
                     i18n.language === 'ja'
-                      ? `第${selection.week}週`
-                      : `Week ${selection.week}`
+                      ? `第${getWeekNumber(selection.date, weekStart).week}週`
+                      : `Week ${getWeekNumber(selection.date, weekStart).week}`
                   )}
                   {selection.type === 'month' && (
                     i18n.language === 'ja'

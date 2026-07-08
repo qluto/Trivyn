@@ -5,7 +5,7 @@ interface EmptyStateProps {
   level: GoalLevel;
 }
 
-export default function EmptyState(_props: EmptyStateProps) {
+export default function EmptyState({ level }: EmptyStateProps) {
   const { t } = useTranslation();
 
   return (
@@ -31,7 +31,7 @@ export default function EmptyState(_props: EmptyStateProps) {
       </svg>
 
       <p className="text-[11px] font-medium text-tertiary dark:text-content-dark-tertiary text-center tracking-wide">
-        {t('goals.emptyFloating')}
+        {t(`goals.empty.${level}`)}
       </p>
       <p className="text-[10px] text-tertiary dark:text-content-dark-tertiary text-center">
         {t('goals.clickToAdd')}

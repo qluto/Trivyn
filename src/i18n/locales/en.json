@@ -15,12 +15,30 @@
       "weekly": "Set your goals for this week",
       "monthly": "Set your goals for this month"
     },
-    "emptyFloating": "No goals yet",
     "clickToAdd": "Click to add",
     "maxHint": "Maximum 3 goals",
     "addPlaceholder": "Add goal...",
     "completed": "Completed",
-    "noGoals": "No goals were set"
+    "noGoals": "No goals were set",
+    "linkHint": "Link to a higher-level goal (optional)",
+    "contribution": "Progress of linked goals"
+  },
+  "context": {
+    "title": {
+      "weekly": "This Week's Goals",
+      "monthly": "This Month's Goals"
+    },
+    "notSet": "Not set yet",
+    "set": "Set now"
+  },
+  "planning": {
+    "carryOverTitle": {
+      "daily": "Unfinished from yesterday",
+      "weekly": "Unfinished from last week",
+      "monthly": "Unfinished from last month"
+    },
+    "carryOver": "Carry over",
+    "dismiss": "Dismiss"
   },
   "navigation": {
     "goals": "Goals",
@@ -35,7 +53,19 @@
     "hint": "What went well, what to improve, what to apply next time, etc.",
     "save": "Save",
     "saving": "Saving...",
-    "close": "Close"
+    "close": "Close",
+    "previousPeriod": "Previous period",
+    "nextPeriod": "Next period",
+    "currentPeriod": "Current",
+    "backToCurrent": "Back to current period",
+    "monthlyNotice": "Monthly reflection is also due. Please fill it out after the weekly one.",
+    "openMonthly": "Open monthly",
+    "noGoalsForPeriod": "No goals for this period",
+    "planNextHint": "Use this reflection to set your next goals",
+    "planNext": {
+      "weekly": "Set this week's goals",
+      "monthly": "Set this month's goals"
+    }
   },
   "settings": {
     "title": "Settings",

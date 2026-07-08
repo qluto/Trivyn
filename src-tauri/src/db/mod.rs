@@ -48,7 +48,7 @@ pub async fn init_database(app: &AppHandle) -> Result<()> {
             period_start INTEGER NOT NULL,
             parent_goal_id TEXT,
             note TEXT,
-            FOREIGN KEY (parent_goal_id) REFERENCES goals(id) ON DELETE CASCADE
+            FOREIGN KEY (parent_goal_id) REFERENCES goals(id) ON DELETE SET NULL
         )",
         [],
     )?;

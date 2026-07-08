@@ -137,6 +137,12 @@ impl Database {
 
     pub fn delete_goal(&self, id: &str) -> Result<()> {
         let conn = self.conn.lock().unwrap();
+        // 親目標の削除時は子のリンクを解除する（子目標自体は履歴として残す）。
+        // FK の有効/無効やスキーマの CASCADE 定義に依存しないよう明示的に行う
+        conn.execute(
+            "UPDATE goals SET parent_goal_id = NULL WHERE parent_goal_id = ?",
+            params![id],
+        )?;
         conn.execute("DELETE FROM goals WHERE id = ?", params![id])?;
         Ok(())
     }

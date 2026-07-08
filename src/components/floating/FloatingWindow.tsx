@@ -8,6 +8,7 @@ import NumberedGoalRow from './NumberedGoalRow';
 import AddGoalField from './AddGoalField';
 import EmptyState from './EmptyState';
 import ConfettiView from '../common/ConfettiView';
+import ParentGoalsContext from '../common/ParentGoalsContext';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
@@ -30,7 +31,9 @@ export default function FloatingWindow() {
     setWeekStart,
     getDailyGoals,
     getWeeklyGoals,
-    getMonthlyGoals
+    getMonthlyGoals,
+    getParentGoals,
+    getChildStats
   } = useGoalStore();
   const { loadSettings, weekStart } = useSettingsStore();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -95,21 +98,21 @@ export default function FloatingWindow() {
     setConfettiState(null);
   }, [selectedLevel]);
 
-  // Dynamically resize window based on content, preserving top position
+  // Dynamically resize window based on content, preserving top position.
+  // ResizeObserver covers all layout changes (goals, level switch, context
+  // strip collapse, parent chips) without enumerating them as deps.
   useEffect(() => {
-    const resizeWindow = async () => {
-      if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-      // Use requestAnimationFrame to ensure DOM is fully rendered
+    const resizeWindow = () => {
       requestAnimationFrame(async () => {
         if (!containerRef.current) return;
 
-        // Get actual content height
         const contentHeight = containerRef.current.scrollHeight;
-        // Minimum height for empty state, max for 3 goals
-        const newHeight = Math.max(60, Math.min(200, contentHeight));
+        // Minimum height for empty state, max for 3 goals + parent context
+        const newHeight = Math.max(60, Math.min(320, contentHeight));
 
-        // Call Rust command to resize with top position fixed
         try {
           await invoke('resize_window_from_top', { newHeight });
         } catch (error) {
@@ -119,16 +122,20 @@ export default function FloatingWindow() {
     };
 
     resizeWindow();
-  }, [goals, selectedLevel]);
+    const resizeObserver = new ResizeObserver(resizeWindow);
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   const currentGoals = selectedLevel === 'daily' ? getDailyGoals()
     : selectedLevel === 'weekly' ? getWeeklyGoals()
     : getMonthlyGoals();
   const canAdd = canAddGoal(selectedLevel);
+  const parentGoals = getParentGoals(selectedLevel);
 
-  const handleAddGoal = async (title: string) => {
+  const handleAddGoal = async (title: string, parentGoalId?: string | null) => {
     try {
-      await addGoal(title, selectedLevel);
+      await addGoal(title, selectedLevel, parentGoalId);
     } catch (error) {
       console.error('Failed to add goal:', error);
     }
@@ -192,6 +199,14 @@ export default function FloatingWindow() {
           />
         </div>
 
+        {/* Parent-level goals context (daily -> weekly, weekly -> monthly) */}
+        <ParentGoalsContext
+          level={selectedLevel}
+          onNavigate={setSelectedLevel}
+          size="compact"
+          className="mx-2 mt-0.5"
+        />
+
         {/* Goals List - padding matches design [4,8,10,8] */}
         <div className="pt-1 px-2 pb-2.5 overflow-hidden" data-tauri-drag-region>
           {currentGoals.length === 0 ? (
@@ -203,6 +218,8 @@ export default function FloatingWindow() {
                 number={index + 1}
                 goal={goal}
                 level={selectedLevel}
+                parentGoal={goal.parentGoalId ? goals.find((g) => g.id === goal.parentGoalId) ?? null : null}
+                childStats={getChildStats(goal.id)}
                 onToggle={(position) => handleToggle(goal.id, position)}
               />
             ))
@@ -213,6 +230,7 @@ export default function FloatingWindow() {
             <AddGoalField
               level={selectedLevel}
               nextNumber={currentGoals.length + 1}
+              parentGoals={parentGoals}
               onAdd={handleAddGoal}
             />
           )}

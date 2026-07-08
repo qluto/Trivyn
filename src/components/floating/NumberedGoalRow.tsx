@@ -8,6 +8,8 @@ interface NumberedGoalRowProps {
   level: GoalLevel;
   onToggle: (position: { x: number; y: number }) => void;
   onDelete?: () => void;
+  parentGoal?: Goal | null;
+  childStats?: { completed: number; total: number } | null;
   size?: GoalRowSize;
 }
 
@@ -15,6 +17,27 @@ const GRADIENT_BACKGROUNDS: Record<GoalLevel, string> = {
   daily: 'bg-gradient-to-br from-daily-accent to-[#F5A682]',
   weekly: 'bg-gradient-to-br from-weekly-accent to-[#A78BFA]',
   monthly: 'bg-gradient-to-br from-monthly-accent to-[#5EEAD4]',
+};
+
+const ACCENT_BG: Record<GoalLevel, string> = {
+  daily: 'bg-daily-accent',
+  weekly: 'bg-weekly-accent',
+  monthly: 'bg-monthly-accent',
+};
+
+// 紐づく下位目標の達成数バッジ（下位レベルのアクセントカラー）
+// ライトモードでは暗めのアクセント（コントラスト確保）、ダークモードでは通常のアクセント
+const CHILD_BADGE: Record<GoalLevel, string> = {
+  daily: 'bg-daily-accent/10 text-daily-accent-text dark:text-daily-accent',
+  weekly: 'bg-weekly-accent/10 text-weekly-accent-text dark:text-weekly-accent',
+  monthly: 'bg-monthly-accent/10 text-monthly-accent-text dark:text-monthly-accent',
+};
+
+// 日次目標に下位レベルはない
+const CHILD_LEVEL: Record<GoalLevel, GoalLevel | null> = {
+  daily: null,
+  weekly: 'daily',
+  monthly: 'weekly',
 };
 
 // Size configurations
@@ -37,7 +60,7 @@ const SIZE_CONFIG = {
   },
 };
 
-export default function NumberedGoalRow({ number, goal, level, onToggle, onDelete, size = 'compact' }: NumberedGoalRowProps) {
+export default function NumberedGoalRow({ number, goal, level, onToggle, onDelete, parentGoal, childStats, size = 'compact' }: NumberedGoalRowProps) {
   const isCompleted = goal.isCompleted;
   const config = SIZE_CONFIG[size];
 
@@ -56,38 +79,52 @@ export default function NumberedGoalRow({ number, goal, level, onToggle, onDelet
       data-tauri-drag-region
     >
       {/* Check/Number circle */}
-      <button
-        onClick={handleClick}
-        style={{
-          width: `${config.circle.width}px`,
-          height: `${config.circle.height}px`,
-          minWidth: `${config.circle.width}px`,
-          minHeight: `${config.circle.height}px`
-        }}
-        className={`
-          ${config.circle.radius} flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-110
-          ${isCompleted
-            ? GRADIENT_BACKGROUNDS[level]
-            : 'border-[1.5px] border-border dark:border-gray-600 bg-transparent'
-          }
-        `}
-      >
-        {isCompleted && config.showCheckmark ? (
-          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        ) : (
-          <span className={`
-            ${config.numberText} leading-none font-bold
+      <span className="relative flex-shrink-0">
+        <button
+          onClick={handleClick}
+          style={{
+            width: `${config.circle.width}px`,
+            height: `${config.circle.height}px`,
+            minWidth: `${config.circle.width}px`,
+            minHeight: `${config.circle.height}px`
+          }}
+          className={`
+            ${config.circle.radius} flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-110
             ${isCompleted
-              ? 'text-white'
-              : 'text-secondary dark:text-content-dark-secondary'
+              ? GRADIENT_BACKGROUNDS[level]
+              : 'border-[1.5px] border-border dark:border-gray-600 bg-transparent'
             }
-          `}>
-            {number}
-          </span>
+          `}
+        >
+          {isCompleted && config.showCheckmark ? (
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <span className={`
+              ${config.numberText} leading-none font-bold
+              ${isCompleted
+                ? 'text-white'
+                : 'text-secondary dark:text-content-dark-secondary'
+              }
+            `}>
+              {number}
+            </span>
+          )}
+        </button>
+
+        {/* Parent link marker (parent level accent color) */}
+        {parentGoal && (
+          <span
+            title={parentGoal.title}
+            className={`
+              absolute -top-[2px] -right-[2px] rounded-full pointer-events-none
+              ${size === 'compact' ? 'w-[5px] h-[5px]' : 'w-[7px] h-[7px]'}
+              ${ACCENT_BG[parentGoal.level]}
+            `}
+          />
         )}
-      </button>
+      </span>
 
       {/* Goal text - draggable */}
       <span
@@ -103,6 +140,19 @@ export default function NumberedGoalRow({ number, goal, level, onToggle, onDelet
       >
         {goal.title}
       </span>
+
+      {/* Linked child goals progress badge */}
+      {childStats && childStats.total > 0 && CHILD_LEVEL[level] && (
+        <span
+          className={`
+            flex-shrink-0 leading-none font-semibold rounded py-0.5
+            ${size === 'compact' ? 'text-[9px] px-1' : 'text-[10px] px-1.5'}
+            ${CHILD_BADGE[CHILD_LEVEL[level]!]}
+          `}
+        >
+          {childStats.completed}/{childStats.total}
+        </span>
+      )}
 
       {/* Delete button - only shown when onDelete is provided */}
       {onDelete && (

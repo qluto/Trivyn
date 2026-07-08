@@ -15,12 +15,30 @@
       "weekly": "今週の目標を設定しましょう",
       "monthly": "今月の目標を設定しましょう"
     },
-    "emptyFloating": "目標がありません",
     "clickToAdd": "クリックして追加",
     "maxHint": "最大3つまで設定できます",
     "addPlaceholder": "目標を追加...",
     "completed": "達成",
-    "noGoals": "ゴールが設定されていませんでした"
+    "noGoals": "ゴールが設定されていませんでした",
+    "linkHint": "上位の目標に紐づけ（任意）",
+    "contribution": "紐づく目標の達成状況"
+  },
+  "context": {
+    "title": {
+      "weekly": "今週の目標",
+      "monthly": "今月の目標"
+    },
+    "notSet": "まだ設定されていません",
+    "set": "設定する"
+  },
+  "planning": {
+    "carryOverTitle": {
+      "daily": "昨日の未完了",
+      "weekly": "先週の未完了",
+      "monthly": "先月の未完了"
+    },
+    "carryOver": "引き継ぐ",
+    "dismiss": "閉じる"
   },
   "navigation": {
     "goals": "目標",
@@ -35,7 +53,19 @@
     "hint": "うまくいったこと、改善点、次に活かせることなど",
     "save": "保存",
     "saving": "保存中...",
-    "close": "閉じる"
+    "close": "閉じる",
+    "previousPeriod": "前の期間",
+    "nextPeriod": "次の期間",
+    "currentPeriod": "現在",
+    "backToCurrent": "現在の期間に戻る",
+    "monthlyNotice": "月次の振り返りも期限を迎えています。週次の後にご記入ください。",
+    "openMonthly": "月次を開く",
+    "noGoalsForPeriod": "この期間の目標はありません",
+    "planNextHint": "振り返りをもとに、次の目標を立てましょう",
+    "planNext": {
+      "weekly": "今週の目標を設定",
+      "monthly": "今月の目標を設定"
+    }
   },
   "settings": {
     "title": "設定",

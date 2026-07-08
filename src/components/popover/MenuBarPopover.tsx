@@ -6,20 +6,15 @@ import { useGoalStore } from '../../store/goalStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { GoalLevel } from '../../types';
 import HistoryView from './HistoryView';
-import ReflectionView from './ReflectionView';
+import ReflectionView, { PeriodChangeEvent } from './ReflectionView';
 import SettingsView from './SettingsView';
 import NumberedGoalRow from '../floating/NumberedGoalRow';
 import AddGoalField from '../floating/AddGoalField';
 import ConfettiView from '../common/ConfettiView';
+import ParentGoalsContext from '../common/ParentGoalsContext';
+import { getPeriodKey } from '../../utils/periods';
 
 type BottomTab = 'goals' | 'reflection' | 'history' | 'settings';
-
-interface PeriodChangeEvent {
-  has_weekly_change: boolean;
-  has_monthly_change: boolean;
-  current_week_key: string;
-  current_month_key: string;
-}
 
 // Navigation icons (14x14 to match design)
 const HomeIcon = () => (
@@ -87,6 +82,13 @@ export default function MenuBarPopover() {
   const [reflectionHeight, setReflectionHeight] = useState(700);
   const [historyHeight, setHistoryHeight] = useState(720);
   const [settingsHeight, setSettingsHeight] = useState(650);
+  const [reflectionTrigger, setReflectionTrigger] = useState<PeriodChangeEvent | null>(null);
+  // キャリーオーバー提案の却下は期間キー単位で永続化（同じ期間内は再表示しない）
+  const [carryOverDismissed, setCarryOverDismissed] = useState<Record<GoalLevel, string | null>>(() => ({
+    daily: localStorage.getItem('trivyn.carryOverDismissed.daily'),
+    weekly: localStorage.getItem('trivyn.carryOverDismissed.weekly'),
+    monthly: localStorage.getItem('trivyn.carryOverDismissed.monthly'),
+  }));
   const containerRef = useRef<HTMLDivElement>(null);
   const goalsContentRef = useRef<HTMLDivElement>(null);
   const lastCheckDateRef = useRef<string>(new Date().toDateString());
@@ -94,6 +96,7 @@ export default function MenuBarPopover() {
     goals,
     loadGoals,
     addGoal,
+    carryOverGoal,
     toggleGoalCompletion,
     canAddGoal,
     deleteGoal,
@@ -101,7 +104,10 @@ export default function MenuBarPopover() {
     setWeekStart,
     getDailyGoals,
     getWeeklyGoals,
-    getMonthlyGoals
+    getMonthlyGoals,
+    getParentGoals,
+    getChildStats,
+    getPreviousPeriodUnfinished
   } = useGoalStore();
   const { loadSettings, weekStart } = useSettingsStore();
 
@@ -166,13 +172,13 @@ export default function MenuBarPopover() {
   useEffect(() => {
     const setupReflectionListener = async () => {
       const unlisten = await listen<PeriodChangeEvent>('reflection-prompt-trigger', (event) => {
-        const { has_weekly_change } = event.payload;
+        const { has_weekly_change, has_monthly_change } = event.payload;
 
         console.log('[MenuBarPopover] Received reflection-prompt-trigger event:', event.payload);
 
-        // 週次優先でReflectionViewに切り替え
-        if (has_weekly_change) {
+        if (has_weekly_change || has_monthly_change) {
           setBottomTab('reflection');
+          setReflectionTrigger(event.payload);
         }
       });
 
@@ -192,13 +198,19 @@ export default function MenuBarPopover() {
     setShowConfetti(false);
   }, [selectedLevel, bottomTab]);
 
-  // Measure goals content height
+  // Measure goals content height. ResizeObserver covers all layout changes
+  // (goals, level switch, context strip, carry-over suggestions, parent chips).
   useEffect(() => {
-    if (bottomTab === 'goals' && goalsContentRef.current) {
-      const height = goalsContentRef.current.scrollHeight;
-      setGoalsHeight(height);
-    }
-  }, [bottomTab, goals, selectedLevel]);
+    if (bottomTab !== 'goals' || !goalsContentRef.current) return;
+    const element = goalsContentRef.current;
+
+    const updateHeight = () => setGoalsHeight(element.scrollHeight);
+    updateHeight();
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(element);
+    return () => resizeObserver.disconnect();
+  }, [bottomTab]);
 
   // Resize window when tab changes or content height changes
   useEffect(() => {
@@ -240,13 +252,43 @@ export default function MenuBarPopover() {
     : selectedLevel === 'weekly' ? getWeeklyGoals()
     : getMonthlyGoals();
   const canAdd = canAddGoal(selectedLevel);
+  const parentGoals = getParentGoals(selectedLevel);
+  // 前期間の未完了目標（同名で既に引き継ぎ済みのものは除外）
+  const carryOverCandidates = getPreviousPeriodUnfinished(selectedLevel).filter(
+    (candidate) => !currentGoals.some((goal) => goal.title === candidate.title)
+  );
+  const currentPeriodKey = getPeriodKey(selectedLevel, new Date(), weekStart);
+  const showCarryOver =
+    canAdd &&
+    carryOverCandidates.length > 0 &&
+    carryOverDismissed[selectedLevel] !== currentPeriodKey;
 
-  const handleAddGoal = async (title: string) => {
+  const dismissCarryOver = () => {
+    localStorage.setItem(`trivyn.carryOverDismissed.${selectedLevel}`, currentPeriodKey);
+    setCarryOverDismissed((prev) => ({ ...prev, [selectedLevel]: currentPeriodKey }));
+  };
+
+  const handleAddGoal = async (title: string, parentGoalId?: string | null) => {
     try {
-      await addGoal(title, selectedLevel);
+      await addGoal(title, selectedLevel, parentGoalId);
     } catch (error) {
       console.error('Failed to add goal:', error);
     }
+  };
+
+  const handleCarryOver = async (goalId: string) => {
+    const goal = carryOverCandidates.find((g) => g.id === goalId);
+    if (!goal) return;
+    try {
+      await carryOverGoal(goal);
+    } catch (error) {
+      console.error('Failed to carry over goal:', error);
+    }
+  };
+
+  const handlePlanNext = (level: GoalLevel) => {
+    setSelectedLevel(level);
+    setBottomTab('goals');
   };
 
   const handleToggle = async (goalId: string, position: { x: number; y: number }) => {
@@ -367,6 +409,14 @@ export default function MenuBarPopover() {
                 </div>
               </div>
 
+              {/* Parent-level goals context (daily -> weekly, weekly -> monthly) */}
+              <ParentGoalsContext
+                level={selectedLevel}
+                onNavigate={setSelectedLevel}
+                size="default"
+                className="mx-4 mb-2"
+              />
+
               {/* Goals list - padding 16px to match design */}
               <div className="px-4 pb-4">
                 {currentGoals.map((goal, index) => (
@@ -375,6 +425,8 @@ export default function MenuBarPopover() {
                     number={index + 1}
                     goal={goal}
                     level={selectedLevel}
+                    parentGoal={goal.parentGoalId ? goals.find((g) => g.id === goal.parentGoalId) ?? null : null}
+                    childStats={getChildStats(goal.id)}
                     onToggle={(position) => handleToggle(goal.id, position)}
                     onDelete={() => handleDeleteGoal(goal.id)}
                     size="default"
@@ -386,14 +438,57 @@ export default function MenuBarPopover() {
                   <AddGoalField
                     level={selectedLevel}
                     nextNumber={currentGoals.length + 1}
+                    parentGoals={parentGoals}
                     onAdd={handleAddGoal}
                     size="default"
                   />
                 )}
+
+                {/* Carry-over suggestions from the previous period */}
+                {showCarryOver && (
+                  <div className="mt-3 p-3 rounded-lg bg-surface-elevated/40 dark:bg-surface-dark-elevated/40">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h3 className="text-[11px] font-semibold text-secondary dark:text-content-dark-secondary tracking-wide">
+                        {t(`planning.carryOverTitle.${selectedLevel}`)}
+                      </h3>
+                      <button
+                        onClick={dismissCarryOver}
+                        className="p-1 -m-1 text-tertiary hover:text-primary transition-colors"
+                        aria-label={t('planning.dismiss')}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="space-y-1">
+                      {carryOverCandidates.map((candidate) => (
+                        <div key={candidate.id} className="flex items-center gap-2">
+                          <span className="flex-1 min-w-0 truncate text-xs text-secondary dark:text-content-dark-secondary">
+                            {candidate.title}
+                          </span>
+                          <button
+                            onClick={() => handleCarryOver(candidate.id)}
+                            className="flex-shrink-0 text-[11px] font-semibold text-brand-primary hover:underline"
+                          >
+                            {t('planning.carryOver')}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
-          {bottomTab === 'reflection' && <ReflectionView onHeightChange={setReflectionHeight} />}
+          {bottomTab === 'reflection' && (
+            <ReflectionView
+              onHeightChange={setReflectionHeight}
+              trigger={reflectionTrigger}
+              onTriggerConsumed={() => setReflectionTrigger(null)}
+              onPlanNext={handlePlanNext}
+            />
+          )}
           {bottomTab === 'history' && <HistoryView onHeightChange={setHistoryHeight} />}
           {bottomTab === 'settings' && <SettingsView onHeightChange={setSettingsHeight} />}
         </div>
