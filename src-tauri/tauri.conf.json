@@ -46,7 +46,7 @@
         "minWidth": 180,
         "minHeight": 60,
         "maxWidth": 180,
-        "maxHeight": 200,
+        "maxHeight": 480,
         "resizable": false,
         "visible": false,
         "skipTaskbar": true,
