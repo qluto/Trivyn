@@ -129,6 +129,26 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
+      # 2つの macOS ターゲットが生成する updater アーティファクトはどちらも
+      # "Trivyn.app.tar.gz" の固定名でリリース上で衝突するため、
+      # latest.json が参照する Trivyn_{version}_{arch}.app.tar.gz へリネームする
+      - name: Rename macOS updater artifacts
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          if [[ "${{ matrix.target }}" == aarch64* ]]; then
+            ARCH=aarch64
+          else
+            ARCH=x64
+          fi
+          BUNDLE_DIR="src-tauri/target/${{ matrix.target }}/release/bundle/macos"
+          for f in "$BUNDLE_DIR"/*.app.tar.gz; do
+            mv "$f" "$BUNDLE_DIR/Trivyn_${VERSION}_${ARCH}.app.tar.gz"
+          done
+          for f in "$BUNDLE_DIR"/*.app.tar.gz.sig; do
+            mv "$f" "$BUNDLE_DIR/Trivyn_${VERSION}_${ARCH}.app.tar.gz.sig"
+          done
+
       - name: Cleanup keychain
         if: runner.os == 'macOS' && always()
         run: |

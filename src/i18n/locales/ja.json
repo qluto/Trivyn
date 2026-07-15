@@ -1,8 +1,14 @@
 {
   "app": {
     "name": "Trivyn",
-    "description": "Three Wins 生産性アプリ",
-    "version": "v0.1.0"
+    "description": "Three Wins 生産性アプリ"
+  },
+  "update": {
+    "available": "新しいバージョン v{{version}} が利用できます",
+    "install": "更新",
+    "installing": "更新中…",
+    "error": "更新に失敗しました",
+    "retry": "再試行"
   },
   "levels": {
     "daily": "日",
