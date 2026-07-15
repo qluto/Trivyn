@@ -1,13 +1,13 @@
 cask "trivyn" do
-  version "0.2.0"
+  version "0.2.1"
 
   on_arm do
-    sha256 "0d6bf0e6bce068eb00ed3b7ce35cd052d8ca93554d6839afc4f4017f0dbb2155"
+    sha256 "a69d87f9f5fc3699350ebfa76b0169c3dd1c94110332d7b41902ac88ed603293"
     url "https://github.com/qluto/Trivyn/releases/download/v#{version}/Trivyn_#{version}_aarch64.dmg"
   end
 
   on_intel do
-    sha256 "0c56d153732638b092128e2185cc6eced86e2041dd8698839f19548377de6d98"
+    sha256 "71ee78acbebebd65b5687bcbcc7d3bded6c020842002a5dfa6469da7bebffe83"
     url "https://github.com/qluto/Trivyn/releases/download/v#{version}/Trivyn_#{version}_x64.dmg"
   end
 
