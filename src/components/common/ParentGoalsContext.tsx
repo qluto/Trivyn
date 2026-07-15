@@ -40,6 +40,8 @@ const SIZE_CONFIG = {
     goalText: 'text-[10px]',
     goalGap: 'gap-1.5 py-0.5',
     dot: 'w-[5px] h-[5px]',
+    // 複数行折り返し時にドットを1行目の中央へ合わせるオフセット
+    dotOffset: 'mt-[4px]',
     badgeText: 'text-[9px] px-1',
     chevron: 'w-2.5 h-2.5',
   },
@@ -49,6 +51,7 @@ const SIZE_CONFIG = {
     goalText: 'text-xs',
     goalGap: 'gap-2 py-1',
     dot: 'w-[6px] h-[6px]',
+    dotOffset: 'mt-[5px]',
     badgeText: 'text-[9px] px-1.5',
     chevron: 'w-3 h-3',
   },
@@ -144,11 +147,11 @@ export default function ParentGoalsContext({
               return (
                 <div
                   key={goal.id}
-                  className={`flex items-center ${config.goalGap}`}
+                  className={`flex items-start ${config.goalGap}`}
                 >
                   <span
                     className={`
-                      ${config.dot} rounded-full flex-shrink-0
+                      ${config.dot} ${config.dotOffset} rounded-full flex-shrink-0
                       ${goal.isCompleted
                         ? ACCENT_BG[parentLevel]
                         : 'border border-border dark:border-gray-600'
@@ -157,13 +160,12 @@ export default function ParentGoalsContext({
                   />
                   <span
                     className={`
-                      flex-1 min-w-0 truncate ${config.goalText} leading-snug
+                      flex-1 min-w-0 break-words ${config.goalText} leading-snug
                       ${goal.isCompleted
                         ? 'text-tertiary dark:text-content-dark-tertiary line-through'
                         : 'text-secondary dark:text-content-dark-secondary'
                       }
                     `}
-                    title={goal.title}
                   >
                     {goal.title}
                   </span>
