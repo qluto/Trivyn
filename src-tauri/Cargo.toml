@@ -1,6 +1,6 @@
 [package]
 name = "trivyn"
-version = "0.2.0"
+version = "0.2.1"
 description = "Three Wins productivity app"
 authors = ["you"]
 edition = "2021"
