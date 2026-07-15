@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useGoalStore } from '../../store/goalStore';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useUpdateStore } from '../../store/updateStore';
 import { GoalLevel } from '../../types';
 import HistoryView from './HistoryView';
 import ReflectionView, { PeriodChangeEvent } from './ReflectionView';
@@ -110,6 +111,14 @@ export default function MenuBarPopover() {
     getPreviousPeriodUnfinished
   } = useGoalStore();
   const { loadSettings, weekStart } = useSettingsStore();
+  const { status: updateStatus, version: updateVersion, checkForUpdate, installUpdate } = useUpdateStore();
+
+  // Check for app updates on startup and periodically (every 6 hours)
+  useEffect(() => {
+    checkForUpdate();
+    const interval = setInterval(checkForUpdate, 6 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [checkForUpdate]);
 
   // Sync weekStart from settings to goal store
   useEffect(() => {
@@ -237,7 +246,8 @@ export default function MenuBarPopover() {
         const targetHeight = heightMap[bottomTab];
 
         // Add header height (approximately 60px for the Trivyn header)
-        const totalHeight = targetHeight + 60;
+        // and the update banner height when visible
+        const totalHeight = targetHeight + 60 + (updateStatus !== 'idle' ? 36 : 0);
 
         console.log(`[MenuBarPopover] Resizing to ${totalHeight}px for tab: ${bottomTab}`);
         await invoke('resize_popover', { height: totalHeight });
@@ -246,7 +256,7 @@ export default function MenuBarPopover() {
       }
     };
     resizeWindow();
-  }, [bottomTab, goalsHeight, reflectionHeight, historyHeight, settingsHeight]);
+  }, [bottomTab, goalsHeight, reflectionHeight, historyHeight, settingsHeight, updateStatus]);
 
   const currentGoals = selectedLevel === 'daily' ? getDailyGoals()
     : selectedLevel === 'weekly' ? getWeeklyGoals()
@@ -379,6 +389,31 @@ export default function MenuBarPopover() {
             </div>
           </div>
         </div>
+
+        {/* Update banner (auto-update) - 36px height */}
+        {updateStatus !== 'idle' && (
+          <div
+            className="flex items-center gap-2 px-4 border-b border-border-subtle dark:border-gray-700 bg-surface-elevated/50 dark:bg-surface-dark-elevated/50"
+            style={{ height: '36px' }}
+          >
+            <span className="flex-1 min-w-0 truncate text-xs text-secondary dark:text-content-dark-secondary">
+              {updateStatus === 'error'
+                ? t('update.error')
+                : t('update.available', { version: updateVersion })}
+            </span>
+            <button
+              onClick={installUpdate}
+              disabled={updateStatus === 'installing'}
+              className="flex-shrink-0 text-[11px] font-semibold text-brand-primary hover:underline disabled:opacity-50 disabled:no-underline"
+            >
+              {updateStatus === 'installing'
+                ? t('update.installing')
+                : updateStatus === 'error'
+                  ? t('update.retry')
+                  : t('update.install')}
+            </button>
+          </div>
+        )}
 
         {/* Content area */}
         <div className="flex-1 overflow-auto">

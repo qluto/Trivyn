@@ -1,8 +1,14 @@
 {
   "app": {
     "name": "Trivyn",
-    "description": "Three Wins Productivity App",
-    "version": "v0.1.0"
+    "description": "Three Wins Productivity App"
+  },
+  "update": {
+    "available": "Version {{version}} is available",
+    "install": "Update",
+    "installing": "Updating…",
+    "error": "Update failed",
+    "retry": "Retry"
   },
   "levels": {
     "daily": "Day",
