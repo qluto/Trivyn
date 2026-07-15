@@ -209,7 +209,7 @@ jobs:
               },
               "linux-x86_64": {
                 "signature": "",
-                "url": "https://github.com/qluto/trivyn/releases/download/v${VERSION}/trivyn_${VERSION}_amd64.AppImage"
+                "url": "https://github.com/qluto/trivyn/releases/download/v${VERSION}/Trivyn_${VERSION}_amd64.AppImage"
               },
               "windows-x86_64": {
                 "signature": "",
@@ -239,8 +239,8 @@ jobs:
             jq --arg sig "$SIG" '.platforms["darwin-x86_64"].signature = $sig' latest.json > tmp.json && mv tmp.json latest.json
           fi
 
-          if [ -f "sigs/trivyn_${VERSION}_amd64.AppImage.sig" ]; then
-            SIG=$(cat "sigs/trivyn_${VERSION}_amd64.AppImage.sig")
+          if [ -f "sigs/Trivyn_${VERSION}_amd64.AppImage.sig" ]; then
+            SIG=$(cat "sigs/Trivyn_${VERSION}_amd64.AppImage.sig")
             jq --arg sig "$SIG" '.platforms["linux-x86_64"].signature = $sig' latest.json > tmp.json && mv tmp.json latest.json
           fi
 
