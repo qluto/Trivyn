@@ -12,6 +12,9 @@ import ParentGoalsContext from '../common/ParentGoalsContext';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
+// ウィンドウ高さの上限。tauri.conf.json の main ウィンドウ maxHeight と揃えること
+const MAX_WINDOW_HEIGHT = 480;
+
 export default function FloatingWindow() {
   const { i18n: i18nInstance } = useTranslation();
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel>('daily');
@@ -110,8 +113,9 @@ export default function FloatingWindow() {
         if (!containerRef.current) return;
 
         const contentHeight = containerRef.current.scrollHeight;
-        // Minimum height for empty state, max for 3 goals + parent context
-        const newHeight = Math.max(60, Math.min(320, contentHeight));
+        // Minimum height for empty state, max for 3 goals + expanded parent context.
+        // 上限超過時はコンテナ側の overflow-y-auto でスクロールできる
+        const newHeight = Math.max(60, Math.min(MAX_WINDOW_HEIGHT, contentHeight));
 
         try {
           await invoke('resize_window_from_top', { newHeight });
@@ -187,7 +191,7 @@ export default function FloatingWindow() {
       )}
       <div
         ref={containerRef}
-        className="relative w-full overflow-hidden glass-card select-none"
+        className="relative w-full max-h-screen overflow-y-auto overflow-x-hidden glass-card select-none"
         data-tauri-drag-region
       >
         {/* Level Switcher */}
