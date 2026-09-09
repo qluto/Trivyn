@@ -110,7 +110,7 @@ function getLevelFromSelection(selection: Selection): GoalLevel | null {
 
 export default function HistoryView({ onHeightChange }: HistoryViewProps) {
   const { t, i18n } = useTranslation();
-  const { goals } = useGoalStore();
+  const { goals, toggleGoalCompletion } = useGoalStore();
   const { loadReflection, getReflection } = useReflectionStore();
   const { weekStart } = useSettingsStore();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -383,8 +383,12 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                     key={goal.id}
                     className="flex items-center gap-3 py-2"
                   >
-                    <div
-                      className={`check-circle ${goal.level} ${goal.isCompleted ? 'checked' : ''} flex-shrink-0`}
+                    {/* 過去の目標の完了状態を後から更新できるようにする（更新忘れ対策） */}
+                    <button
+                      type="button"
+                      onClick={() => toggleGoalCompletion(goal.id).catch(console.error)}
+                      aria-pressed={goal.isCompleted}
+                      className={`check-circle ${goal.level} ${goal.isCompleted ? 'checked' : ''} flex-shrink-0 cursor-pointer`}
                       style={{ width: '20px', height: '20px' }}
                     >
                       {goal.isCompleted && (
@@ -392,7 +396,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
-                    </div>
+                    </button>
                     <span
                       className={`text-sm flex-1 min-w-0 break-words whitespace-normal ${
                         goal.isCompleted ? 'text-tertiary line-through' : 'text-primary'
