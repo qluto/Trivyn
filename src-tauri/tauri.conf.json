@@ -1,6 +1,6 @@
 {
   "productName": "Trivyn",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "identifier": "com.trivyn.main",
   "build": {
     "beforeDevCommand": "npm run dev",
