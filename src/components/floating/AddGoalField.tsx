@@ -96,6 +96,16 @@ export default function AddGoalField({ nextNumber, onAdd, parentGoals = [], size
           onChange={(e) => setTitle(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          onKeyDown={(e) => {
+            // IME 変換中の Esc は変換キャンセルなので扱わない
+            if (e.key !== 'Escape' || e.nativeEvent.isComposing || e.keyCode === 229) return;
+            // 入力があればクリアしてフォーカスを外す（このときはポップオーバー側の Esc＝閉じるを抑止）。
+            // 空なら Esc をそのまま流して、1回でポップオーバーを閉じられるようにする
+            if (title.length > 0 || parentGoalId !== null) e.preventDefault();
+            setTitle('');
+            setParentGoalId(null);
+            e.currentTarget.blur();
+          }}
           placeholder={t('goals.addPlaceholder')}
           className={`flex-1 bg-transparent ${config.text} leading-snug text-primary placeholder-tertiary dark:placeholder-content-dark-tertiary outline-none`}
         />

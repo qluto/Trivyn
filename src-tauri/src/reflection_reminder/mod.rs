@@ -1,6 +1,7 @@
 pub mod background;
 
 use crate::db::Database;
+use crate::popover::{show_popover, PopoverState};
 use chrono::{DateTime, Datelike, Local};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -61,14 +62,18 @@ impl ReflectionReminder {
 
                 println!("[ReflectionReminder] Emitting reflection-prompt-trigger event: {:?}", event);
 
+                // Webview のリスナー登録前でも取りこぼさないよう保留状態に保存
+                // （フロントエンドは take_pending_reflection_prompt で取得する）
+                if let Some(state) = app.try_state::<PopoverState>() {
+                    state.set_pending_reflection(event.clone());
+                }
+
+                // フロントエンドへの起床通知
                 app.emit("reflection-prompt-trigger", event)
                     .map_err(|e| format!("Failed to emit event: {}", e))?;
 
-                // ポップオーバーウィンドウを表示
-                if let Some(window) = app.get_webview_window("popover") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
+                // トレイ位置に合わせて表示し、明示的に閉じるまで残す（キーボードフォーカスは奪わない）
+                show_popover(app, None, true);
 
                 // 7. 表示履歴を更新
                 if should_show_weekly {

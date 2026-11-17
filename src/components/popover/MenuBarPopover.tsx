@@ -1,19 +1,21 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { getCurrentWindow, Window as TauriWindow } from '@tauri-apps/api/window';
 import { useGoalStore } from '../../store/goalStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useUpdateStore } from '../../store/updateStore';
 import { GoalLevel } from '../../types';
 import HistoryView from './HistoryView';
-import ReflectionView, { PeriodChangeEvent } from './ReflectionView';
+import ReflectionView, { PeriodChangeEvent, ReflectionLevel } from './ReflectionView';
 import SettingsView from './SettingsView';
 import NumberedGoalRow from '../floating/NumberedGoalRow';
 import AddGoalField from '../floating/AddGoalField';
 import ConfettiView from '../common/ConfettiView';
 import ParentGoalsContext from '../common/ParentGoalsContext';
 import { getPeriodKey } from '../../utils/periods';
+import { useWindowDrag } from '../../hooks/useWindowDrag';
 
 type BottomTab = 'goals' | 'reflection' | 'history' | 'settings';
 
@@ -33,6 +35,12 @@ const CalendarIcon = () => (
 const BookIcon = () => (
   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
   </svg>
 );
 
@@ -84,6 +92,10 @@ export default function MenuBarPopover() {
   const [historyHeight, setHistoryHeight] = useState(720);
   const [settingsHeight, setSettingsHeight] = useState(650);
   const [reflectionTrigger, setReflectionTrigger] = useState<PeriodChangeEvent | null>(null);
+  // 期間の切り替わりで自動表示中の振り返り（バナー表示用）。閉じる・他タブへの移動で解除
+  const [promptLevel, setPromptLevel] = useState<ReflectionLevel | null>(null);
+  // 表示されるたびに増やし、非表示中にスキップしたリサイズをやり直す
+  const [shownCount, setShownCount] = useState(0);
   // キャリーオーバー提案の却下は期間キー単位で永続化（同じ期間内は再表示しない）
   const [carryOverDismissed, setCarryOverDismissed] = useState<Record<GoalLevel, string | null>>(() => ({
     daily: localStorage.getItem('trivyn.carryOverDismissed.daily'),
@@ -91,6 +103,8 @@ export default function MenuBarPopover() {
     monthly: localStorage.getItem('trivyn.carryOverDismissed.monthly'),
   }));
   const containerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const reflectionFlushRef = useRef<(() => Promise<void>) | null>(null);
   const goalsContentRef = useRef<HTMLDivElement>(null);
   const lastCheckDateRef = useRef<string>(new Date().toDateString());
   const {
@@ -112,6 +126,56 @@ export default function MenuBarPopover() {
   } = useGoalStore();
   const { loadSettings, weekStart } = useSettingsStore();
   const { status: updateStatus, version: updateVersion, checkForUpdate, installUpdate } = useUpdateStore();
+
+  // ヘッダーの操作要素以外（ロゴ・タイトル・余白）を掴んで移動できる。本文は選択・スクロールがあるので対象外
+  useWindowDrag(headerRef);
+
+  // ポップオーバーを閉じる。振り返りの未保存分は保存してから隠す
+  const closePopover = useCallback(async () => {
+    setPromptLevel(null);
+    try {
+      await reflectionFlushRef.current?.();
+    } catch (error) {
+      console.error('Failed to save before closing:', error);
+    }
+    try {
+      // 隠すと同時に Rust 側の「フォーカスを失っても閉じない」状態も解除される
+      await invoke('hide_popover');
+    } catch (error) {
+      console.error('hide_popover failed, falling back to window.hide():', error);
+      await getCurrentWindow().hide().catch((e) => console.error('Failed to hide popover:', e));
+    }
+  }, []);
+
+  // フローティングウィンドウ（label: main）を表示する。隠した後の復帰導線
+  const showFloatingWindow = async () => {
+    try {
+      const floating = await TauriWindow.getByLabel('main');
+      await floating?.show();
+    } catch (error) {
+      console.error('Failed to show floating window:', error);
+    }
+  };
+
+  // Esc / ⌘W（Ctrl+W）で閉じる。IME 変換中のキー入力は無視する
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.isComposing || e.keyCode === 229 || e.defaultPrevented) return;
+      const isEscape = e.key === 'Escape';
+      const isCloseShortcut = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'w';
+      if (!isEscape && !isCloseShortcut) return;
+      e.preventDefault();
+      closePopover();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [closePopover]);
+
+  // 他のタブへ移動したら自動表示の案内は解除する
+  const selectTab = (tab: BottomTab) => {
+    if (tab !== 'reflection') setPromptLevel(null);
+    setBottomTab(tab);
+  };
 
   // Check for app updates on startup and periodically (every 6 hours)
   useEffect(() => {
@@ -156,13 +220,21 @@ export default function MenuBarPopover() {
   // Reload goals when window becomes visible
   useEffect(() => {
     const setupVisibilityListener = async () => {
-      const { Window } = await import('@tauri-apps/api/window');
-      const currentWindow = Window.getCurrent();
+      const currentWindow = getCurrentWindow();
 
       const unlisten = await currentWindow.onFocusChanged(({ payload: focused }: { payload: boolean }) => {
         if (focused) {
           console.log('[MenuBarPopover] Window focused, reloading goals');
           loadGoals();
+          setShownCount((count) => count + 1);
+        } else {
+          // トレイのクリックなど hide_popover 以外で隠された場合も案内を解除する
+          currentWindow
+            .isVisible()
+            .then((visible) => {
+              if (!visible) setPromptLevel(null);
+            })
+            .catch(() => {});
         }
       });
 
@@ -177,20 +249,43 @@ export default function MenuBarPopover() {
     };
   }, [loadGoals]);
 
-  // Listen for reflection prompt trigger events
+  // Rust 側の表示／非表示通知。リマインダーによる表示はフォーカスを奪わないため、
+  // フォーカスイベントだけでは表示・非表示を検知できない
   useEffect(() => {
-    const setupReflectionListener = async () => {
-      const unlisten = await listen<PeriodChangeEvent>('reflection-prompt-trigger', (event) => {
-        const { has_weekly_change, has_monthly_change } = event.payload;
+    const unlistenShown = listen('popover-shown', () => setShownCount((count) => count + 1));
+    const unlistenHidden = listen('popover-hidden', () => setPromptLevel(null));
+    return () => {
+      unlistenShown.then((unlisten) => unlisten());
+      unlistenHidden.then((unlisten) => unlisten());
+    };
+  }, []);
 
-        console.log('[MenuBarPopover] Received reflection-prompt-trigger event:', event.payload);
-
-        if (has_weekly_change || has_monthly_change) {
+  // Reflection prompt: 保留中のプロンプトを Rust 側から取り出す。
+  // イベントは起動直後（リスナー登録前）に発火して失われることがあるため、
+  // マウント時にも取り出し、イベントは「確認のきっかけ」としてのみ扱う（payload は使わない）
+  useEffect(() => {
+    const takePendingPrompt = async () => {
+      try {
+        const pending = await invoke<PeriodChangeEvent | null>('take_pending_reflection_prompt');
+        console.log('[MenuBarPopover] Pending reflection prompt:', pending);
+        // 取り出した時点で Rust 側からは消えるため、StrictMode の再実行やアンマウント後でも必ず反映する
+        // （キャンセルフラグで捨てない）
+        if (pending && (pending.has_weekly_change || pending.has_monthly_change)) {
           setBottomTab('reflection');
-          setReflectionTrigger(event.payload);
+          setReflectionTrigger(pending);
+          setPromptLevel(pending.has_weekly_change ? 'weekly' : 'monthly');
         }
-      });
+      } catch (error) {
+        console.error('Failed to take pending reflection prompt:', error);
+      }
+    };
 
+    const setupReflectionListener = async () => {
+      const unlisten = await listen('reflection-prompt-trigger', () => {
+        takePendingPrompt();
+      });
+      // リスナー登録後に確認して、その間に発火したイベントの取りこぼしを防ぐ
+      takePendingPrompt();
       return unlisten;
     };
 
@@ -226,8 +321,7 @@ export default function MenuBarPopover() {
     const resizeWindow = async () => {
       try {
         // Only resize when window is visible
-        const { Window } = await import('@tauri-apps/api/window');
-        const currentWindow = Window.getCurrent();
+        const currentWindow = getCurrentWindow();
         const isVisible = await currentWindow.isVisible();
 
         if (!isVisible) {
@@ -256,7 +350,7 @@ export default function MenuBarPopover() {
       }
     };
     resizeWindow();
-  }, [bottomTab, goalsHeight, reflectionHeight, historyHeight, settingsHeight, updateStatus]);
+  }, [bottomTab, goalsHeight, reflectionHeight, historyHeight, settingsHeight, updateStatus, shownCount]);
 
   const currentGoals = selectedLevel === 'daily' ? getDailyGoals()
     : selectedLevel === 'weekly' ? getWeeklyGoals()
@@ -298,7 +392,7 @@ export default function MenuBarPopover() {
 
   const handlePlanNext = (level: GoalLevel) => {
     setSelectedLevel(level);
-    setBottomTab('goals');
+    selectTab('goals');
   };
 
   const handleToggle = async (goalId: string, position: { x: number; y: number }) => {
@@ -352,9 +446,9 @@ export default function MenuBarPopover() {
       >
         {/* Header with Trivyn logo and icon navigation - 56px height */}
         <div
-          className="border-b border-border-subtle dark:border-gray-700"
+          ref={headerRef}
+          className="border-b border-border-subtle dark:border-gray-700 select-none"
           style={{ height: '56px' }}
-          data-tauri-drag-region
         >
           <div className="flex items-center justify-between h-full px-4">
             {/* Logo and title */}
@@ -368,7 +462,7 @@ export default function MenuBarPopover() {
               {navItems.map(({ tab, icon: Icon }) => (
                 <button
                   key={tab}
-                  onClick={() => setBottomTab(tab)}
+                  onClick={() => selectTab(tab)}
                   className={`
                     flex items-center justify-center rounded-lg transition-all duration-200
                     ${bottomTab === tab
@@ -382,10 +476,24 @@ export default function MenuBarPopover() {
                     background: bottomTab === tab ? 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)' : undefined
                   }}
                   aria-label={t(`navigation.${tab}`)}
+                  title={t(`navigation.${tab}`)}
                 >
                   <Icon />
                 </button>
               ))}
+
+              {/* Close button（ナビとは区切って配置） */}
+              <span aria-hidden="true" className="w-px h-4 bg-border-subtle dark:bg-gray-700" />
+              <button
+                type="button"
+                onClick={closePopover}
+                className="flex items-center justify-center rounded-lg transition-colors duration-200 text-tertiary hover:text-primary hover:bg-surface-elevated dark:hover:bg-surface-dark-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50"
+                style={{ width: '28px', height: '28px' }}
+                aria-label={t('common.close')}
+                title={t('common.close')}
+              >
+                <CloseIcon />
+              </button>
             </div>
           </div>
         </div>
@@ -513,6 +621,19 @@ export default function MenuBarPopover() {
                     </div>
                   </div>
                 )}
+
+                {/* フローティングウィンドウを表示（×で隠した後に戻すための導線） */}
+                <button
+                  type="button"
+                  onClick={showFloatingWindow}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium text-secondary dark:text-content-dark-secondary hover:text-primary bg-surface-elevated/50 dark:bg-surface-dark-elevated/50 hover:bg-surface-elevated dark:hover:bg-surface-dark-elevated transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <rect x="12" y="11" width="7" height="6" rx="1" fill="currentColor" stroke="none" />
+                  </svg>
+                  {t('floating.show')}
+                </button>
               </div>
             </div>
           )}
@@ -522,6 +643,9 @@ export default function MenuBarPopover() {
               trigger={reflectionTrigger}
               onTriggerConsumed={() => setReflectionTrigger(null)}
               onPlanNext={handlePlanNext}
+              promptLevel={promptLevel}
+              onLater={closePopover}
+              flushRef={reflectionFlushRef}
             />
           )}
           {bottomTab === 'history' && <HistoryView onHeightChange={setHistoryHeight} />}

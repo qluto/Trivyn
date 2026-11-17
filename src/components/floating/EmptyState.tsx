@@ -9,7 +9,7 @@ export default function EmptyState({ level }: EmptyStateProps) {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col items-center justify-center gap-2 py-6 px-4" data-tauri-drag-region>
+    <div className="flex flex-col items-center justify-center gap-2 py-6 px-4">
       {/* Circle dashed icon */}
       <svg
         className="w-6 h-6 text-tertiary dark:text-content-dark-tertiary"

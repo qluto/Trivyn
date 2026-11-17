@@ -8,6 +8,7 @@ mod db;
 mod commands;
 mod tray;
 mod window;
+mod popover;
 mod reflection_reminder;
 
 fn main() {
@@ -27,6 +28,9 @@ fn main() {
                     eprintln!("Failed to initialize database: {}", e);
                 }
             });
+
+            // ポップオーバーの状態（sticky・保留中のリフレクション促し）
+            app.manage(popover::PopoverState::default());
 
             // Setup system tray
             if let Err(e) = tray::create_tray(app.handle()) {
@@ -54,17 +58,10 @@ fn main() {
                 db_state.inner().clone(),
             ));
 
-            // Run initial check
-            let app_handle_clone = app.handle().clone();
-            if let Err(e) = reminder.check_and_notify(&app_handle_clone) {
-                eprintln!("Initial reflection check failed: {}", e);
-            }
-
-            // Start background checker
+            // Start background checker（起動時チェックも兼ねる。トレイ作成後に少し遅延して実行）
             let app_handle = app.handle().clone();
-            let reminder_clone = reminder.clone();
             tauri::async_runtime::spawn(async move {
-                reflection_reminder::background::start_background_checker(reminder_clone, app_handle).await;
+                reflection_reminder::background::start_background_checker(reminder, app_handle).await;
             });
 
             Ok(())
@@ -92,6 +89,8 @@ fn main() {
             commands::periods::get_month_key,
             commands::window::resize_window_from_top,
             commands::window::resize_popover,
+            commands::window::hide_popover,
+            commands::window::take_pending_reflection_prompt,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -213,6 +213,8 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
         <button
           onClick={goToPreviousMonth}
           className="nav-btn"
+          aria-label={t('history.previousMonth')}
+          title={t('history.previousMonth')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -224,7 +226,9 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
           {monthlyGoals.length > 0 && (
             <button
               onClick={() => setSelection({ type: 'month', year, month })}
-              className="flex gap-1"
+              className="flex gap-1 p-1 -m-1 rounded"
+              aria-label={t('history.showMonth')}
+              title={t('history.showMonth')}
             >
               {monthlyGoals.map((goal, i) => (
                 <div
@@ -247,6 +251,8 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
         <button
           onClick={goToNextMonth}
           className="nav-btn"
+          aria-label={t('history.nextMonth')}
+          title={t('history.nextMonth')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -362,7 +368,10 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                 </h3>
                 {selectedGoals.length > 0 && (
                   <span className="px-2 py-0.5 text-xs font-bold text-white rounded-md" style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)' }}>
-                    {selectedGoals.filter(g => g.isCompleted).length}/{selectedGoals.length} 完了
+                    {t('history.completedCount', {
+                      completed: selectedGoals.filter(g => g.isCompleted).length,
+                      total: selectedGoals.length,
+                    })}
                   </span>
                 )}
               </div>
@@ -388,6 +397,7 @@ export default function HistoryView({ onHeightChange }: HistoryViewProps) {
                       type="button"
                       onClick={() => toggleGoalCompletion(goal.id).catch(console.error)}
                       aria-pressed={goal.isCompleted}
+                      aria-label={t('goals.toggleComplete', { title: goal.title })}
                       className={`check-circle ${goal.level} ${goal.isCompleted ? 'checked' : ''} flex-shrink-0 cursor-pointer`}
                       style={{ width: '20px', height: '20px' }}
                     >

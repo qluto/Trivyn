@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, MutableRefObject } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useReflectionStore } from '../../store/reflectionStore';
 import { useGoalStore } from '../../store/goalStore';
 import { useSettingsStore } from '../../store/settingsStore';
@@ -19,28 +20,50 @@ export interface PeriodChangeEvent {
   current_month_key: string;
 }
 
+export type ReflectionLevel = 'weekly' | 'monthly';
+
 interface ReflectionViewProps {
   onHeightChange?: (height: number) => void;
   trigger?: PeriodChangeEvent | null;
   onTriggerConsumed?: () => void;
   onPlanNext?: (level: GoalLevel) => void;
+  // 期間切り替わりで自動表示されたときのバナー（null なら非表示）
+  promptLevel?: ReflectionLevel | null;
+  onLater?: () => void;
+  // 親（閉じる操作）から未保存の入力を保存できるようにする
+  flushRef?: MutableRefObject<(() => Promise<void>) | null>;
 }
 
-type ReflectionLevel = 'weekly' | 'monthly';
+type Insights = { insight1: string; insight2: string; insight3: string };
 
-export default function ReflectionView({ onHeightChange, trigger, onTriggerConsumed, onPlanNext }: ReflectionViewProps) {
+const toInsights = (reflection: { insight1?: string | null; insight2?: string | null; insight3?: string | null } | null): Insights => ({
+  insight1: reflection?.insight1 || '',
+  insight2: reflection?.insight2 || '',
+  insight3: reflection?.insight3 || '',
+});
+
+export default function ReflectionView({
+  onHeightChange,
+  trigger,
+  onTriggerConsumed,
+  onPlanNext,
+  promptLevel,
+  onLater,
+  flushRef,
+}: ReflectionViewProps) {
   const { t, i18n } = useTranslation();
   const [level, setLevel] = useState<ReflectionLevel>('weekly');
   const [targetDate, setTargetDate] = useState<Date>(() => new Date());
-  const [insights, setInsights] = useState({
-    insight1: '',
-    insight2: '',
-    insight3: '',
-  });
-  const [isSaving, setIsSaving] = useState(false);
+  const [insights, setInsights] = useState<Insights>(() => toInsights(null));
+  // 読み込みが完了した期間のキー。完了前は編集させない（未読込の空欄で既存の振り返りを上書きしないため）
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [showMonthlyNotice, setShowMonthlyNotice] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const lastAppliedTriggerRef = useRef<PeriodChangeEvent | null>(null);
+  // 未保存の編集（編集時点の期間ごと保持するので、期間が切り替わっても正しい期間に保存される）
+  const pendingRef = useRef<{ level: ReflectionLevel; periodKey: string; insights: Insights } | null>(null);
+  // 保存を直列化して、古い内容が新しい内容を後から上書きしないようにする
+  const saveChainRef = useRef<Promise<void>>(Promise.resolve());
 
   const { loadReflection, saveReflection, getReflection } = useReflectionStore();
   const { getGoalsForPeriod } = useGoalStore();
@@ -50,6 +73,8 @@ export default function ReflectionView({ onHeightChange, trigger, onTriggerConsu
     () => getPeriodKey(level, targetDate, weekStart),
     [level, targetDate, weekStart]
   );
+  const reflectionKey = `${level}-${periodKey}`;
+  const isLoaded = loadedKey === reflectionKey;
   const periodLabel = useMemo(
     () => formatPeriodLabel(level, targetDate, weekStart, i18n.language),
     [level, targetDate, weekStart, i18n.language]
@@ -76,20 +101,73 @@ export default function ReflectionView({ onHeightChange, trigger, onTriggerConsu
   const showPlanNext =
     !!onPlanNext && isPreviousPeriod && getGoalsForPeriod(level, new Date()).length < 3;
 
+  // 未保存の編集があれば保存する（blur・期間切り替え・ウィンドウのフォーカス喪失・閉じる操作から呼ばれる）
+  const flush = useCallback((): Promise<void> => {
+    const pending = pendingRef.current;
+    if (!pending) return saveChainRef.current;
+    pendingRef.current = null;
+    saveChainRef.current = saveChainRef.current
+      .then(() =>
+        saveReflection(
+          pending.level,
+          pending.periodKey,
+          pending.insights.insight1,
+          pending.insights.insight2,
+          pending.insights.insight3
+        )
+      )
+      .catch((error) => {
+        console.error('Failed to save reflection:', error);
+        // 次の機会に再試行できるよう、より新しい編集がなければ戻しておく
+        if (!pendingRef.current) pendingRef.current = pending;
+      });
+    return saveChainRef.current;
+  }, [saveReflection]);
+
   // Load reflection when target period changes
   useEffect(() => {
-    loadReflection(level, periodKey);
-  }, [level, periodKey, loadReflection]);
-
-  // Sync local state with loaded reflection
-  useEffect(() => {
-    const reflection = getReflection(level, periodKey);
-    setInsights({
-      insight1: reflection?.insight1 || '',
-      insight2: reflection?.insight2 || '',
-      insight3: reflection?.insight3 || '',
+    let active = true;
+    const key = `${level}-${periodKey}`;
+    // キャッシュがあれば即表示し、読み込み完了後に最新の内容で同期する
+    setInsights(toInsights(getReflection(level, periodKey)));
+    setLoadedKey(null);
+    loadReflection(level, periodKey).finally(() => {
+      if (active) setLoadedKey(key);
     });
-  }, [level, periodKey, getReflection]);
+    return () => {
+      active = false;
+      // 前の期間の未保存分を保存してから切り替える
+      flush();
+    };
+  }, [level, periodKey, loadReflection, getReflection, flush]);
+
+  // Sync local state with the reflection once it has been loaded
+  useEffect(() => {
+    if (!isLoaded) return;
+    // 読み込み中に入力された内容は上書きしない
+    if (pendingRef.current) return;
+    setInsights(toInsights(getReflection(level, periodKey)));
+  }, [isLoaded, level, periodKey, getReflection]);
+
+  // ウィンドウがフォーカスを失った（クリックで外れて隠れる場合を含む）ときと、アンマウント時に保存
+  useEffect(() => {
+    const unlistenPromise = getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+      if (!focused) flush();
+    });
+    return () => {
+      unlistenPromise.then((unlisten) => unlisten()).catch(() => {});
+      flush();
+    };
+  }, [flush]);
+
+  // 親に保存関数を公開
+  useEffect(() => {
+    if (!flushRef) return;
+    flushRef.current = flush;
+    return () => {
+      if (flushRef.current === flush) flushRef.current = null;
+    };
+  }, [flushRef, flush]);
 
   // Apply trigger payload from parent (auto-target the period that just ended)
   useEffect(() => {
@@ -111,26 +189,14 @@ export default function ReflectionView({ onHeightChange, trigger, onTriggerConsu
     onTriggerConsumed?.();
   }, [trigger, onTriggerConsumed]);
 
-  const handleSave = async () => {
-    if (isSaving) return;
-    setIsSaving(true);
-    try {
-      await saveReflection(
-        level,
-        periodKey,
-        insights.insight1,
-        insights.insight2,
-        insights.insight3
-      );
-    } catch (error) {
-      console.error('Failed to save reflection:', error);
-    } finally {
-      setIsSaving(false);
-    }
+  const handleInsightChange = (key: keyof Insights, value: string) => {
+    const next = { ...insights, [key]: value };
+    setInsights(next);
+    pendingRef.current = { level, periodKey, insights: next };
   };
 
   const handleBlur = () => {
-    handleSave();
+    flush();
   };
 
   const handleLevelChange = (lvl: ReflectionLevel) => {
@@ -160,29 +226,40 @@ export default function ReflectionView({ onHeightChange, trigger, onTriggerConsu
     setTargetDate(addPeriods('monthly', new Date(), -1));
   };
 
-  // Notify parent of height changes
+  // Notify parent of height changes. ResizeObserver がバナーや目標数などすべての
+  // レイアウト変化を拾うので、依存を列挙しない
   useEffect(() => {
-    if (!onHeightChange || !contentRef.current) return;
+    const element = contentRef.current;
+    if (!onHeightChange || !element) return;
 
-    const updateHeight = () => {
-      if (contentRef.current) {
-        const height = contentRef.current.scrollHeight;
-        onHeightChange(height);
-      }
-    };
-
+    const updateHeight = () => onHeightChange(element.scrollHeight);
     updateHeight();
 
     const resizeObserver = new ResizeObserver(updateHeight);
-    resizeObserver.observe(contentRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [level, insights, showMonthlyNotice, levelGoals.length, onHeightChange]);
+    resizeObserver.observe(element);
+    return () => resizeObserver.disconnect();
+  }, [onHeightChange]);
 
   return (
     <div ref={contentRef} className="flex flex-col">
+      {/* 期間の切り替わりで自動表示されたときの案内（「あとで」で閉じられる） */}
+      {promptLevel && (
+        <div className="mx-4 mt-3 pl-3 pr-1.5 py-1.5 rounded-lg bg-brand-primary/10 flex items-center gap-2">
+          <span className="flex-1 min-w-0 text-xs font-semibold text-brand-primary">
+            {t(`reflection.promptBanner.${promptLevel}`)}
+          </span>
+          {onLater && (
+            <button
+              type="button"
+              onClick={onLater}
+              className="flex-shrink-0 px-2 py-1 rounded-md text-[11px] font-semibold text-secondary hover:text-primary hover:bg-surface-elevated dark:hover:bg-surface-dark-elevated transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50"
+            >
+              {t('reflection.later')}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Level tabs - only weekly and monthly for reflection */}
       <div className="px-4 py-3">
         <div className="flex gap-1 p-1 bg-surface-elevated/50 dark:bg-surface-dark-elevated/50 rounded-lg">
@@ -303,8 +380,9 @@ export default function ReflectionView({ onHeightChange, trigger, onTriggerConsu
               <textarea
                 key={index}
                 value={insights[item.key]}
-                onChange={(e) => setInsights({ ...insights, [item.key]: e.target.value })}
+                onChange={(e) => handleInsightChange(item.key, e.target.value)}
                 onBlur={handleBlur}
+                readOnly={!isLoaded}
                 className="input-field resize-none min-h-[56px]"
                 placeholder={item.placeholder}
                 rows={2}

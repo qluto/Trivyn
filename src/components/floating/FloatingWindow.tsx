@@ -11,12 +11,14 @@ import ConfettiView from '../common/ConfettiView';
 import ParentGoalsContext from '../common/ParentGoalsContext';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { useWindowDrag } from '../../hooks/useWindowDrag';
 
 // ウィンドウ高さの上限。tauri.conf.json の main ウィンドウ maxHeight と揃えること
 const MAX_WINDOW_HEIGHT = 480;
 
 export default function FloatingWindow() {
-  const { i18n: i18nInstance } = useTranslation();
+  const { t, i18n: i18nInstance } = useTranslation();
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel>('daily');
   const [confettiState, setConfettiState] = useState<{
     show: boolean;
@@ -41,6 +43,9 @@ export default function FloatingWindow() {
   const { loadSettings, weekStart } = useSettingsStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const lastCheckDateRef = useRef<string>(new Date().toDateString());
+
+  // 操作要素以外のどこを掴んでもウィンドウを移動できる
+  useWindowDrag(containerRef);
 
   // Sync weekStart from settings to goal store
   useEffect(() => {
@@ -169,9 +174,10 @@ export default function FloatingWindow() {
     }
   };
 
-  const handleClose = async () => {
-    const { Window } = await import('@tauri-apps/api/window');
-    await Window.getCurrent().hide();
+  const handleClose = () => {
+    getCurrentWindow()
+      .hide()
+      .catch((error) => console.error('Failed to hide window:', error));
   };
 
   const goalsCount = {
@@ -191,17 +197,44 @@ export default function FloatingWindow() {
       )}
       <div
         ref={containerRef}
-        className="relative w-full max-h-screen overflow-y-auto overflow-x-hidden glass-card select-none"
-        data-tauri-drag-region
+        className="group/win relative w-full max-h-screen overflow-y-auto overflow-x-hidden glass-card select-none"
       >
-        {/* Level Switcher */}
-        <div data-tauri-drag-region>
-          <LevelSwitcher
-            selected={selectedLevel}
-            onChange={setSelectedLevel}
-            goalsCount={goalsCount}
+        {/* Grip bar: 掴んで移動するための専用領域。スクロール時も上端に残す */}
+        <div
+          className="sticky top-0 z-10 h-4 flex items-center justify-center cursor-grab active:cursor-grabbing"
+          title={t('floating.dragHint')}
+        >
+          <span
+            aria-hidden="true"
+            className="w-8 h-[3px] rounded-full bg-border dark:bg-gray-600 opacity-60 group-hover/win:opacity-100 transition-opacity"
           />
+
+          {/* Close (hide) button: 見た目14px・当たり判定20px */}
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label={t('floating.hide')}
+            title={t('floating.hide')}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full
+                       flex items-center justify-center cursor-default
+                       before:absolute before:-inset-[3px] before:rounded-full
+                       text-tertiary dark:text-content-dark-tertiary
+                       hover:text-primary hover:bg-surface-elevated dark:hover:bg-surface-dark-elevated
+                       opacity-30 group-hover/win:opacity-100 focus-visible:opacity-100 transition-opacity
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50"
+          >
+            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
+
+        {/* Level Switcher */}
+        <LevelSwitcher
+          selected={selectedLevel}
+          onChange={setSelectedLevel}
+          goalsCount={goalsCount}
+        />
 
         {/* Parent-level goals context (daily -> weekly, weekly -> monthly) */}
         <ParentGoalsContext
@@ -212,7 +245,7 @@ export default function FloatingWindow() {
         />
 
         {/* Goals List - padding matches design [4,8,10,8] */}
-        <div className="pt-1 px-2 pb-2.5 overflow-hidden" data-tauri-drag-region>
+        <div className="pt-1 px-2 pb-2.5 overflow-hidden">
           {currentGoals.length === 0 ? (
             <EmptyState level={selectedLevel} />
           ) : (
@@ -240,19 +273,6 @@ export default function FloatingWindow() {
           )}
         </div>
 
-        {/* Close button (hover to show) */}
-        <button
-          className="absolute top-2 right-2 w-6 h-6 rounded-full
-                     bg-surface-elevated dark:bg-surface-dark-elevated
-                     flex items-center justify-center
-                     opacity-0 hover:opacity-100 transition-opacity
-                     group z-10"
-          onClick={handleClose}
-        >
-          <svg className="w-3 h-3 text-tertiary group-hover:text-primary" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
       </div>
     </>
   );

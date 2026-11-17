@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getVersion } from '@tauri-apps/api/app';
 import { useSettingsStore } from '../../store/settingsStore';
 
 interface SettingsViewProps {
@@ -38,12 +37,9 @@ export default function SettingsView({ onHeightChange }: SettingsViewProps) {
   const { t, i18n } = useTranslation();
   const { weekStart, language, theme, reflectionPromptEnabled, loadSettings, setWeekStart, setLanguage, setTheme, setReflectionPromptEnabled } = useSettingsStore();
   const contentRef = useRef<HTMLDivElement>(null);
-  // リリースビルドでは CI がタグから書き込んだ tauri.conf.json のバージョンが返る
-  const [appVersion, setAppVersion] = useState<string | null>(null);
 
   useEffect(() => {
     loadSettings();
-    getVersion().then(setAppVersion).catch(() => setAppVersion(null));
   }, [loadSettings]);
 
   // Notify parent of height changes
@@ -159,14 +155,6 @@ export default function SettingsView({ onHeightChange }: SettingsViewProps) {
           <span className="text-sm text-primary">{t('settings.notifications.reflectionPrompt')}</span>
           <Toggle checked={reflectionPromptEnabled} onChange={setReflectionPromptEnabled} />
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="pt-6 text-center space-y-1">
-        <p className="text-sm font-semibold text-primary">
-          Trivyn{appVersion ? ` v${appVersion}` : ''}
-        </p>
-        <p className="text-xs text-tertiary">Three Wins メソッドで目標を達成</p>
       </div>
     </div>
   );

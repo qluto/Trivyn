@@ -1,4 +1,7 @@
-use tauri::{command, Window, LogicalSize, PhysicalPosition};
+use tauri::{command, AppHandle, LogicalSize, Manager, PhysicalPosition, Window};
+
+use crate::popover::{self, PopoverState};
+use crate::reflection_reminder::PeriodChangeEvent;
 
 #[cfg(target_os = "windows")]
 fn update_window_region(window: &Window) -> Result<(), String> {
@@ -65,4 +68,17 @@ pub async fn resize_popover(window: Window, height: f64) -> Result<(), String> {
     update_window_region(&window)?;
 
     Ok(())
+}
+
+/// ポップオーバーを閉じる（sticky 状態も解除）
+#[command]
+pub fn hide_popover(app: AppHandle) {
+    popover::hide_popover(&app);
+}
+
+/// 保留中のリフレクション促しを取得してクリアする
+#[command]
+pub fn take_pending_reflection_prompt(app: AppHandle) -> Option<PeriodChangeEvent> {
+    app.try_state::<PopoverState>()
+        .and_then(|state| state.inner().take_pending_reflection())
 }

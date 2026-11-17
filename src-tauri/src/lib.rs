@@ -3,3 +3,5 @@ pub mod db;
 pub mod commands;
 pub mod tray;
 pub mod window;
+pub mod popover;
+pub mod reflection_reminder;

@@ -1,9 +1,10 @@
 use tauri::{
-    AppHandle, Manager, PhysicalPosition, PhysicalSize, Runtime,
+    AppHandle, Manager, Rect, Runtime,
     menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
 };
 use crate::db::Database;
+use crate::popover;
 
 // Get localized menu text based on language setting
 fn get_menu_text(language: &str, key: &str) -> &'static str {
@@ -74,81 +75,30 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
             if let TrayIconEvent::Click {
                 button: tauri::tray::MouseButton::Left,
                 button_state: tauri::tray::MouseButtonState::Up,
-                position,
+                rect,
                 ..
             } = event
             {
                 let app = tray.app_handle();
-                if let Some(window) = app.get_webview_window("popover") {
-                    let is_visible = window.is_visible().unwrap_or(false);
+                let Some(window) = app.get_webview_window(popover::POPOVER_LABEL) else {
+                    return;
+                };
 
-                    if is_visible {
-                        let _ = window.hide();
-                    } else {
-                        // Get window and monitor info
-                        let window_size = window.outer_size().unwrap_or(PhysicalSize { width: 420, height: 400 });
-                        let monitor = window.current_monitor().ok().flatten();
+                if window.is_visible().unwrap_or(false) {
+                    popover::hide_popover(app);
+                    return;
+                }
 
-                        // Platform-specific positioning logic
-                        #[cfg(target_os = "macos")]
-                        let (x, y) = if let Some(monitor) = monitor {
-                            let monitor_size = monitor.size();
-                            let monitor_pos = monitor.position();
-
-                            // Calculate monitor bounds
-                            let monitor_top = monitor_pos.y;
-                            let monitor_bottom = monitor_pos.y + monitor_size.height as i32;
-                            let monitor_height = monitor_size.height as i32;
-
-                            // Determine if tray is in top half or bottom half of screen
-                            let tray_y = position.y as i32;
-                            let is_tray_on_top = tray_y < (monitor_top + monitor_height / 2);
-
-                            // Center horizontally relative to tray icon
-                            let x = (position.x as i32 - (window_size.width as i32 / 2))
-                                .max(monitor_pos.x)
-                                .min(monitor_pos.x + monitor_size.width as i32 - window_size.width as i32);
-
-                            // Position vertically based on tray location
-                            let y = if is_tray_on_top {
-                                // Tray is on top (macOS) - position window below tray
-                                (tray_y + 10).min(monitor_bottom - window_size.height as i32)
-                            } else {
-                                // Tray is on bottom - position window above tray
-                                (tray_y - window_size.height as i32 - 10).max(monitor_top)
-                            };
-
-                            (x, y)
-                        } else {
-                            // Fallback if monitor info unavailable
-                            let x = position.x as i32 - 210;
-                            let y = position.y as i32 + 10;
-                            (x, y)
-                        };
-
-                        // Windows/Linux: Center popover on screen
-                        #[cfg(not(target_os = "macos"))]
-                        let (x, y) = if let Some(monitor) = monitor {
-                            let monitor_size = monitor.size();
-                            let monitor_pos = monitor.position();
-
-                            // Center both horizontally and vertically on screen
-                            let x = monitor_pos.x + (monitor_size.width as i32 - window_size.width as i32) / 2;
-                            let y = monitor_pos.y + (monitor_size.height as i32 - window_size.height as i32) / 2;
-
-                            (x, y)
-                        } else {
-                            // Fallback if monitor info unavailable - approximate center
-                            let x = position.x as i32 - (window_size.width as i32 / 2);
-                            let y = position.y as i32 - (window_size.height as i32 / 2);
-                            (x, y)
-                        };
-
-                        let _ = window.set_position(PhysicalPosition::new(x, y));
-                        let _ = window.show();
-                        let _ = window.set_focus();
+                // マウスダウンでポップオーバーがブラーして閉じた直後のクリックは
+                // 「閉じる操作」とみなし、再表示しない
+                if let Some(state) = app.try_state::<popover::PopoverState>() {
+                    if state.was_just_hidden_by_blur() {
+                        return;
                     }
                 }
+
+                popover::show_popover(app, Some(rect), false);
+                let _ = window.set_focus();
             }
         })
         .build(app)?;
@@ -166,6 +116,13 @@ impl TrayIconId {
     fn get(&self) -> &tauri::tray::TrayIconId {
         &self.0
     }
+}
+
+/// 保存済みトレイアイコンの矩形を取得（Linux では常に None）
+pub fn tray_rect<R: Runtime>(app: &AppHandle<R>) -> Option<Rect> {
+    let tray_id = app.try_state::<TrayIconId>()?;
+    let tray = app.tray_by_id(tray_id.get())?;
+    tray.rect().ok().flatten()
 }
 
 // Update tray menu with new language

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Goal, GoalLevel } from '../../types';
 
 type GoalRowSize = 'compact' | 'default';
@@ -61,6 +62,7 @@ const SIZE_CONFIG = {
 };
 
 export default function NumberedGoalRow({ number, goal, level, onToggle, onDelete, parentGoal, childStats, size = 'compact' }: NumberedGoalRowProps) {
+  const { t } = useTranslation();
   const isCompleted = goal.isCompleted;
   const config = SIZE_CONFIG[size];
 
@@ -76,12 +78,15 @@ export default function NumberedGoalRow({ number, goal, level, onToggle, onDelet
   return (
     <div
       className={`w-full flex items-center ${config.gap} ${config.padding} group transition-colors`}
-      data-tauri-drag-region
     >
       {/* Check/Number circle */}
       <span className="relative flex-shrink-0">
+        {/* コンパクト時は見た目16pxのまま、疑似要素で当たり判定を24pxに広げる */}
         <button
+          type="button"
           onClick={handleClick}
+          aria-label={t('goals.toggleComplete', { title: goal.title })}
+          aria-pressed={isCompleted}
           style={{
             width: `${config.circle.width}px`,
             height: `${config.circle.height}px`,
@@ -89,7 +94,9 @@ export default function NumberedGoalRow({ number, goal, level, onToggle, onDelet
             minHeight: `${config.circle.height}px`
           }}
           className={`
-            ${config.circle.radius} flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-110
+            relative ${config.circle.radius} flex items-center justify-center flex-shrink-0 transition-all duration-200 hover:scale-110
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50
+            ${size === 'compact' ? 'before:absolute before:-inset-1 before:rounded-full' : ''}
             ${isCompleted
               ? GRADIENT_BACKGROUNDS[level]
               : 'border-[1.5px] border-border dark:border-gray-600 bg-transparent'
@@ -126,9 +133,8 @@ export default function NumberedGoalRow({ number, goal, level, onToggle, onDelet
         )}
       </span>
 
-      {/* Goal text - draggable */}
+      {/* Goal text（フローティングでは useWindowDrag によりドラッグ領域になる） */}
       <span
-        data-tauri-drag-region
         className={`
           flex-1 min-w-0 text-left ${config.text} leading-snug break-words whitespace-normal
           transition-all duration-200
@@ -158,8 +164,10 @@ export default function NumberedGoalRow({ number, goal, level, onToggle, onDelet
       {onDelete && (
         <button
           onClick={onDelete}
-          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-red-500/10 rounded-lg flex-shrink-0"
-          title="削除"
+          type="button"
+          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1.5 hover:bg-red-500/10 rounded-lg flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/50"
+          title={t('goals.delete')}
+          aria-label={t('goals.delete')}
         >
           <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

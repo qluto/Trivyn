@@ -73,7 +73,8 @@
         "decorations": false,
         "alwaysOnTop": true,
         "transparent": true,
-        "center": false
+        "center": false,
+        "acceptFirstMouse": true
       }
     ],
     "security": {

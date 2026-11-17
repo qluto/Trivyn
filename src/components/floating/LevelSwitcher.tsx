@@ -24,7 +24,7 @@ export default function LevelSwitcher({ selected, onChange }: LevelSwitcherProps
   const levels: GoalLevel[] = ['daily', 'weekly', 'monthly'];
 
   return (
-    <div className="flex items-center gap-0.5 px-1.5 pt-1 pb-0.5">
+    <div className="flex items-center gap-0.5 px-1.5 pt-0.5 pb-0.5">
       {levels.map((level) => {
         const isSelected = selected === level;
         const levelGoals = level === 'daily' ? getDailyGoals()

@@ -3,6 +3,14 @@
     "name": "Trivyn",
     "description": "Three Wins 生産性アプリ"
   },
+  "common": {
+    "close": "閉じる"
+  },
+  "floating": {
+    "show": "フローティングウィンドウを表示",
+    "hide": "フローティングウィンドウを隠す",
+    "dragHint": "ドラッグして移動"
+  },
   "update": {
     "available": "新しいバージョン v{{version}} が利用できます",
     "install": "更新",
@@ -27,7 +35,9 @@
     "completed": "達成",
     "noGoals": "ゴールが設定されていませんでした",
     "linkHint": "上位の目標に紐づけ（任意）",
-    "contribution": "紐づく目標の達成状況"
+    "contribution": "紐づく目標の達成状況",
+    "delete": "削除",
+    "toggleComplete": "達成を切り替え: {{title}}"
   },
   "context": {
     "title": {
@@ -71,7 +81,12 @@
     "planNext": {
       "weekly": "今週の目標を設定",
       "monthly": "今月の目標を設定"
-    }
+    },
+    "promptBanner": {
+      "weekly": "先週の振り返りの時間です",
+      "monthly": "先月の振り返りの時間です"
+    },
+    "later": "あとで"
   },
   "settings": {
     "title": "設定",
@@ -137,7 +152,11 @@
     "noGoalsOnDate": "この日の目標はありません",
     "monthYear": "{{year}}年{{month}}月",
     "dateDetail": "{{month}}月{{day}}日",
-    "delete": "削除"
+    "delete": "削除",
+    "previousMonth": "前の月",
+    "nextMonth": "次の月",
+    "completedCount": "{{completed}}/{{total}} 完了",
+    "showMonth": "この月の目標を表示"
   },
   "tray": {
     "showFloating": "フローティングウィンドウを表示",

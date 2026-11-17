@@ -240,19 +240,3 @@
     background-clip: text;
   }
 }
-
-/* Tauri drag region - required for Windows compatibility */
-[data-tauri-drag-region] {
-  app-region: drag;
-  -webkit-app-region: drag;
-}
-
-/* Prevent dragging on interactive elements */
-[data-tauri-drag-region] button,
-[data-tauri-drag-region] input,
-[data-tauri-drag-region] textarea,
-[data-tauri-drag-region] select,
-[data-tauri-drag-region] a {
-  app-region: no-drag;
-  -webkit-app-region: no-drag;
-}
